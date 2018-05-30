@@ -27,6 +27,7 @@
   (you can also create a password for the temporary user to prevent Windows
   from auto login at the next reboot)
 
+* run customize.cmd (as administrator) from usb drive
 * restart
 * log into new user, firstrun.cmd runs (user will be given a choice)
 * firstrun.cmd runs, then logs user out so changes take effect
