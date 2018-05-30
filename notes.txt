@@ -1,0 +1,196 @@
+===============================================================================
+ Notes
+===============================================================================
+
+* no network connection (preferred, not required)
+* install Windows 10 from usb drive (Microsoft media creation tool)
+* first run OOBE setup wizard- create a temporary user (see below)
+
+  the temporary user will be used to run the customize.cmd script, and then
+  deleted after logging into a new user account- most changes can be made
+  to the current user, but because the start menu tiles is quite a mess because
+  of suggested apps and cannot be removed via scripting (that I know of), its
+  easier to just use a temporary user then delete it when no longer needed
+
+  option 1 (auto create the new user)-
+  use 'temp<some name>', then a new user will be created with <some name>
+  when the script is done running
+  like- tempOwner  - tempOwner will be the temp user and Owner will be created
+  by customize.cmd, tempOwner will need to be deleted later
+
+  option2-
+  use 'temp', then you will be promted for a new user name where you can type
+  in the new user name
+
+  option3-
+  a new user will need to be created with administrator priviledges
+  (you can also create a password for the temporary user to prevent Windows
+  from auto login at the next reboot)
+
+* restart
+* log into new user, firstrun.cmd runs (user will be given a choice)
+* firstrun.cmd runs, then logs user out so changes take effect
+* log back in
+* delete the original temp user (only first new user needs to do this)
+
+* turn on num lock if desktop pc or laptop with number pad
+* connect network
+* settings/apps/default apps, set program defaults as needed
+  (foxit, chrome, vlc, etc.)
+* settings/personalization/start, turn off recently added apps
+* open/close Chrome 3 times to get rid of initial firstrun pages
+* Microsoft Edge, open, click home button, copy home address, set as homepage
+  (also click home button, dismiss google notification on web page- do
+   several times until no more google info notifications)
+
+
+
+###############################################################################
+    files - on usb drive (same drive as Win10 setup)
+            put them in a folder with a name of your choice
+###############################################################################
+USB drive-
+    normal Win10 files/folders
+    ...
+
+    myfolder\
+        customize.cmd       <-main app, run as administrator
+        firstrun.cmd        <-new users first run app
+        remove-apps.ps1     <-new users first run helper script
+        pintostart.ps1      <-new users first run helper script
+        weather.hiv         <-new users first run Weather settings
+        Wallpaper\
+            any.jpg
+            another.jpg
+        Win32Apps\
+            install.cmd
+            any_app.exe
+            any_app.msi
+            app\
+            another_app\
+        Desktop\
+            *.lnk
+
+===============================================================================
+ customize.cmd (normally run after setup when logged into the temporary user,
+                but can run at any time in any user account with admin
+                priviledges)
+===============================================================================
+check if running as administrator
+set timezone
+HKLM registry changes
+default user registry changes (any needed before user logs on first time)
+copy any wallpapers to users\public\pictures
+rename default user DefaultLayouts.xml (start menu tiles will be minimal)
+copy firstrun.cmd, remove-apps.ps1, pintostart.ps1, and weather.hiv to
+  default user start folder
+set computer name
+change power profile (current is balanced) so power stays on when on ac
+run Win32Apps\install.cmd if available
+
+
+===============================================================================
+ firstrun.cmd (will be copied to default user startup folder)
+              (runs when new user first logs in)
+===============================================================================
+HKCU registry changes
+set wallpaper (random from a few in public pictures)
+remove Windows apps for this user
+delete this file, remove-apps.ps1, pintostart.ps1, and weather.hiv
+logout so changes take effect
+
+
+===============================================================================
+ remove-apps.ps1 (will be copied to default user startup folder)
+                 (called by firstrun.cmd)
+===============================================================================
+powershell script to remove Windows apps
+
+
+===============================================================================
+ pintostart.ps1 (will be copied to default user startup folder)
+                (called by firstrun.cmd)
+===============================================================================
+powershell script to pin/unpin apps to start menu tiles
+
+
+===============================================================================
+ weather.hiv    (will be copied to default user startup folder)
+                (called by firstrun.cmd)
+
+the settings.dat file is just a registry hive, to get a copy open Weather in
+any user/pc, the copy this file-
+"%userprofile%"\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe\Settings\settings.dat
+rename it weaher.hiv for use here (renamed only for a better description)
+===============================================================================
+weather app settings (this one uses Rock Valley, IA for location)
+
+
+===============================================================================
+ Wallpaper\*.jpg    (will be copied to public pictures)
+===============================================================================
+any jpg in Wallpaper folder
+
+
+===============================================================================
+ Win32Apps\install.cmd  (called by customize.cmd)
+
+ modify as needed, currently set to install 7Zip, VLC Media Player, Chrome,
+ Libre Office, Foxit Reader (manually)
+===============================================================================
+runs setup for win32 apps like chrome, foxit, etc.
+
+
+===============================================================================
+ Desktop\*.lnk
+===============================================================================
+premade desktop links, copied to default user desktop (all new users will get)
+
+
+
+
+
+===============================================================================
+Other randome notes
+===============================================================================
+windows install media could be modified to include many of these changes,
+but a new version of windows now comes out several times a year, and also
+any changes due to errors, etc. would require doing the whole process again-
+it requires extracting the images from the install.esd into a wim image as
+the esd cannot be changed- then both Home and Pro images need to be mounted,
+modified, saved- its not a fast process, so its better to just work with the
+normal install media as-is
+
+a setupcomplete.cmd script could also be added which would simply look for
+a specific script on any drive (like customize.cmd), where our script could
+be run automatically before the first user logs in- but would still need
+to do the install image manipulation as above, and there can be some things
+that cannot be done without an interactive gui (like foxit setup- which does
+not seem to have good command line install options for the free version)- and
+you also have the problem where you will have no idea when the script has
+run, whether the script was found, whether it completed ok, etc.- you just
+have to hope it runs, and then check the script log file when logged in
+
+msft has various methods to 'automate' the rollout, but they are all a pain
+to use and debug, so its better to just do things without any special tools
+or methods, just relying on what can be done via registry, files, etc. with
+normal available scripting tools (batch file and powershell)
+
+the best way to make changes is to simply create a temporary user where we can
+run the customize.cmd- since its too late for some changes when that user logs
+in (mainly the start menu tile layout will have placeholders for suggested
+apps, and the pintostart.ps1 script cannot access/remove these), the temporary
+user will only be used to run customize.cmd, and deleted after- the advantage
+is we can see what is happening, and have full control
+
+provisioned Windows apps can be removed at the system level, but is not
+necessary as the firstrun.cmd script will remove for each new user, and doing
+this way preserves all provisioned apps for any user that wants to skip the
+firstrun.cmd script
+
+new users that choose to not run the script will still have a minimal start menu
+tile layout as the DefaultLayouts.xml is renamed so will not be used to create
+the many default tiles a new user normally sees, otherwise it is pretty close
+to a normal new user
+
+
