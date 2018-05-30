@@ -6,7 +6,7 @@ rem     runs when new user created, located in
 rem     %userprofile%\appdata\roaming\microsoft\windows\start menu\programs\startup
 rem     deletes itself when done
 rem
-rem     if script run from somehwere else, no files deleted
+rem     if script run from somewhere else, no files deleted
 rem     (if want to manually run script on current user)
 rem ===========================================================================
 cd /d "%~dp0"
