@@ -39,12 +39,12 @@ $win10apps = @"
     >Microsoft.ZuneVideo
 "@
 
-write-host "Removing apps...`r`n"
+write-host "Removing apps..."
 foreach ($app in $win10apps.split("`n")){
     $app = $app.trim()
     if($app[0] -eq '>'){
         $app = $app.replace('>','')
-        write-host "removing $app`r`n"
+        write-host "removing $app"
         Get-AppxPackage $app | Remove-AppxPackage
     }
 }

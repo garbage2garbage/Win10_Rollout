@@ -58,9 +58,7 @@ rem ===========================================================================
 rem     remove windows apps
 rem ===========================================================================
 if exist "%removeappsfile%" (
-    <nul set /p nothing=removing Windows apps...
     powershell -executionpolicy bypass -file "%removeappsfile%"
-    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
@@ -69,7 +67,7 @@ rem     registry changes
 rem ===========================================================================
 if exist "%regfile%" (
     <nul set /p nothing=registry changes...
-    reg import "%regfile%"
+    reg import "%regfile%" >NUL
     if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
@@ -91,7 +89,7 @@ if not %n% == 0 (
         if !n! gtr !rand! goto getout
     )
     :getout
-    reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f
+    reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f >NUL
     if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 ) else ( echo pictures not found )
 echo.
