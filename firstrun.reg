@@ -118,6 +118,13 @@ Windows Registry Editor Version 5.00
 "SearchboxTaskbarMode"=dword:00000000
 
 
+;notepad font/size
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Microsoft\Notepad]
+"lfWeight"=dword:00000190
+"lfFaceName"="Consolas"
+
+
 ;Foxit Reader settings
 ;==============================================================================
 [HKEY_CURRENT_USER\Software\Foxit Software\Foxit Reader 9.0\Preferences\General]

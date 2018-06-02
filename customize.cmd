@@ -1,6 +1,6 @@
 @echo off
 cd /d %~dp0
-color 9f
+color 5f
 rem ===========================================================================
 rem     customize.cmd
 rem     run this with a new temp user right after Windows OOBE
@@ -40,7 +40,7 @@ if not %errorlevel% == 0 (
     goto :eof
 )
 echo.
-echo Starting customize.cmd...
+echo  === Starting customize.cmd ===
 echo.
 
 rem ===========================================================================
@@ -87,7 +87,7 @@ rem     will end up with settings, store and edge
 rem ===========================================================================
 if exist "%defaultlayoutfile%" (
     <nul set /p nothing=renaming DefaultLayouts.xml...
-    ren "%defaultlayoutfile%" "%defaultlayoutfile%.bak" >NUL 2>&1
+    ren "%defaultlayoutfile%" *.bak >NUL 2>&1
     if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
@@ -150,6 +150,7 @@ if exist "%win32appsfrom%\install.cmd" (
     echo.
     call %win32appsfrom%\install.cmd
     echo.
+    color 5f
 )
 
 rem ===========================================================================
@@ -185,17 +186,16 @@ rem ===========================================================================
 rem get serial number
 for /f "skip=1 tokens=2 delims=," %%a in ('wmic bios get SerialNumber /format:csv') DO set sernum=%%a
 rem (the above seems to end up with one space char if fails)
-if %sernum% == " " set sernum=0
+if %sernum% == " " ( set sernum=0 ) else ( set newname=PC-%sernum% )
 echo.
 echo current computer name: %computername%
 echo.
 if %sernum% == 0 (
-    set /p newname=" [set computer name]  name: "
+    echo  [ press ENTER to keep %computername% ]
 ) else (
-    set newname=PC-%sernum%
-    echo [set computer name]
-    set /p newname=" [press ENTER for new name of %newname%]  name: "
+    echo  [ press ENTER for new name of %newname% ]
 )
+set /p newname="  new computer name: "
 if not %newname% == 0 (
     WMIC ComputerSystem where Name="%computername%" call Rename Name="%newname%" >NUL
 )
@@ -206,13 +206,13 @@ rem     DONE
 rem ===========================================================================
 color 2f
 echo.
-echo  reboot for changes to take effect
+echo  === reboot for changes to take effect ===
 echo.
 if %username:~0,4% == temp (
 echo  remember to delete this temp user when logged into the new user
 echo.
 )
-timeout /t 10
+timeout /t 30
 
 
 
