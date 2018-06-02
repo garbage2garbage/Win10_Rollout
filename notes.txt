@@ -137,7 +137,7 @@ any jpg in Wallpaper folder
  Win32Apps\install.cmd  (called by customize.cmd)
 
  modify as needed, currently set to install 7Zip, VLC Media Player, Chrome,
- Libre Office, Foxit Reader (manually)
+ Libre Office, Foxit Reader
 ===============================================================================
 runs setup for win32 apps like chrome, foxit, etc.
 
@@ -182,7 +182,7 @@ run the customize.cmd- since its too late for some changes when that user logs
 in (mainly the start menu tile layout will have placeholders for suggested
 apps, and the pintostart.ps1 script cannot access/remove these), the temporary
 user will only be used to run customize.cmd, and deleted after- the advantage
-is we can see what is happening, and have full control
+is we can see what is happening, and have full control with interaction
 
 provisioned Windows apps can be removed at the system level, but is not
 necessary as the firstrun.cmd script will remove for each new user, and doing

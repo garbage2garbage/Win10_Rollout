@@ -1,52 +1,164 @@
 @echo off
+cd /d %~dp0
+color 9f
 rem ===========================================================================
 rem     customize.cmd
+rem     run this with a new temp user right after Windows OOBE
 rem ===========================================================================
-color 9f
-
-
-
 
 rem ===========================================================================
-rem     test if running as admin 
+rem     set some vars
 rem ===========================================================================
-net file 1>nul 2>nul
-if not %errorlevel%==0 (
+set firstrunscript=firstrun.cmd
+set helperfiles=remove-apps.ps1 weather.hiv pintostart.ps1 firstrun.reg
+set regfile=customize.reg
+set wallpaperto=c:\users\public\pictures
+set wallpaperfrom=Wallpaper
+set win32appsfrom=Win32Apps
+set defaultlayoutfile=c:\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml
+set onedrivelnk=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk
+set defaultstartfolder=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup
+set defaulttemp=c:\users\default\appdata\local\temp
+set defaultdesktop=c:\users\default\Desktop
+set desktopfrom=Desktop
+set defaulthiv=c:\users\default\ntuser.dat
+set timezone=Central Standard Time
+set newname=0
+set sernum=0
+
+rem ===========================================================================
+rem     test if running as admin
+rem ===========================================================================
+net file 1>NUL 2>&1
+if not %errorlevel% == 0 (
     color 4f
-    echo This needs to run as administrator
+    echo  This script needs to run as administrator
     echo.
-    echo right click this batch file, run as administrator
+    echo  right click this script file, run as administrator
     echo.
     timeout /t 15
     goto :eof
 )
+echo.
+echo Starting customize.cmd...
+echo.
 
 rem ===========================================================================
-rem     change to this script drive/path
+rem     set timezone
 rem ===========================================================================
-cd /d %~dp0
+<nul set /p nothing=setting time zone to %timezone%...
+tzutil /s "%timezone%" >NUL 2>&1
+if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+echo.
 
 rem ===========================================================================
-rem     set log file, can check if script acting right
+rem     registry changes HKLM\SOFTWARE and default user
+rem     default user changes here have to be done before firstrun.cmd runs
+rem     backup default user hiv if not already done
 rem ===========================================================================
-set logfile=%windir%\temp\customize.log
+if exist "%regfile%" (
+    if not exist "%defaulthiv%.original" (
+        <nul set /p nothing=backing up default user ntuser.dat...
+        copy /y "%defaulthiv%" "%defaulthiv%.original" >NUL 2>&1
+        if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+        echo.
+    )
+    <nul set /p nothing=HKLM and default user registry changes...
+    reg load HKLM\1 "%defaulthiv%" >NUL 2>&1
+    reg import "%regfile%" >NUL 2>&1
+    reg unload HKLM\1 >NUL 2>&1
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
 
 rem ===========================================================================
-rem     use call, so all output is logged with single command
+rem     wallpapers, copy any jpg in this drive/folder
 rem ===========================================================================
-time /t
+if exist "%wallpaperfrom%" (
+    <nul set /p nothing=copying wallpapers...
+    copy /y "%wallpaperfrom%\*.jpg" "%wallpaperto%" >NUL 2>&1
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+
+rem ===========================================================================
+rem     rename default user DefaultLayouts.xml for minimal start menu tiles
+rem     will end up with settings, store and edge
+rem ===========================================================================
+if exist "%defaultlayoutfile%" (
+    <nul set /p nothing=renaming DefaultLayouts.xml...
+    ren "%defaultlayoutfile%" "%defaultlayoutfile%.bak" >NUL 2>&1
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+
+rem ===========================================================================
+rem OneDrive setup in Run key already removed by customize.cmd, but link remains
+rem ===========================================================================
+if exist "%onedrivelnk%" (
+    <nul set /p nothing=deleting OneDrive start menu link...
+    del "%onedrivelnk%" >NUL 2>&1
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+
+rem ===========================================================================
+rem     copy files to default user startup folder
+rem     any new users will run firstrun.cmd from startup folder
+rem
+rem     user customization takes place in firstrun.cmd
+rem     any other needed files will go into default user temp folder
+rem ===========================================================================
+if exist "%firstrunscript%" (
+    <nul set /p nothing=copying firstrun files to default user...
+    if not exist "%defaultstartfolder%" mkdir "%defaultstartfolder%" >NUL 2>&1
+    copy /y "%firstrunscript%" "%defaultstartfolder%" >NUL 2>&1
+    rem copy any other needed files to temp folder
+    for %%f in (%helperfiles%) do (
+        copy /y %%f "%defaulttemp%" >NUL 2>&1
+    )
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+
+rem ===========================================================================
+rem     copy any additional dekstop links to default user desktop
+rem ===========================================================================
+rem TODO possibly change to powershell script to create lnk
+if exist "%desktopfrom%" (
+    <nul set /p nothing=copying desktop links...
+    copy /y "%desktopfrom%\*.lnk" "%defaultdesktop%" >NUL 2>&1
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+
+rem ===========================================================================
+rem     power profile, current config should be 'balanced', just change
+rem     plugged in settings to always stay on
+rem ===========================================================================
+<nul set /p nothing=setting power profile to always on when on ac...
+powercfg /change monitor-timeout-ac 0 >NUL 2>&1
+powercfg /change standby-timeout-ac 0 >NUL 2>&1
+if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 echo.
-echo Starting customize.cmd, logging to %logfile%...
-call :main > %logfile% 2>&1
-echo.
-time /t
-echo.
+
+rem ===========================================================================
+rem     install win32 apps
+rem ===========================================================================
+if exist "%win32appsfrom%\install.cmd" (
+    echo running %win32appsfrom%\install.cmd...
+    echo.
+    call %win32appsfrom%\install.cmd
+    echo.
+)
 
 rem ===========================================================================
 rem     set a password on temp user so does not auto logon after next reboot
-rem     create the new user
-rem     skip this if user does not contain 'temp' 
-rem     (if script run later and logged into a needed user)
+rem     create the new user IF this user name starts with 'temp'
+rem     (if user name starts with temp, assume this is a temp user that is
+rem      only used to run this script)
+rem     if user name is 'temp', ask for a new user name to create
+rem     if user name is 'temp<something>', create a new user '<something>'
 rem ===========================================================================
 if %username:~0,4% == temp (
     echo setting %username% password to 1 to prevent auto logon at next boot
@@ -54,10 +166,11 @@ if %username:~0,4% == temp (
     rem if username is not temp, assume the rest is actual username wanted
     rem if is temp, ask for user name
     if %username% == temp (
-        set /p newuser=" [Add new user]  name: "    
+        set /p newuser=" [add new user]  name: "
     ) else ( set newuser=%username:~4% )
     echo.
 )
+rem check if newuser var is now set
 set newuser >NUL 2>&1
 if %errorlevel% == 0 (
     echo adding new user %newuser%
@@ -67,193 +180,60 @@ if %errorlevel% == 0 (
 )
 
 rem ===========================================================================
-rem     install win32 apps
+rem     check if want a new computer name
 rem ===========================================================================
-if exist Win32Apps\install.cmd ( 
-    echo running Win32Apps\install.cmd...
-    call Win32Apps\install.cmd
-)
-
-rem ===========================================================================
-rem     show log file in notepad
-rem ===========================================================================
-echo opening logfile in notepad...
-notepad %logfile%
-echo.
-color 2f
-echo reboot for changes to take effect
-echo.
-echo if you want a different computer name, you can do it now before reboot
-echo.
-timeout /t 10
-goto :eof
-rem END
-
-
-
-rem ===========================================================================
-rem ===========================================================================
-rem     main script function called from above
-rem ===========================================================================
-rem ===========================================================================
-:main
-date /t
-time /t
-echo.
-rem ===========================================================================
-rem     set timezone
-rem ===========================================================================
-echo setting time zone to Central... >CON
-echo [set timezone]
-tzutil /s "Central Standard Time"
-echo.
-
-rem ===========================================================================
-rem     remove Windows provisioned apps
-rem     use powershell script
-rem     (just leave them in, remove for each new user via firstrun.cmd)
-rem ===========================================================================
-rem if exist remove-apps.ps1 ( 
-rem    echo removing provisioned apps... >CON
-rem    echo [remove provisioned apps via powershell script]
-rem    powershell -executionpolicy bypass -file remove-apps.ps1 -provisioned
-rem    echo.
-rem )
-
-rem ===========================================================================
-rem     registry changes HKLM\SOFTWARE
-rem ===========================================================================
-echo HKLM registry changes... >CON
-echo [HKLM registry]
-echo [advertising, suggested apps]
-reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo /v Enabled /t REG_DWORD /d 0 /f
-reg add HKLM\SOFTWARE\Policies\Microsoft\Windows\CloudContent /v DisableWindowsConsumerFeatures /t REG_DWORD /d 1 /f
-echo.
-echo [disable first logon animation, use  preparing Windows... instead]
-reg add HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v "EnableFirstLogonAnimation" /t REG_DWORD /d 0 /f
-echo.
-rem echo [hide recently added apps - policy for all users]
-rem reg add HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer /v HideRecentlyAddedApps /t REG_DWORD /d 1 /f
-rem echo.
-
-rem ===========================================================================
-rem     registry changes for default user
-rem     apply any here that will be too late for the firstrun.cmd
-rem     (backup of original ntuser.dat is made so can get back to original)
-rem ===========================================================================
-if not exist c:\users\default\ntuser.dat.original (
-    echo backing up default user ntuser.dat... >CON
-    echo [backup default user registry]
-    copy /y c:\users\default\ntuser.dat c:\users\default\ntuser.dat.original
-    echo.
-)
-echo default user registry changes.. >CON
-echo [modify default user registry]
-reg load HKLM\1 c:\users\default\ntuser.dat
-echo.
-echo [prevent OneDrive from installing for new users]
-reg delete HKLM\1\Software\Microsoft\Windows\CurrentVersion\Run /v OneDriveSetup /f
-echo.
-echo [prevent welcome page shown in edge]
-reg add "HKLM\1\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v "SubscribedContent-310093Enabled" /t REG_DWORD /d 0 /f
-echo.
-echo [default console font size to something readable]
-reg add HKLM\1\Console /v "FontSize" /t REG_DWORD /d 1572864 /f
-reg unload HKLM\1
-echo.
-
-rem ===========================================================================
-rem     wallpapers, copy any jpg in this drive/folder
-rem ===========================================================================
-if exist Wallpaper (
-    echo copying wallpapers... >CON
-    echo [copy jpg wallpapers]
-    copy /y Wallpaper\*.jpg c:\users\public\pictures
-    echo.
-)
-
-rem ===========================================================================
-rem     rename default user DefaultLayouts.xml for minimal start menu tiles
-rem     will end up with settings, store and edge
-rem ===========================================================================
-echo renaming DefaultLayouts.xml... >CON
-echo [rename DefaultLayouts.xml for default user]
-ren c:\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml DefaultLayouts.xml.bak
-echo.
-
-rem ===========================================================================
-rem OneDrive setup in Run key already removed by customize.cmd, but link remains
-rem ===========================================================================
-echo deleting OneDrive start menu link... >CON
-echo [delete OneDrive start menu link]
-del "c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk"
-echo.
-
-
-rem ===========================================================================
-rem     copy files to default user startup folder
-rem     any new users will run firstrun.cmd from startup folder
-rem     
-rem     user customization takes place in firstrun.cmd
-rem ===========================================================================
-echo copying startup files to default user... >CON
-echo [copy files to default user startup folder]
-set sf="c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup"
-if not exist %sf% mkdir %sf%
-copy /y firstrun.cmd %sf%
-rem copy any other needed files here, hide so they don't try to run
-rem if already there, remove hidden attrib so can replace
-for %%f in (remove-apps.ps1 weather.hiv pintostart.ps1) do (
-    if exist %%f (
-        if exist %sf%\%%f attrib -H %sf%\%%f
-        copy /y %%f %sf%
-        rem hide so it doesn't open in notepad on startup, hidden will not run
-        attrib +H %sf%\%%f
-    )
-)
-echo.
-
-rem ===========================================================================
-rem     copy any additional dekstop links to default user desktop
-rem ===========================================================================
-if exist Desktop (
-    echo copying desktop links... >CON
-    echo [copy app links to default user desktop]
-    copy /y Desktop\*.lnk c:\users\default\Desktop
-    echo.
-)
-
-
-rem ===========================================================================
-rem     computer name - using serial number
-rem ===========================================================================
-echo [setting computer name]
-rem using wmic to avoid using powershell
+rem get serial number
 for /f "skip=1 tokens=2 delims=," %%a in ('wmic bios get SerialNumber /format:csv') DO set sernum=%%a
-for /f "skip=1 tokens=2 delims=," %%a in ('wmic computersystem get name /format:csv') DO set oldname=%%a
-rem if both are set to something, rename (the above seems to end up with one space char if fails)
-if not %oldname% == " " if not %sernum% == " " (
-    echo setting computer name from %oldname% to PC-%sernum%... >CON
-    echo old name: %oldname%   new name: PC-%sernum%
-    WMIC ComputerSystem where Name="%oldname%" call Rename Name="PC-%sernum%"
-) else ( echo cannot get serial number, name not changed )
+rem (the above seems to end up with one space char if fails)
+if %sernum% == " " set sernum=0
+echo.
+echo current computer name: %computername%
+echo.
+if %sernum% == 0 (
+    set /p newname=" [set computer name]  name: "
+) else (
+    set newname=PC-%sernum%
+    echo [set computer name]
+    set /p newname=" [press ENTER for new name of %newname%]  name: "
+)
+if not %newname% == 0 (
+    WMIC ComputerSystem where Name="%computername%" call Rename Name="%newname%" >NUL
+)
 echo.
 
 rem ===========================================================================
-rem     power profile, current config should be 'balanced', just change
-rem     plugged in settings to always stay on
+rem     DONE
 rem ===========================================================================
-echo setting power profile to always on when on ac... >CON
-echo [setting current power profile - monitor and standby timeout for ac to 0 - off]
-powercfg /change monitor-timeout-ac 0
-powercfg /change standby-timeout-ac 0
+color 2f
 echo.
+echo  reboot for changes to take effect
+echo.
+if %username:~0,4% == temp (
+echo  remember to delete this temp user when logged into the new user
+echo.
+)
+timeout /t 10
 
 
-rem done, log time
-date /t
-time /t
-echo.
-echo.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -1,0 +1,132 @@
+Windows Registry Editor Version 5.00
+
+;suggested apps
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SystemPaneSuggestionsEnabled"=dword:00000000
+"SubscribedContent-338388Enabled"=dword:00000000
+;  show tips and tricks
+"SubscribedContent-338389Enabled"=dword:00000000
+
+
+;control panel large icons, classic view
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel]
+"AllItemsIconView"=dword:00000000
+"StartupPage"=dword:00000001
+
+
+;desktop icons
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\\HideDesktopIcons\NewStartPanel]
+"{59031a47-3f72-44a7-89c5-5595fe6b30ee}"=dword:00000000
+"{20D04FE0-3AEA-1069-A2D8-08002B30309D}"=dword:00000000
+; control panel
+;"{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}"=dword:00000000
+; network
+;"{018D5C66-4533-4307-9B53-224DE2ED1FE6}"=dword:00000000
+
+
+;desktop auto-arrange icons
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Bags\1\Desktop]
+"FFlags"=dword:40200225
+
+
+;ie connection settings (disable auto check connection script)
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings\Connections]
+"DefaultConnectionSettings"=hex:46,00,00,00,03,00,00,00,01,00,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+"SavedLegacySettings"=hex:46,00,00,00,04,00,00,00,01,00,00,00,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
+  00,00,00,00,00,00,00,00,00,00,00,00,00,00
+
+
+;ie homepage
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Main]
+"Start Page"="http://google.com/"
+
+
+;ie menu,command bar,status
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\MINIE]
+"AlwaysShowMenus"=dword:00000001
+"CommandBarEnabled"=dword:00000001
+"ShowStatusBar"=dword:00000001
+
+
+;no hide file extensions
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"HideFileExt"=dword:00000000
+; taskbar no combine
+"TaskbarGlomLevel"=dword:00000001
+
+
+; people icon on taskbar
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People]
+"PeopleBand"=dword:00000000
+
+
+;notifications
+;==============================================================================
+; Edge
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge]
+"Enabled"=dword:00000000
+; Cortana
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Microsoft.Windows.Cortana_cw5n1h2txyewy!CortanaUI]
+"Enabled"=dword:00000000
+; Store
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Microsoft.WindowsStore_8wekyb3d8bbwe!App]
+"Enabled"=dword:00000000
+; Suggested
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.Suggested]
+"Enabled"=dword:00000000
+; Windows Hello
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings\Windows.SystemToast.HelloFace]
+"Enabled"=dword:00000000
+
+
+;Edge home button and url, new tab use blank page
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\Main]
+"HomeButtonPage"="https://www.google.com/"
+"HomeButtonEnabled"=dword:00000001
+[HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\ServiceUI]
+"NewTabPageDisplayOption"=dword:00000002
+[HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\TabbedBrowsing]
+"NTPFirstRun"=dword:00000001
+
+
+;minimal taskband
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband]
+"Favorites"=hex:ff
+"FavoritesChanges"=-
+"FavoritesVersion"=-
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins]
+"MailPin"=dword:00000000
+
+
+;cortana hidden
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Search]
+"SearchboxTaskbarMode"=dword:00000000
+
+
+;Foxit Reader settings
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Foxit Software\Foxit Reader 9.0\Preferences\General]
+"bShowStartPage"="0"
+"bShowAdvertisement"="0"
+"bShowFloatingPromotionPage"="0"
+"bCollectData"="0"
+[HKEY_CURRENT_USER\Software\Foxit Software\Foxit Reader 9.0\Preferences\Registration]
+"bShowRegisterDlg"="0"
+[HKEY_CURRENT_USER\Software\Foxit Software\Foxit Reader 9.0\Preferences\Others]
+"bCheckRegister"="0"
+
