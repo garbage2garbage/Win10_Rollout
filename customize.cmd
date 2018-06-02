@@ -162,8 +162,10 @@ rem     if user name is 'temp', ask for a new user name to create
 rem     if user name is 'temp<something>', create a new user '<something>'
 rem ===========================================================================
 if %username:~0,4% == temp (
-    echo setting %username% password to 1 to prevent auto logon at next boot
-    net user %username% 1
+    <nul set /p nothing=setting %username% password to 1 to prevent auto logon at next boot
+    net user %username% 1 >NUL
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    echo.
     rem if username is not temp, assume the rest is actual username wanted
     rem if is temp, ask for user name
     if %username% == temp (
@@ -174,9 +176,10 @@ if %username:~0,4% == temp (
 rem check if newuser var is now set
 set newuser >NUL 2>&1
 if %errorlevel% == 0 (
-    echo adding new user %newuser%
-    net user /add %newuser%
-    net localgroup administrators /add %newuser%
+    <nul set /p nothing=adding new user %newuser%
+    net user /add %newuser% >NUL
+    net localgroup administrators /add %newuser% >NUL
+    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
