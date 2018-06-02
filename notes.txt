@@ -67,8 +67,8 @@ USB drive-
             install.cmd
             any_app.exe
             any_app.msi
-            app\
-            another_app\
+            app\            <-app specific files needed for install.cmd
+            another_app\      like any settings file, etc.
         Desktop\
             *.lnk
 
@@ -81,10 +81,9 @@ check if running as administrator
 set timezone
 HKLM registry changes
 default user registry changes (any needed before user logs on first time)
-copy any wallpapers to users\public\pictures
+wallpapers
 rename default user DefaultLayouts.xml (start menu tiles will be minimal)
-copy firstrun.cmd, remove-apps.ps1, pintostart.ps1, and weather.hiv to
-  default user start folder
+copy helper files for firstrun.cmd
 set computer name
 change power profile (current is balanced) so power stays on when on ac
 run Win32Apps\install.cmd if available
@@ -97,7 +96,7 @@ run Win32Apps\install.cmd if available
 HKCU registry changes
 set wallpaper (random from a few in public pictures)
 remove Windows apps for this user
-delete this file, remove-apps.ps1, pintostart.ps1, and weather.hiv
+delete this file
 logout so changes take effect
 
 
@@ -119,10 +118,10 @@ powershell script to pin/unpin apps to start menu tiles
  weather.hiv    (will be copied to default user startup folder)
                 (called by firstrun.cmd)
 
-the settings.dat file is just a registry hive, to get a copy open Weather in
-any user/pc, the copy this file-
+the settings.dat file is just a registry hiv, to get a copy open Weather in
+any user/pc, then copy this file-
 "%userprofile%"\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe\Settings\settings.dat
-rename it weaher.hiv for use here (renamed only for a better description)
+rename it weather.hiv for use here (renamed only for a better description)
 ===============================================================================
 weather app settings (this one uses Rock Valley, IA for location)
 
@@ -182,7 +181,7 @@ run the customize.cmd- since its too late for some changes when that user logs
 in (mainly the start menu tile layout will have placeholders for suggested
 apps, and the pintostart.ps1 script cannot access/remove these), the temporary
 user will only be used to run customize.cmd, and deleted after- the advantage
-is we can see what is happening, and have full control with interaction
+is we can see what is happening, and have full control with user interaction
 
 provisioned Windows apps can be removed at the system level, but is not
 necessary as the firstrun.cmd script will remove for each new user, and doing
