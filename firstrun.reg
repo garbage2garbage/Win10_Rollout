@@ -1,6 +1,6 @@
 Windows Registry Editor Version 5.00
 
-;suggested apps
+;disable suggested apps
 ;==============================================================================
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
 "SystemPaneSuggestionsEnabled"=dword:00000000
@@ -16,7 +16,7 @@ Windows Registry Editor Version 5.00
 "StartupPage"=dword:00000001
 
 
-;desktop icons
+;hide desktop icons (0 = show)
 ;==============================================================================
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\\HideDesktopIcons\NewStartPanel]
 "{59031a47-3f72-44a7-89c5-5595fe6b30ee}"=dword:00000000
@@ -27,10 +27,11 @@ Windows Registry Editor Version 5.00
 ;"{018D5C66-4533-4307-9B53-224DE2ED1FE6}"=dword:00000000
 
 
+;does not seem to work- key/value is correct, but it seems explorer needs to do it
 ;desktop auto-arrange icons
 ;==============================================================================
-[HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Bags\1\Desktop]
-"FFlags"=dword:40200225
+;[HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Bags\1\Desktop]
+;"FFlags"=dword:40200225
 
 
 ;ie connection settings (disable auto check connection script)
@@ -58,7 +59,7 @@ Windows Registry Editor Version 5.00
 "ShowStatusBar"=dword:00000001
 
 
-;no hide file extensions
+;do not hide file extensions
 ;==============================================================================
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
 "HideFileExt"=dword:00000000
@@ -66,7 +67,7 @@ Windows Registry Editor Version 5.00
 "TaskbarGlomLevel"=dword:00000001
 
 
-; people icon on taskbar
+; turn off people icon on taskbar
 ;==============================================================================
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\People]
 "PeopleBand"=dword:00000000
@@ -101,15 +102,15 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\TabbedBrowsing]
 "NTPFirstRun"=dword:00000001
 
-
+;this is now done in pintostart.ps1
 ;minimal taskband
 ;==============================================================================
-[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband]
-"Favorites"=hex:ff
-"FavoritesChanges"=-
-"FavoritesVersion"=-
-[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins]
-"MailPin"=dword:00000000
+;[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband]
+;"Favorites"=hex:ff
+;"FavoritesChanges"=-
+;"FavoritesVersion"=-
+;[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins]
+;"MailPin"=dword:00000000
 
 
 ;cortana hidden
