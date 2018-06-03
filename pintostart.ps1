@@ -59,8 +59,8 @@ foreach($nam in $apps_topin){
 
 # need alternate method for File Explorer taskbar
 # the lnk in the following folder works ok
-$flnk = $sh.Namespace("C:\ProgramData\Microsoft\Windows\Start Menu Places").Items() | ?{ $_.Path -like '*File Explorer*' }
-if($v = $flnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
+$fe_lnk = $sh.Namespace("$env:ProgramData\Microsoft\Windows\Start Menu Places").Items() | ?{ $_.Path -like '*File Explorer*' }
+if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
 
 
 
