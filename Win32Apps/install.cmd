@@ -1,6 +1,7 @@
 @echo off
 cd /d %~dp0
 color 5f
+set silent=^>NUL 2^>^&1
 rem ===========================================================================
 rem     get file names so can update versions easily- assuming the install
 rem     files are named similar enough
@@ -47,11 +48,11 @@ rem ===========================================================================
 if defined vlcnam (
     <nul set /p nothing=installing VLC...
     %vlcnam% /L=1033 /S
-    mkdir c:\users\default\appdata\roaming\vlc >NUL 2>&1
-    if exist vlc copy /y vlc\*.* c:\users\default\appdata\roaming\vlc >NUL
-    del "c:\programdata\microsoft\windows\start menu\programs\videolan\documentation.lnk" >NUL
-    del "c:\programdata\microsoft\windows\start menu\programs\videolan\release notes.lnk" >NUL
-    del "c:\programdata\microsoft\windows\start menu\programs\videolan\videolan website.lnk" >NUL
+    mkdir c:\users\default\appdata\roaming\vlc %silent%
+    if exist vlc copy /y vlc\*.* c:\users\default\appdata\roaming\vlc %silent%
+    del "c:\programdata\microsoft\windows\start menu\programs\videolan\documentation.lnk" %silent%
+    del "c:\programdata\microsoft\windows\start menu\programs\videolan\release notes.lnk" %silent%L
+    del "c:\programdata\microsoft\windows\start menu\programs\videolan\videolan website.lnk" %silent%
     echo DONE
 )
 
@@ -64,7 +65,7 @@ rem ===========================================================================
 if defined chromenam (
     <nul set /p nothing=installing Chrome...
     %chromenam% /silent /install
-    if exist chrome\master_preferences copy /y chrome\master_preferences "c:\program files (x86)\google\chrome\application" >NUL
+    if exist chrome\master_preferences copy /y chrome\master_preferences "c:\program files (x86)\google\chrome\application" %silent%
     echo DONE
 )
 
@@ -92,6 +93,6 @@ rem ===========================================================================
 if defined foxitnam (
     <nul set /p nothing=installing Foxit Reader...
     msiexec /qb /i %foxitnam% ADDLOCAL=FX_PDFVIEWER,FX_SE MAKEDEFAULT="1" VIEW_IN_BROWSER="1" DESKTOP_SHORTCUT="1" STARTMENU_SHORTCUT="1" AUTO_UPDATE="0" CPDF_DISABLE="1" DISABLE_UNINSTALL_SURVEY="1"
-    del "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Foxit Reader\Activate Plugins.lnk" >NUL
+    del "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Foxit Reader\Activate Plugins.lnk" %silent%
     echo DONE
 )
