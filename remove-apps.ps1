@@ -39,13 +39,17 @@ $win10apps = @"
     >Microsoft.ZuneVideo
 "@
 
+#disable remove-appxpackage progress info
+$ProgressPreference=’SilentlyContinue’
+
 write-host "Removing apps..."
+
 foreach ($app in $win10apps.split("`n")){
     $app = $app.trim()
     if($app[0] -eq '>'){
         $app = $app.replace('>','')
-        write-host "removing $app"
-        Get-AppxPackage $app | Remove-AppxPackage
+        write-host -f yel $app
+        Get-AppxPackage $app | Remove-AppxPackage -ErrorAction SilentlyContinue
     }
 }
 
