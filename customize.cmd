@@ -11,6 +11,7 @@ rem     set some vars
 rem ===========================================================================
 set firstrunscript=firstrun.cmd
 set helperfiles=remove-apps.ps1 weather.hiv pintostart.ps1 firstrun.reg
+set createlink=create-link.ps1
 set regfile=customize.reg
 set wallpaperto=c:\users\public\pictures
 set wallpaperfrom=Wallpaper
@@ -20,7 +21,6 @@ set onedrivelnk=c:\users\default\appdata\roaming\microsoft\windows\start menu\pr
 set defaultstartfolder=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup
 set defaulttemp=c:\users\default\appdata\local\temp
 set defaultdesktop=c:\users\default\Desktop
-set desktopfrom=Desktop
 set defaulthiv=c:\users\default\ntuser.dat
 set timezone=Central Standard Time
 set newname=0
@@ -122,12 +122,11 @@ if exist "%firstrunscript%" (
 )
 
 rem ===========================================================================
-rem     copy any additional dekstop links to default user desktop
+rem     create any needed dekstop links to default user desktop
 rem ===========================================================================
-rem TODO possibly change to powershell script to create lnk
-if exist "%desktopfrom%" (
-    <nul set /p nothing=copying desktop links...
-    copy /y "%desktopfrom%\*.lnk" "%defaultdesktop%" >NUL 2>&1
+if exist "%create-link%" (
+    <nul set /p nothing=creating desktop links...
+    powershell -executionpolicy bypass -file "%create-link%" "%defaultdesktop%\All Apps" shell:AppsFolder
     if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
