@@ -1,6 +1,6 @@
- @echo off
+@echo off
 cd /d %~dp0
-color 9f
+color 5f
 rem ===========================================================================
 rem     get file names so can update versions easily- assuming the install
 rem     files are named similar enough
@@ -14,7 +14,7 @@ for /f %%n in ('dir /b FoxitReader*.msi') do set foxitnam=%%n
 rem ===========================================================================
 rem     can pass 'all' to script to automatically do all installs
 rem ===========================================================================
-if "%1"=="all" goto :start
+if "%1"=="all" goto :install
 
 rem ===========================================================================
 rem     else will ask for each (available), then install only requested apps
@@ -25,7 +25,7 @@ if defined chromenam set /p a=" install Chrome?       [Y,N] " && if %a% == n set
 if defined foxitnam  set /p a=" install Foxit Reader? [Y,N] " && if %a% == n set foxitnam=
 if defined officenam set /p a=" install LibreOffice?  [Y,N] " && if %a% == n set officenam=
 
-:start
+:install
 rem ===========================================================================
 rem     https://www.7-zip.org/download.html
 rem
