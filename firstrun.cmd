@@ -78,10 +78,11 @@ rem ===========================================================================
 rem     set wallpaper
 rem ===========================================================================
 <nul set /p nothing=setting wallpaper...
-rem get number of jpgs, pick a random jpg
+rem get number of jpgs
 set n=0
 for %%f in (%wallpaperfolder%\*.jpg) do set /A n+=1
-if not %n% == 0 (
+rem pick a random jpg
+if %n% == 0 ( echo pictures not found ) else (
     set /a "rand=%random% * %n% / 32768 + 1"
     set n=1
     for /f "delims=*" %%1 in ('dir /a-d /b %wallpaperfolder%\*.jpg') do (
@@ -92,7 +93,7 @@ if not %n% == 0 (
     :getout
     reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f %silent%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-) else ( echo pictures not found )
+)
 echo.
 
 rem ===========================================================================
@@ -106,7 +107,7 @@ if exist "%pinstartfile%" (
 )
 
 rem ===========================================================================
-rem     wetaher app location
+rem     weather app location
 rem ===========================================================================
 if exist "%bingwxhiv%" (
     <nul set /p nothing=setting Weather app location...
