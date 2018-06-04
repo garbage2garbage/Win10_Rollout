@@ -1,6 +1,7 @@
 @echo off
 cd /d "%~dp0"
 color 5f
+SETLOCAL ENABLEDELAYEDEXPANSION
 rem ===========================================================================
 rem     firstrun.cmd
 rem
@@ -26,6 +27,7 @@ set pinstartfile=%usertemp%\pintostart.ps1
 set bingwxhiv=%usertemp%\weather.hiv
 set bingwxfolder=%userprofile%\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe
 if "%~dp0" == "%startfolder%\" set firstrun=1
+set silent=^>NUL 2^>^&1
 
 rem ===========================================================================
 rem     give user a choice to run this
@@ -67,8 +69,8 @@ rem     registry changes
 rem ===========================================================================
 if exist "%regfile%" (
     <nul set /p nothing=registry changes...
-    reg import "%regfile%" >NUL
-    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    reg import "%regfile%" %silent%
+    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
@@ -80,7 +82,6 @@ rem get number of jpgs, pick a random jpg
 set n=0
 for %%f in (%wallpaperfolder%\*.jpg) do set /A n+=1
 if not %n% == 0 (
-    setlocal enabledelayedexpansion
     set /a "rand=%random% * %n% / 32768 + 1"
     set n=1
     for /f "delims=*" %%1 in ('dir /a-d /b %wallpaperfolder%\*.jpg') do (
@@ -89,8 +90,8 @@ if not %n% == 0 (
         if !n! gtr !rand! goto getout
     )
     :getout
-    reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f >NUL
-    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f %silent%
+    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
 ) else ( echo pictures not found )
 echo.
 
@@ -100,7 +101,7 @@ rem ===========================================================================
 if exist "%pinstartfile%" (
     <nul set /p nothing=setting start menu pinned apps...
     powershell -executionpolicy bypass -file "%pinstartfile%"
-    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
@@ -109,13 +110,13 @@ rem     wetaher app location
 rem ===========================================================================
 if exist "%bingwxhiv%" (
     <nul set /p nothing=setting Weather app location...
-    if exist "%bingwxfolder%" del /s /q "%bingwxfolder%\*"
+    if exist "%bingwxfolder%" del /s /q "%bingwxfolder%\*" %silent%
     for %%d in (AC AppData LocalCache LocalState RoamingState Settings SystemAppData TempState) do (
-        mkdir "%bingwxfolder%\%%d" >NUL
+        mkdir "%bingwxfolder%\%%d" %silent%
     )
-    copy /y "%bingwxhiv%" "%bingwxfolder%\Settings\settings.dat" >NUL
+    copy /y "%bingwxhiv%" "%bingwxfolder%\Settings\settings.dat" %silent%
     type NUL > "%bingwxfolder%\Settings\roaming.lock"
-    if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
@@ -124,14 +125,14 @@ color 2f
 echo  will be logging out so some changes can take effect...
 timeout /t 30
 rem ===========================================================================
-rem delete this file and logout if was firstrun
+rem delete this file, helper files, and logout IF was firstrun
 rem (goto) trick gets all following commands cached so
 rem logoff command can still run when deleted
 rem ===========================================================================
 :cleanup
-del /Q "%usertemp%\*.*" >NUL 2>&1
-rem if run from startup folder, can delete and logoout
+rem if run from startup folder, can delete files and logoout
 if %firstrun% == 1 (
+    del /Q "%usertemp%\*.*" %silent%
     if %logout% == 1 (
         (goto) 2>nul & del "%~f0" & shutdown /l
     ) else (
