@@ -177,7 +177,7 @@ rem ===========================================================================
 rem     if newuser not set (top of script) and this user is 'temp'
 rem     ask to create a new user
 rem ===========================================================================
-if not defined newuser if %username% == temp
+if not defined newuser if %username% == temp (
     set /p newuser=" [add new user]  name: "
     echo.
 )
@@ -186,7 +186,7 @@ rem ===========================================================================
 rem     if newuser not set (top of script) and this user starts with 'temp'
 rem     create a new user using name after 'temp' (like tempOwner -> Owner)
 rem ===========================================================================
-if not defined newuser if %username:~0,4% == temp
+if not defined newuser if %username:~0,4% == temp (
     set newuser=%username:~4%
     echo.
 )
