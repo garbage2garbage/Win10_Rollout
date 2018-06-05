@@ -209,7 +209,7 @@ if not defined newname (
     rem sernum will normally be set twice, last time set is serial number
     for /f "skip=1 tokens=2 delims=," %%a in ('wmic bios get SerialNumber /format:csv') DO set sernum=%%a
     rem (the above seems to end up with one space char if fails)
-    if not !sernum! == " " set newname=PC-%sernum%
+    if not !sernum! == " " set newname=PC-!sernum!
 )
 
 rem ===========================================================================
