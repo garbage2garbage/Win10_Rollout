@@ -1,4 +1,6 @@
-#apps starting with > will be removed, all others remain
+# remove-apps.ps1
+
+#apps starting with > will be REMOVED, all others remain
 #(this list was generated in Win10 ver 1803, newer version will probably change)
 #modify as needed
 $win10apps = @"
@@ -44,6 +46,8 @@ $ProgressPreference=’SilentlyContinue’
 
 write-host "Removing apps..."
 
+#list is big string so we don't have to quote each app in an array
+#but we then need to split up our list and trim 
 foreach ($app in $win10apps.split("`n")){
     $app = $app.trim()
     if($app[0] -eq '>'){
