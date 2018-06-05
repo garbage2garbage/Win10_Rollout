@@ -1,8 +1,6 @@
-#=================
 # pintostart.ps1
-#=================
 
-# apps wanted pinned to start menu- change as wanted
+# apps we want pinned to start menu- change as needed
 $apps_topin = @(
     "Microsoft Edge"
     "Calculator"
@@ -22,7 +20,7 @@ $apps_topin = @(
 
 2> pin apps to start menu from list provided in this script
 
-taskbar- can unpin, but not pin 
+taskbar- can unpin, but not pin (File Explorer needs alternate method to unpin) 
 
 this will not remove any suggested apps which normally show up for
 a new user when DefaultLayouts.xml is used- there may be a way but
