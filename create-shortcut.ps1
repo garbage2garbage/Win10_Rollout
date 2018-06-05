@@ -5,8 +5,13 @@ param(
     [Parameter(Position=0)] [string] $pathname,
     [Parameter(Position=1)] [string] $target
 )
+
+#no error message if fails
 $erroractionpreference = "SilentlyContinue"
+
+#check if both parameters provided
 if(!$pathname -or !$target){ exit 1 }
+
 $sh = New-Object -Com WScript.Shell
 $sc = $sh.CreateShortcut("$pathname.lnk")
 $sc.TargetPath = $target
@@ -15,14 +20,17 @@ if($error){ exit 1 }
 exit 0
 
 
-#unused for our use
+#all shortcut options
 <#
-$sc.Arguments="-args"
-$sc.WorkingDirectory = "c:\windows"
-$sc.WindowStyle = 1
-$sc.Hotkey = "CTRL+SHIFT+F"
-$sc.IconLocation = "notepad.exe, 0"
-$sc.Description = "Shortcut Description";
+Arguments 
+Description 
+FullName 
+Hotkey 
+IconLocation 
+RelativePath 
+TargetPath 
+WindowStyle 
+WorkingDirectory
 #>
 
 
