@@ -2,7 +2,7 @@
  Notes
 ===============================================================================
 
-* no network connection (preferred, not required)
+* no network connection (a little nicer if Win does not detect internet)
 * install Windows 10 from usb drive (Microsoft media creation tool)
 * first run OOBE setup wizard- create a temporary user (see below)
 
@@ -43,7 +43,7 @@
 * Microsoft Edge, open, click home button, copy home address, set as homepage
   (also click home button, dismiss google notification on web page- do
    several times until no more google info notifications)
-
+* check date/time- can toggle auto set off/on in settings to force update
 
 
 ###############################################################################
@@ -56,6 +56,7 @@ USB drive-
 
     myfolder\
         customize.cmd       <-main app, run as administrator
+        create-shortcut.ps1 <-main app helper script
         firstrun.cmd        <-new users first run app
         remove-apps.ps1     <-new users first run helper script
         pintostart.ps1      <-new users first run helper script
@@ -64,13 +65,11 @@ USB drive-
             any.jpg
             another.jpg
         Win32Apps\
-            install.cmd
-            any_app.exe
-            any_app.msi
-            app\            <-app specific files needed for install.cmd
-            another_app\      like any settings file, etc.
-        Desktop\
-            *.lnk
+            install.cmd     <-apps install script
+            any.exe
+            another.msi
+            any\            <-app specific files needed for install.cmd
+            another\          like any settings file, etc.
 
 ===============================================================================
  customize.cmd (normally run after setup when logged into the temporary user,
@@ -90,13 +89,19 @@ run Win32Apps\install.cmd if available
 
 
 ===============================================================================
+ create-shortcut.ps1 (called by customize.cmd)
+===============================================================================
+powershell script to create shortcuts (lnk)
+
+
+===============================================================================
  firstrun.cmd (will be copied to default user startup folder)
               (runs when new user first logs in)
 ===============================================================================
 HKCU registry changes
 set wallpaper (random from a few in public pictures)
 remove Windows apps for this user
-delete this file
+delete this file and helper files
 logout so changes take effect
 
 
@@ -111,7 +116,7 @@ powershell script to remove Windows apps
  pintostart.ps1 (will be copied to default user startup folder)
                 (called by firstrun.cmd)
 ===============================================================================
-powershell script to pin/unpin apps to start menu tiles
+powershell script to pin/unpin apps from start menu, unpin apps from taskbar
 
 
 ===============================================================================
@@ -123,7 +128,7 @@ any user/pc, then copy this file-
 "%userprofile%"\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe\Settings\settings.dat
 rename it weather.hiv for use here (renamed only for a better description)
 ===============================================================================
-weather app settings (this one uses Rock Valley, IA for location)
+weather app settings (this one set to Rock Valley, IA for location)
 
 
 ===============================================================================
@@ -139,13 +144,6 @@ any jpg in Wallpaper folder
  Libre Office, Foxit Reader
 ===============================================================================
 runs setup for win32 apps like chrome, foxit, etc.
-
-
-===============================================================================
- Desktop\*.lnk
-===============================================================================
-premade desktop links, copied to default user desktop (all new users will get)
-
 
 
 
@@ -164,9 +162,7 @@ normal install media as-is
 a setupcomplete.cmd script could also be added which would simply look for
 a specific script on any drive (like customize.cmd), where our script could
 be run automatically before the first user logs in- but would still need
-to do the install image manipulation as above, and there can be some things
-that cannot be done without an interactive gui (like foxit setup- which does
-not seem to have good command line install options for the free version)- and
+to do the install image manipulation as above, and
 you also have the problem where you will have no idea when the script has
 run, whether the script was found, whether it completed ok, etc.- you just
 have to hope it runs, and then check the script log file when logged in
