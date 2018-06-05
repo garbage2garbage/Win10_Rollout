@@ -42,7 +42,7 @@ $win10apps = @"
 "@
 
 #disable remove-appxpackage progress info
-$ProgressPreference=’SilentlyContinue’
+$ProgressPreference="SilentlyContinue"
 
 write-host "Removing apps..."
 
