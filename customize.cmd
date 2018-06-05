@@ -8,25 +8,31 @@ rem     run this with a new temp user right after Windows OOBE
 rem ===========================================================================
 
 rem ===========================================================================
-rem     set some vars
+rem     vars
 rem ===========================================================================
-set firstrunscript=firstrun.cmd
-set helperfiles=remove-apps.ps1 weather.hiv pintostart.ps1 firstrun.reg
-set createlink=create-link.ps1
-set regfile=customize.reg
-set wallpaperto=c:\users\public\pictures
-set wallpaperfrom=Wallpaper
-set win32appsfrom=Win32Apps
-set defaultlayoutfile=c:\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml
-set onedrivelnk=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk
-set defaultstartfolder=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup
-set defaulttemp=c:\users\default\appdata\local\temp
-set defaultdesktop=c:\users\default\Desktop
-set defaulthiv=c:\users\default\ntuser.dat
+rem --options--
 set timezone=Central Standard Time
 set newname=
 set newuser=
 set powerprofile_ac=0
+rem --our files--
+set firstrunscript=firstrun.cmd
+set helperfiles=remove-apps.ps1 weather.hiv pintostart.ps1 firstrun.reg
+set createlink=create-link.ps1
+set regfile=customize.reg
+rem --our folders--
+set wallpaperfrom=Wallpaper
+set win32appsfrom=Win32Apps
+rem --files--
+set defaultlayoutfile=c:\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml
+set onedrivelnk=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk
+set defaulthiv=c:\users\default\ntuser.dat
+rem --folders--
+set wallpaperto=c:\users\public\pictures
+set defaultstartfolder=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup
+set defaulttemp=c:\users\default\appdata\local\temp
+set defaultdesktop=c:\users\default\Desktop
+rem --misc--
 set silent=^>NUL 2^>^&1
 
 rem ===========================================================================
@@ -69,9 +75,7 @@ if exist "%regfile%" (
         echo.
     )
     <nul set /p nothing=HKLM and default user registry changes...
-    reg load HKLM\1 "%defaulthiv%" %silent%
-    reg import "%regfile%" %silent%
-    reg unload HKLM\1 %silent%
+    reg load HKLM\1 "%defaulthiv%" %silent% && reg import "%regfile%" %silent% && reg unload HKLM\1 %silent%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
@@ -115,14 +119,15 @@ rem     user customization takes place in firstrun.cmd
 rem     any other needed files will go into default user temp folder
 rem ===========================================================================
 if exist "%firstrunscript%" (
+    set fail=0
     <nul set /p nothing=copying firstrun files to default user...
-    if not exist "%defaultstartfolder%" mkdir "%defaultstartfolder%" %silent%
-    copy /y "%firstrunscript%" "%defaultstartfolder%" %silent%
+    if not exist "%defaultstartfolder%" (mkdir "%defaultstartfolder%" %silent% || set fail=1)
+    copy /y "%firstrunscript%" "%defaultstartfolder%" %silent% || set fail=1
     rem copy any other needed files to temp folder
     for %%f in (%helperfiles%) do (
-        copy /y %%f "%defaulttemp%" %silent%
+        copy /y %%f "%defaulttemp%" %silent% || set fail=1
     )
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
+    if !fail! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
