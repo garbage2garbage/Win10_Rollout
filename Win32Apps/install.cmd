@@ -21,7 +21,7 @@ if "%1"=="all" goto :install
 rem ===========================================================================
 rem     else will ask for each (available), then install only requested apps
 rem ===========================================================================
-if defined zipname   set /p a=" install 7Zip?         [Y,N] " && if !a! == n set zipnam=
+if defined zipnam    set /p a=" install 7Zip?         [Y,N] " && if !a! == n set zipnam=
 if defined vlcnam    set /p a=" install VLC?          [Y,N] " && if !a! == n set vlcnam=
 if defined chromenam set /p a=" install Chrome?       [Y,N] " && if !a! == n set chromenam=
 if defined foxitnam  set /p a=" install Foxit Reader? [Y,N] " && if !a! == n set foxitnam=
