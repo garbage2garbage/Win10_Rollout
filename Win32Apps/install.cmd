@@ -1,6 +1,7 @@
 @echo off
 cd /d %~dp0
 color 5f
+SETLOCAL ENABLEDELAYEDEXPANSION
 set silent=^>NUL 2^>^&1
 rem ===========================================================================
 rem     get file names so can update versions easily- assuming the install
@@ -20,11 +21,11 @@ if "%1"=="all" goto :install
 rem ===========================================================================
 rem     else will ask for each (available), then install only requested apps
 rem ===========================================================================
-if defined zipname   set /p a=" install 7Zip?         [Y,N] " && if %a% == n set zipnam=
-if defined vlcnam    set /p a=" install VLC?          [Y,N] " && if %a% == n set vlcnam=
-if defined chromenam set /p a=" install Chrome?       [Y,N] " && if %a% == n set chromenam=
-if defined foxitnam  set /p a=" install Foxit Reader? [Y,N] " && if %a% == n set foxitnam=
-if defined officenam set /p a=" install LibreOffice?  [Y,N] " && if %a% == n set officenam=
+if defined zipname   set /p a=" install 7Zip?         [Y,N] " && if !a! == n set zipnam=
+if defined vlcnam    set /p a=" install VLC?          [Y,N] " && if !a! == n set vlcnam=
+if defined chromenam set /p a=" install Chrome?       [Y,N] " && if !a! == n set chromenam=
+if defined foxitnam  set /p a=" install Foxit Reader? [Y,N] " && if !a! == n set foxitnam=
+if defined officenam set /p a=" install LibreOffice?  [Y,N] " && if !a! == n set officenam=
 
 :install
 rem ===========================================================================
