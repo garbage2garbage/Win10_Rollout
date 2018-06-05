@@ -134,9 +134,9 @@ if exist "%firstrunscript%" (
 rem ===========================================================================
 rem     create any needed dekstop links to default user desktop
 rem ===========================================================================
-if exist "%create-link%" (
+if exist "%createlink%" (
     <nul set /p nothing=creating desktop links...
-    powershell -executionpolicy bypass -file "%create-link%" "%defaultdesktop%\All Apps" shell:AppsFolder
+    powershell -executionpolicy bypass -file "%createlink%" "%defaultdesktop%\All Apps" shell:AppsFolder
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
