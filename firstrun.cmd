@@ -52,7 +52,7 @@ cls
 rem since Y, set to logout automatically when done
 set logout=1
 echo.
-echo  Starting firstrun.cmd, this won' take long
+echo  Starting firstrun.cmd, this will not take long
 echo  you will be logged out shortly, so just log back in at logon screen
 echo.
 
