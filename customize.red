@@ -59,21 +59,99 @@ call-wait: func [ cmd [string!] /local ret ][
 ]
 
 ;===========================================================================
-;   common call/wait function for powershell with logging
+;   call/wait function for powershell with logging
+;   script on command line
 ;===========================================================================
-call-powershell: func [ fil [file!] /arg args [string!] ][
-    any [ arg  args: copy "" ] ;make args empty string if no arg
-    call-wait rejoin [ 
-        "powershell -executionpolicy bypass -file " to-local-file fil
-        " " args ;will be harmless if no args
-    ]
+call-powershell: func [ cmd [string!] ][
+    call-wait rejoin [ "powershell -executionpolicy bypass -command " cmd ]
 ]
 
 ;===========================================================================
-;   create link
+;   create link (provide command line script to powershell)
 ;===========================================================================
-create-link: func [ pathname [string!] target [string!] ][
-    call-powershell/arg create-link-script rejoin [ pathname " " target ]
+create-link-ps1: {
+$sc = (New-Object -Com WScript.Shell).CreateShortcut('$NAME.lnk')
+$sc.TargetPath = '$TARGET'
+$sc.Save()
+exit $error.count
+}
+create-link: func [ pathname [string!] target [string!] /local txt ][
+    txt: copy create-link-ps1
+    replace txt "$NAME" pathname
+    replace txt "$TARGET" target
+    replace/all txt {"} {'} ;" will get stripped- use ' instead
+    call-powershell txt 
+]
+
+;===========================================================================
+;   unpin all apps from start menu and taskbar
+;===========================================================================
+pintostart-ps1: {
+$apps_topin = @(
+"Microsoft Edge"
+"Calculator"
+"Settings"
+"File Explorer"
+"Task Manager"
+"Google Chrome"
+"Weather"
+"Control Panel"
+"Windows Defender Security Center"
+)
+$list=$true #assume list
+$sh = new-object -com Shell.Application
+$allappobj = $sh.NameSpace('shell:AppsFolder').Items()
+#if list  is true (set by red caller) just output list of apps
+if($list){
+    foreach($app in $allappobj){ echo $app.Name }
+    exit 0
+}
+
+$pin_str = "&Pin to Start"
+$unpin_str = "Un&pin from Start"
+$unpintb_str = "Unpin from tas&kbar"
+foreach($appobj in $allappobj){
+    if($v = $appobj.Verbs() | where Name -eq $unpin_str){ $v.DoIt() }
+    if($v = $appobj.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
+}
+foreach($nam in $apps_topin){ 
+    if($appobj = $allappobj | where Name -eq $nam){
+        if($v = $appobj.Verbs() | where Name -eq $pin_str){ $v.DoIt() } 
+    }
+}
+$fe_lnk = $sh.Namespace("$env:ProgramData\Microsoft\Windows\Start Menu Places").Items() | ?{ $_.Path -like '*File Explorer*' }
+if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
+}
+pintostart: func [ /list /local txt ret ][
+    txt: copy pintostart-ps1
+    replace/all txt {"} {'} ;" will get stripped- use ' instead
+    any [ list  replace txt {$list=$true} {$list=$false} ]
+    ret: call-powershell txt
+    any [ list  return ret ]
+    ret: split copy last-out newline
+    all [ empty? ret  return false ]
+    ret
+]
+
+;===========================================================================
+;    remove-apps
+;===========================================================================
+list-apps-ps1: {
+get-appxpackage | %{$_.Name}
+}
+remove-apps-ps1: {
+$ProgressPreference='SilentlyContinue'
+get-appxpackage $APP | remove-appxpackage
+}
+list-apps: func [ /local ret txt ][
+    txt: copy list-apps-ps1
+    ret: call-powershell txt
+    all [ ret  ret: split copy last-out newline ]
+    ret
+]
+remove-apps: func [ /local ret txt ][
+    txt: copy remove-apps-ps1
+    ret: call-powershell txt
 ]
 
 ;===========================================================================
@@ -211,7 +289,7 @@ copy-startup-files: has [ ret ][
 ]
 
 ;===========================================================================
-;    create any needed links
+;    create any needed links from list
 ;===========================================================================
 create-links: has [ ret ][
     any [ ret: value? 'links  return false ]
@@ -283,4 +361,3 @@ set-users: has [ tmp ][
         create-user/admin newuser
     ]
 ]
-
