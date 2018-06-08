@@ -120,6 +120,7 @@ log-view: does [
         
         a: area 800x600
         19.24.30
+        font-name "Consolas"
         font-size 16
         font-color 158.186.203
         bold on-resize [ a/size: event/window/size - 20x50 ]
