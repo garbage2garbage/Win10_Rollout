@@ -7,9 +7,9 @@ wallpaper-from: %wallpaper
 wallpaper-to: %/c/users/public/pictures
 links: [ ;pathname target (windows file format)
     {%userprofile%\desktop\All Apps} {shell:AppsFolder}
-    ;{%userprofile%\desktop\Notepad.exe} {notepad.exe}
+    ;{%userprofile%\desktop\Notepad} {notepad.exe}
 ]
-power-ac-timeout: 0 ;current power profile when on ac, timeout (0=off)
+power-ac-timeout: 0 ;current power profile (balanced) when on ac, timeout (0=off)
 win32-apps-script: %Win32Apps/install.cmd
 ;newuser: {Owner}
 
