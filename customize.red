@@ -112,13 +112,19 @@ log-view: does [
     view/no-wait/flags [ 
         title "LOG VIEW"
         backdrop 44.51.57
+        
+        button 90x20 font-size 12 bold "font size +" 
+        on-down [ all [ a/font/size < 48  a/font/size: a/font/size + 2  a/size: a/size ] ]
+        button 90x20 font-size 12 bold "font size -" 
+        on-down [ all [ a/font/size > 10  a/font/size: a/font/size - 2  a/size: a/size ] ] return
+        
         a: area 800x600
         19.24.30
         font-size 16
         font-color 158.186.203
-        bold on-resize [ a/size: event/window/size - 20x20 ]
+        bold on-resize [ a/size: event/window/size - 20x50 ]
         do [ a/text: log ]
-    ] [resize]
+    ] [resize no-min no-max ]
 ]
 
 ;===========================================================================
