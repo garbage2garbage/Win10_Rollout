@@ -111,12 +111,12 @@ unless have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit 
 log-view: does [
     view/no-wait/flags [ 
         title "LOG VIEW"
+        backdrop 44.51.57
         a: area 800x600
-        0.50.100
+        19.24.30
         font-size 16
-        font-color white
-        bold
-        on-resize [ a/size: event/window/size - 20x20 ]
+        font-color 158.186.203
+        bold on-resize [ a/size: event/window/size - 20x20 ]
         do [ a/text: log ]
     ] [resize]
 ]
