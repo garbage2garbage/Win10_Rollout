@@ -50,8 +50,10 @@ call-wait: func [ cmd [string!] /local ret ][
     last-err: copy ""
     ret: call/wait/output/error cmd last-out last-err
     append log rejoin [ {[} now {][} cmd {][exit code } ret {]} newline ]
-    any [ empty? last-out  append log rejoin [ {[OUTPUT]} newline last-out newline ] ]
-    any [ empty? last-err  append log rejoin [ {[ERROR]} newline last-err newline ] ] 
+    trim/tail last-out
+    trim/tail last-err
+    any [ empty? last-out  append log rejoin [ {[OUTPUT]} newline last-out newline newline ] ]
+    any [ empty? last-err  append log rejoin [ {[ERROR]} newline last-err newline newline ] ] 
     any [ zero? ret  err-count: err-count + 1 ]
     zero? ret
 ]
@@ -91,8 +93,8 @@ unless is-admin? [ view admin-error-view ] ;TODO add quit to block
 ;===========================================================================
 ;    required files check
 ;===========================================================================
-have-all-files?: [
-    foreach fil required-files [ any [ exists? fil  return false ]
+have-all-files?: does [
+    foreach fil required-files [ any [ exists? fil  return false ] ]
 ]
 missing-files-view: [ 
     title "ERROR"
@@ -109,7 +111,7 @@ unless have-all-files? [ view missing-files-view ] ;TODO add quit to block
 get-serial-number: has [ tmp ][
     any [ call-wait {wmic bios get SerialNumber}  return false ]
     tmp: copy last-out
-    split trim/lines tmp " "
+    tmp: split trim/lines tmp " "
     all [ equal? length? tmp 2  equal? tmp/1 "SerialNumber"  pc-serial-number: tmp/2 ]
     not none? pc-serial-number
 ]
@@ -146,7 +148,7 @@ copy-wallpaper: does [
     all [
         value? 'wallpaper-from
         value? 'wallpaper-to
-        call-wait rejoin [ {copy /y } to-local-file wallpaper-from {\*.jpg} to-local-file wallpaper-to ]
+        call-wait rejoin [ {copy /y } to-local-file wallpaper-from {\*.jpg } to-local-file wallpaper-to ]
     ]
 ]
 
