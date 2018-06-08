@@ -88,7 +88,7 @@ admin-error-view: [
     at 0x10 t "administrator rights needed"
     at 0x50 t "right click, run as administrator"
 ]
-unless is-admin? [ view admin-error-view ] ;TODO add quit to block
+unless is-admin? [ view/flags admin-error-view 'no-min ] ;TODO add quit to block
 
 ;===========================================================================
 ;    required files check
@@ -103,7 +103,23 @@ missing-files-view: [
     style t: text 400x50 150.0.0 center bold font-size 16 font-color white
     at 0x10 t "missing required file(s)"
 ]
-unless have-all-files? [ view missing-files-view ] ;TODO add quit to block
+unless have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit to block
+
+;===========================================================================
+;   view logs
+;===========================================================================
+log-view: does [
+    view/no-wait/flags [ 
+        title "LOG VIEW"
+        a: area 800x600
+        0.50.100
+        font-size 16
+        font-color white
+        bold
+        on-resize [ a/size: event/window/size - 20x20 ]
+        do [ a/text: log ]
+    ] [resize]
+]
 
 ;===========================================================================
 ;   get serial number
