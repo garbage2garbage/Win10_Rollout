@@ -49,11 +49,11 @@ call-wait: func [ cmd [string!] /local ret ][
     last-out: copy ""
     last-err: copy ""
     ret: call/wait/output/error cmd last-out last-err
-    append log rejoin [ {[} now {][} cmd {][exit code } ret {]} newline ]
+    append log rejoin [ "[" now "][" cmd "][exit code " ret "]" newline ]
     trim/tail last-out
     trim/tail last-err
-    any [ empty? last-out  append log rejoin [ {[OUTPUT]} newline last-out newline newline ] ]
-    any [ empty? last-err  append log rejoin [ {[ERROR]} newline last-err newline newline ] ] 
+    any [ empty? last-out  append log rejoin [ "[OUTPUT]^/" last-out "^/^/" ] ]
+    any [ empty? last-err  append log rejoin [ "[ERROR]^/" last-err "^/^/" ] ] 
     any [ zero? ret  err-count: err-count + 1 ]
     zero? ret
 ]
@@ -62,10 +62,10 @@ call-wait: func [ cmd [string!] /local ret ][
 ;   common call/wait function for powershell with logging
 ;===========================================================================
 call-powershell: func [ fil [file!] /arg args [string!] ][
-    any [ arg  args: copy {} ] ;make args empty string if no arg
+    any [ arg  args: copy "" ] ;make args empty string if no arg
     call-wait rejoin [ 
-        {powershell -executionpolicy bypass -file } to-local-file fil
-        { } args ;will be harmless if no args
+        "powershell -executionpolicy bypass -file " to-local-file fil
+        " " args ;will be harmless if no args
     ]
 ]
 
@@ -73,7 +73,7 @@ call-powershell: func [ fil [file!] /arg args [string!] ][
 ;   create link
 ;===========================================================================
 create-link: func [ pathname [string!] target [string!] ][
-    call-powershell/arg create-link-script rejoin [ pathname { } target ]
+    call-powershell/arg create-link-script rejoin [ pathname " " target ]
 ]
 
 ;===========================================================================
@@ -109,7 +109,7 @@ unless have-all-files? [ view missing-files-view ] ;TODO add quit to block
 ;   get serial number
 ;===========================================================================
 get-serial-number: has [ tmp ][
-    any [ call-wait {wmic bios get SerialNumber}  return false ]
+    any [ call-wait "wmic bios get SerialNumber"  return false ]
     tmp: copy last-out
     tmp: split trim/lines tmp " "
     all [ equal? length? tmp 2  equal? tmp/1 "SerialNumber"  pc-serial-number: tmp/2 ]
@@ -131,13 +131,13 @@ set-timezone: does [
 ;   backup default user hiv if not already done
 ;===========================================================================
 backup-file: func [ fil [file!] newname [file!] ][
-    call-wait rejoin [ {copy /y } to-local-file fil { } to-local-file newname ]
+    call-wait rejoin [ "copy /y " to-local-file fil " " to-local-file newname ]
 ]
 reg-update: does [
-    any [ exists? default-hiv  backup-file default-hiv rejoin [ default-hiv {.original} ] ]
-    any [ call-wait rejoin [ {reg load HKLM\1 } to-local-file default-hiv ]  return false ]
-    (call-wait rejoin [ {reg import } to-local-file reg-file ]) and
-        (call-wait {reg unload HKLM\1}) ;both run regardless of return value
+    any [ exists? default-hiv  backup-file default-hiv rejoin [ default-hiv ".original" ] ]
+    any [ call-wait rejoin [ "reg load HKLM\1 " to-local-file default-hiv ]  return false ]
+    (call-wait rejoin [ "reg import " to-local-file reg-file ]) and
+        (call-wait "reg unload HKLM\1") ;both run regardless of return value
 ]
 
 
@@ -148,8 +148,9 @@ copy-wallpaper: does [
     all [
         value? 'wallpaper-from
         value? 'wallpaper-to
-        call-wait rejoin [ {copy /y } to-local-file wallpaper-from {\*.jpg } to-local-file wallpaper-to ]
+        return call-wait rejoin [ "copy /y " to-local-file wallpaper-from "\*.jpg " to-local-file wallpaper-to ]
     ]
+    false
 ]
 
 
@@ -159,7 +160,7 @@ copy-wallpaper: does [
 ;===========================================================================
 rename-layouts: does [
     any [ exists? layout-xml  return true ] ;already gone
-    call-wait rejoin [ {ren } to-local-file layout-xml { *.bak} ]
+    call-wait rejoin [ "ren " to-local-file layout-xml " *.bak" ]
 ]
 
 ;===========================================================================
@@ -171,7 +172,7 @@ copy-startup-files: has [ ret ][
     ret: true
     foreach fil startup-files [
         ret: ret and call-wait rejoin [ 
-            {copy /y } to-local-file fil { } to-local-file startup-files-to 
+            "copy /y " to-local-file fil " " to-local-file startup-files-to 
         ]
     ] 
     any [ ret  return false ]
@@ -179,11 +180,11 @@ copy-startup-files: has [ ret ][
     ;     which will eventually get replaced by a red app
     any [ 
         exists? default-startup-folder
-        call-wait rejoin [ {mkdir } to-local-file default-startup-folder ]
+        call-wait rejoin [ "mkdir " to-local-file default-startup-folder ]
         return false
     ]
-    create-link rejoin [ to-local-file default-startup-folder {\firstrun} ]
-        rejoin [ to-local-file startup-files-to {\} to-local-file startup-file ]
+    create-link rejoin [ to-local-file default-startup-folder "\firstrun" ]
+        rejoin [ to-local-file startup-files-to "\" to-local-file startup-file ]
 ]
 
 ;===========================================================================
@@ -203,8 +204,8 @@ create-links: has [ ret ][
 ;===========================================================================
 set-power-profile: does [
     any [ value? 'power-ac-timeout  return false ]
-    (call-wait rejoin [ {powercfg /change monitor-timeout-ac } power-ac-timeout ]) and
-    (call-wait rejoin [ {powercfg /change standby-timeout-ac } power-ac-timeout ])
+    (call-wait rejoin [ "powercfg /change monitor-timeout-ac " power-ac-timeout ]) and
+    (call-wait rejoin [ "powercfg /change standby-timeout-ac " power-ac-timeout ])
 ]
 
 
@@ -212,11 +213,12 @@ set-power-profile: does [
 ;    install win32 apps
 ;===========================================================================
 install-apps: does [
-    any [ 
-        all [ value? 'win32-apps-script  exists? win32-apps-script ]
-        return false
+    all [ 
+        value? 'win32-apps-script
+        exists? win32-apps-script
+        return call-wait win32-apps-script
     ]
-    call-wait win32-apps-script
+    return false
 ]
 
 ;===========================================================================
@@ -234,13 +236,13 @@ set-pc-name: func [ newname [string!] ][
 ;    to prevent autologin after restart (temp user no longer needed)
 ;===========================================================================
 set-password: func [ user [string!] pw [string!] ][
-    call-wait rejoin [ {net user } user { } pw ] 
+    call-wait rejoin [ "net user " user " " pw ] 
 ]
 create-user: func [ user [string!] /admin /local ret ][
     all [
-        ret: call-wait rejoin [ {net user /add } user ]
+        ret: call-wait rejoin [ "net user /add " user ]
         admin
-        ret: call-wait rejoin [ {net localgroup administrators /add } user ]
+        ret: call-wait rejoin [ "net localgroup administrators /add " user ]
     ]
     ret
 ]
