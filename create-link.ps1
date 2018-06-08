@@ -1,4 +1,4 @@
-# create-shortcut.ps1
+# create-link.ps1
 # (simple version)
 
 param(
