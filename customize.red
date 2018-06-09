@@ -228,12 +228,24 @@ unless have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit 
 ;===========================================================================
 ;   view logs
 ;===========================================================================
+save-log: has [ nam ][
+    nam: request-file/save/file to-file rejoin [ get-env "userprofile" "\desktop\customize.txt" ]
+    all [ nam  write nam log ]
+]
 log-view: does [
     view/no-wait/flags [ 
         size 800x600
         title "LOG VIEW"
         backdrop 44.51.57
                
+        style b: button 90x20 font-size 10 bold
+        b "FONT SIZE" 
+        on-down [ all [ a/font/size < 36  a/font/size: a/font/size + 2  a/size: a/size ] ]
+        b font-size 8 "FONT SIZE" 
+        on-down [ all [ a/font/size > 10  a/font/size: a/font/size - 2  a/size: a/size ] ]
+        b "SAVE" [ save-log ] 
+        return
+        
         at 0x40
         a: area 800x560
         19.24.30
@@ -241,15 +253,7 @@ log-view: does [
         font-size 16
         font-color 158.186.203
         bold on-resize [ a/size: event/window/size - 0x40 ]
-        
-        style b: button 90x20 font-size 10 bold
-        at 10x10
-        b "FONT SIZE" 
-        on-down [ all [ a/font/size < 36  a/font/size: a/font/size + 2  a/size: a/size ] ]
-        at 110x10
-        b font-size 8 "FONT SIZE" 
-        on-down [ all [ a/font/size > 10  a/font/size: a/font/size - 2  a/size: a/size ] ] return
-        
+       
         do [ a/text: log ]
     ] [resize no-min no-max ]
 ]
