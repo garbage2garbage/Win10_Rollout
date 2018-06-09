@@ -58,6 +58,19 @@ win10apps-remove: [
     >Microsoft.ZuneVideo
 ]
 
+;apps to pinto start menu
+apps-to-pin: [
+    "Microsoft Edge"
+    "Calculator"
+    "Settings"
+    "File Explorer"
+    "Task Manager"
+    "Google Chrome"
+    "Weather"
+    "Control Panel"
+    "Windows Defender Security Center"
+]
+
 
 ;===========================================================================
 ;    required vars - functions will assume these vars are set
@@ -148,32 +161,25 @@ create-link: func [ pathname [string!] target [string!] /local txt ][
 ]
 
 ;===========================================================================
-;   unpin all apps from start menu and taskbar
+;   unpin all apps from start menu and taskbar, pin our list if defined
+;   can also call with /list to list all pinable apps
+;   or /listpinned for list of pinned apps
 ;===========================================================================
 pintostart-ps1: {
-$apps_topin = @(
-"Microsoft Edge"
-"Calculator"
-"Settings"
-"File Explorer"
-"Task Manager"
-"Google Chrome"
-"Weather"
-"Control Panel"
-"Windows Defender Security Center"
-)
-$list=$true #assume list
-$sh = new-object -com Shell.Application
-$allappobj = $sh.NameSpace('shell:AppsFolder').Items()
-#if list  is true (set by red caller) just output list of apps
-if($list){
-    foreach($app in $allappobj){ echo $app.Name }
-    exit 0
-}
-
+$list=0 #assume only want a list of apps 0=no list 1=list all, 2=list pinned
+$apps_topin = @()
 $pin_str = "&Pin to Start"
 $unpin_str = "Un&pin from Start"
 $unpintb_str = "Unpin from tas&kbar"
+$sh = new-object -com Shell.Application
+$allappobj = $sh.NameSpace('shell:AppsFolder').Items()
+if($list -gt 0){
+    foreach($app in $allappobj){ 
+    if($list -eq 1){ echo $app.Name }
+        else { if($app.Verbs() | where Name -eq $unpin_str){ echo $app.Name } }
+    }
+    exit 0
+}
 foreach($appobj in $allappobj){
     if($v = $appobj.Verbs() | where Name -eq $unpin_str){ $v.DoIt() }
     if($v = $appobj.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
@@ -186,12 +192,21 @@ foreach($nam in $apps_topin){
 $fe_lnk = $sh.Namespace("$env:ProgramData\Microsoft\Windows\Start Menu Places").Items() | ?{ $_.Path -like '*File Explorer*' }
 if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
 }
-pintostart: func [ /list /local txt ret ][
+pintostart: func [ /list /listpinned /local txt ret tmp ][
     txt: copy pintostart-ps1
+    tmp: 0  all [ list  tmp: 1 ] all [ listpinned  tmp: 2 ]
+    unless zero? tmp [ replace txt {$list=0} rejoin [ "{$list=" tmp "}" ] ]
+    all [
+        not list
+        value? apps-to-pin
+        tmp: copy "$apps_topin = @(^/"
+        foreach app apps-to-pin [ append tmp rejoin [ "'" app "'^/" ] ]
+        append tmp ")"
+        replace txt {$apps_topin = @()} tmp
+    ]
     replace/all txt {"} {'} ;" will get stripped- use ' instead
-    unless list [ replace txt {$list=$true} {$list=$false} ]
     ret: call-powershell txt
-    unless list [ return ret ]
+    any [ list  listpinned  return ret ]
     ret: split copy last-out newline
     all [ empty? ret  ret: false ]
     ret
