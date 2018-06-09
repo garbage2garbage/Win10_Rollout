@@ -169,9 +169,9 @@ create-link: func [ pathname [string!] target [string!] /local txt ][
 pintostart-ps1: {
 $list=0 #assume only want a list of apps 0=no list 1=list all, 2=list pinned
 $apps_topin = @()
-$pin_str = "&Pin to Start"
-$unpin_str = "Un&pin from Start"
-$unpintb_str = "Unpin from tas&kbar"
+$pin_str = '&Pin to Start'
+$unpin_str = 'Un&pin from Start'
+$unpintb_str = 'Unpin from tas&kbar'
 $sh = new-object -com Shell.Application
 $allappobj = $sh.NameSpace('shell:AppsFolder').Items()
 if($list -gt 0){
@@ -190,7 +190,7 @@ foreach($nam in $apps_topin){
         if($v = $appobj.Verbs() | where Name -eq $pin_str){ $v.DoIt() } 
     }
 }
-$fe_lnk = $sh.Namespace("$env:ProgramData\Microsoft\Windows\Start Menu Places").Items() | ?{ $_.Path -like '*File Explorer*' }
+$fe_lnk = $sh.Namespace('$env:ProgramData\Microsoft\Windows\Start Menu Places').Items() | ?{ $_.Path -like '*File Explorer*' }
 if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
 }
 pintostart: func [ /list /listpinned /local txt ret tmp ][
