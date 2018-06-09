@@ -13,6 +13,48 @@ power-ac-timeout: 0 ;current power profile (balanced) when on ac, timeout (0=off
 win32-apps-script: %Win32Apps/install.cmd
 ;newuser: {Owner}
 
+;apps starting with > will be REMOVED, all others remain
+;(this list was generated in Win10 ver 1803, newer version will probably change)
+;modify as needed
+win10apps-remove: [
+     Microsoft.BingWeather
+     Microsoft.DesktopAppInstaller
+     Microsoft.GetHelp
+     Microsoft.Getstarted
+    >Microsoft.Messaging
+    >Microsoft.Microsoft3DViewer
+    >Microsoft.MicrosoftOfficeHub
+     Microsoft.MicrosoftSolitaireCollection
+     Microsoft.MicrosoftStickyNotes
+    >Microsoft.MSPaint
+    >Microsoft.Office.OneNote
+    >Microsoft.OneConnect
+    >Microsoft.People
+    >Microsoft.Print3D
+    >Microsoft.SkypeApp
+    >Microsoft.StorePurchaseApp
+    >Microsoft.Wallet
+     Microsoft.WebMediaExtensions
+     Microsoft.Windows.Photos
+     Microsoft.WindowsAlarms
+     Microsoft.WindowsCalculator
+     Microsoft.WindowsCamera
+    >microsoft.windowscommunicationsapps
+    >Microsoft.WindowsFeedbackHub
+     Microsoft.WindowsMaps
+    >Microsoft.WindowsSoundRecorder
+     Microsoft.WindowsStore
+    >Microsoft.Xbox.TCUI
+    >Microsoft.XboxApp
+    >Microsoft.XboxGameOverlay
+    >Microsoft.XboxGamingOverlay
+    >Microsoft.XboxIdentityProvider
+    >Microsoft.XboxSpeechToTextOverlay
+    >Microsoft.ZuneMusic
+    >Microsoft.ZuneVideo
+]
+
+
 ;required vars - functions will assume these vars are set
 reg-file: %customize.reg
 create-link-script: %create-link.ps1
@@ -136,22 +178,22 @@ pintostart: func [ /list /local txt ret ][
 ;===========================================================================
 ;    remove-apps
 ;===========================================================================
-list-apps-ps1: {
-get-appxpackage | %{$_.Name}
-}
-remove-apps-ps1: {
-$ProgressPreference='SilentlyContinue'
-get-appxpackage $APP | remove-appxpackage
-}
-list-apps: func [ /local ret txt ][
-    txt: copy list-apps-ps1
-    ret: call-powershell txt
+list-apps: func [ /local ret ][
+    ret: call-powershell "get-appxpackage | %{$_.Name}"
     all [ ret  ret: split copy last-out newline ]
     ret
 ]
-remove-apps: func [ /local ret txt ][
-    txt: copy remove-apps-ps1
-    ret: call-powershell txt
+remove-apps: func [ /local ret ][
+    any [ ret: value? win10apps-remove  return false ]
+    foreach w win10apps-remove [
+        w: to-string w
+        all [ 
+            equal? first w #">"
+            w: skip w 1
+            ret: ret and call-powershell rejoin [ {$ProgressPreference='SilentlyContinue'; get-appxpackage } w { | remove-appxpackage} ]
+        ]
+    ]
+    ret
 ]
 
 ;===========================================================================
@@ -188,20 +230,26 @@ unless have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit 
 ;===========================================================================
 log-view: does [
     view/no-wait/flags [ 
+        size 800x600
         title "LOG VIEW"
         backdrop 44.51.57
-        
-        button 90x20 font-size 12 bold "font size +" 
-        on-down [ all [ a/font/size < 48  a/font/size: a/font/size + 2  a/size: a/size ] ]
-        button 90x20 font-size 12 bold "font size -" 
-        on-down [ all [ a/font/size > 10  a/font/size: a/font/size - 2  a/size: a/size ] ] return
-        
-        a: area 800x600
+               
+        at 0x40
+        a: area 800x560
         19.24.30
         font-name "Consolas"
         font-size 16
         font-color 158.186.203
-        bold on-resize [ a/size: event/window/size - 20x50 ]
+        bold on-resize [ a/size: event/window/size - 0x40 ]
+        
+        style b: button 90x20 font-size 10 bold
+        at 10x10
+        b "FONT SIZE" 
+        on-down [ all [ a/font/size < 36  a/font/size: a/font/size + 2  a/size: a/size ] ]
+        at 110x10
+        b font-size 8 "FONT SIZE" 
+        on-down [ all [ a/font/size > 10  a/font/size: a/font/size - 2  a/size: a/size ] ] return
+        
         do [ a/text: log ]
     ] [resize no-min no-max ]
 ]
