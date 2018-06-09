@@ -1,3 +1,5 @@
+Red [ needs: 'view ]
+
 ;===========================================================================
 ;    user vars - put in config file instead
 ;===========================================================================
@@ -5,9 +7,11 @@
 timezone: "Central Standard Time"
 wallpaper-from: %wallpaper
 wallpaper-to: %/c/users/public/pictures
-links: [ ;pathname target (windows file format)
-    {%userprofile%\desktop\All Apps} {shell:AppsFolder}
-    ;{%userprofile%\desktop\Notepad} {notepad.exe}
+links: [ 
+    ;pathname target (windows file format)
+    ;env variables to expand put inside < >
+    {<userprofile>\desktop\All Apps} {shell:AppsFolder}
+    ;{<userprofile>\desktop\Notepad} {notepad.exe}
 ]
 power-ac-timeout: 0 ;current power profile (balanced) when on ac, timeout (0=off)
 win32-apps-script: %Win32Apps/install.cmd
@@ -55,7 +59,9 @@ win10apps-remove: [
 ]
 
 
-;required vars - functions will assume these vars are set
+;===========================================================================
+;    required vars - functions will assume these vars are set
+;===========================================================================
 reg-file: %customize.reg
 create-link-script: %create-link.ps1
 default-hiv: %/c/users/default/ntuser.dat
@@ -78,6 +84,22 @@ last-out: ""
 last-err: ""
 log: ""
 err-count: 0
+
+;===========================================================================
+;   theme colors
+;===========================================================================
+theme1: context [
+    log-view: context [
+        bg-major: 19.24.30
+        bg-minor: 44.51.57
+        fg-major: 158.186.203
+    ]
+    error-view: context [
+        bg-major: 150.0.0
+        fg-major: 255.255.255
+    ]
+]
+theme: theme1
 
 ;===========================================================================
 ;    change to the script dir
@@ -200,11 +222,11 @@ remove-apps: func [ /local ret ][
 ;    admin check
 ;===========================================================================
 is-admin?: does [ call-wait {net file} ]
-admin-error-view: [ 
+admin-error-view: compose [ 
     title "ERROR"
     size 400x100
-    backdrop 150.0.0
-    style t: text 400x50 150.0.0 center bold font-size 16 font-color white
+    backdrop (theme/error-view/bg-major)
+    style t: text 400x50 (theme/error-view/bg-major) center bold font-size 16 font-color (theme/error-view/fg-major)
     at 0x10 t "administrator rights needed"
     at 0x50 t "right click, run as administrator"
 ]
@@ -216,11 +238,13 @@ unless is-admin? [ view/flags admin-error-view 'no-min ] ;TODO add quit to block
 have-all-files?: does [
     foreach fil required-files [ any [ exists? fil  return false ] ]
 ]
-missing-files-view: [ 
+missing-files-view: compose [ 
     title "ERROR"
     size 400x100
-    backdrop 150.0.0
-    style t: text 400x50 150.0.0 center bold font-size 16 font-color white
+    backdrop (theme/error-view/bg-major)
+    style t: text 400x50 (theme/error-view/bg-major) center 
+        bold font-size 16
+        font-color (theme/error-view/fg-major)
     at 0x10 t "missing required file(s)"
 ]
 unless have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit to block
@@ -235,10 +259,10 @@ save-log: has [ nam ][
     all [ nam  write nam log ]
 ]
 log-view: does [
-    view/no-wait/flags [ 
+    view/no-wait/flags compose [ 
         size 800x600
         title "LOG VIEW"
-        backdrop 44.51.57
+        backdrop (theme/log-view/bg-minor)
                
         style b: button 90x20 font-size 10 bold
         b "FONT SIZE" 
@@ -249,11 +273,10 @@ log-view: does [
         return
         
         at 0x40
-        a: area 800x560
-        19.24.30
-        font-name "Consolas"
-        font-size 16
-        font-color 158.186.203
+        a: area 800x560 (theme/log-view/bg-major)
+            font-name "Consolas"
+            font-size 16
+            font-color (theme/log-view/fg-major)
         bold on-resize [ a/size: event/window/size - 0x40 ]
        
         do [ a/text: log ]
@@ -352,6 +375,9 @@ copy-startup-files: has [ ret ][
 create-links: has [ ret ][
     unless ret: value? 'links [ return false ]
     foreach [ p t ] links [
+        ;replace env variables in links (only first one done)
+        parse p [ thru "<" copy ev to ">" (replace p rejoin [ "<" ev ">" ] get-env ev) ]
+        parse t [ thru "<" copy ev to ">" (replace t rejoin [ "<" ev ">" ] get-env ev) ]
         all [ p t  ret: ret and create-link p t ]
     ]
     ret
