@@ -19,7 +19,7 @@ win32-apps-script: %Win32Apps/install.cmd
 
 ;apps starting with > will be REMOVED, all others remain
 ;(this list was generated in Win10 ver 1803, newer version will probably change)
-;modify as needed
+;modify as needed (no quotes needed unless name has spaces)
 win10apps-remove: [
      Microsoft.BingWeather
      Microsoft.DesktopAppInstaller
@@ -59,6 +59,7 @@ win10apps-remove: [
 ]
 
 ;apps to pinto start menu
+;(needs quotes for any with space in name- just quote all of them)
 apps-to-pin: [
     "Microsoft Edge"
     "Calculator"
