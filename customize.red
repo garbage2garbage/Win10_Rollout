@@ -164,20 +164,22 @@ create-link: func [ pathname [string!] target [string!] /local txt ][
 ;===========================================================================
 ;   unpin all apps from start menu and taskbar, pin our list if defined
 ;   can also call with /list to list all pinable apps
-;   or /listpinned for list of pinned apps
+;   (those already pinned start with .)
 ;===========================================================================
 pintostart-ps1: {
-$list=0 #assume only want a list of apps 0=no list 1=list all, 2=list pinned
+$list=$true
 $apps_topin = @()
 $pin_str = '&Pin to Start'
 $unpin_str = 'Un&pin from Start'
 $unpintb_str = 'Unpin from tas&kbar'
 $sh = new-object -com Shell.Application
 $allappobj = $sh.NameSpace('shell:AppsFolder').Items()
-if($list -gt 0){
-    foreach($app in $allappobj){ 
-    if($list -eq 1){ echo $app.Name }
-        else { if($app.Verbs() | where Name -eq $unpin_str){ echo $app.Name } }
+if($list){
+    foreach($app in $allappobj){
+        $nam = $app.Name
+        if($app.Verbs() | ?{$_.Name -eq $unpin_str}){ $nam = ('>' + $nam) }
+        $nam | write-output
+        $app.Verbs() 
     }
     exit 0
 }
@@ -193,23 +195,22 @@ foreach($nam in $apps_topin){
 $fe_lnk = $sh.Namespace('$env:ProgramData\Microsoft\Windows\Start Menu Places').Items() | ?{ $_.Path -like '*File Explorer*' }
 if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
 }
-pintostart: func [ /list /listpinned /local txt ret tmp ][
+pintostart: func [ /list /local txt ret tmp ][
     txt: copy pintostart-ps1
-    tmp: 0  all [ list  tmp: 1 ] all [ listpinned  tmp: 2 ]
-    unless zero? tmp [ replace txt {$list=0} rejoin [ "{$list=" tmp "}" ] ]
+    unless list [ replace txt "$list=$true" "$list=$false" ]
     all [
         not list
         value? apps-to-pin
         tmp: copy "$apps_topin = @(^/"
         foreach app apps-to-pin [ append tmp rejoin [ "'" app "'^/" ] ]
         append tmp ")"
-        replace txt {$apps_topin = @()} tmp
+        replace txt "$apps_topin = @()" tmp
     ]
     replace/all txt {"} {'} ;" will get stripped- use ' instead
-    ret: call-powershell txt
-    any [ list  listpinned  return ret ]
+    unless ret: call-powershell txt [ return false ]
+    any [ list  return ret ]
+    all [ empty? last-out  return [] ]
     ret: split copy last-out newline
-    all [ empty? ret  ret: false ]
     ret
 ]
 
@@ -246,7 +247,7 @@ admin-error-view: compose [
     at 0x10 t "administrator rights needed"
     at 0x50 t "right click, run as administrator"
 ]
-unless is-admin? [ view/flags admin-error-view 'no-min ] ;TODO add quit to block
+;unless is-admin? [ view/flags admin-error-view 'no-min ] ;TODO add quit to block
 
 ;===========================================================================
 ;    required files check
@@ -261,9 +262,9 @@ missing-files-view: compose [
     style t: text 400x50 (theme/error-view/bg-major) center 
         bold font-size 16
         font-color (theme/error-view/fg-major)
-    at 0x10 t "missing required file(s)"
+    at 0x10 t "required files missing"
 ]
-unless have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit to block
+;if not have-all-files? [ view/flags missing-files-view 'no-min ] ;TODO add quit to block
 
 ;===========================================================================
 ;   view logs
