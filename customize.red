@@ -78,14 +78,15 @@ apps-to-pin: [
 ;===========================================================================
 reg-file: %customize.reg
 create-link-script: %create-link.ps1
-default-hiv: %/c/users/default/ntuser.dat
-layout-xml: %/c/users/default/AppData/local/Microsoft/Windows/shell/DefaultLayouts.xml
+sys-drive: first get-env "systemdrive"
+default-hiv: rejoin [ %/ sys-drive %/users/default/ntuser.dat ]
+layout-xml: rejoin [ %/ sys-drive %/users/default/AppData/local/Microsoft/Windows/shell/DefaultLayouts.xml ]
 startup-file: %firstrun.cmd ;create link in startup folder to this file
 startup-files: [ %remove-apps.ps1 %weather.hiv %pintostart.ps1 %firstrun.reg ]
-startup-files-to: %/c/users/default/appdata/local/temp
-default-startup-folder: %"/c/users/default/appdata/roaming/microsoft/windows/start menu/programs/Startup"
-;need 64bit version of powershell
-powershell.exe: "C:\Windows\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+startup-files-to: rejoin [ %/ sys-drive %/users/default/appdata/local/temp ]
+default-startup-folder: rejoin [ %/ sys-drive %"/users/default/appdata/roaming/microsoft/windows/start menu/programs/Startup" ]
+;need to use 64bit version of powershell
+powershell-exe: rejoin [ get-env "windir" "\Sysnative\WindowsPowerShell\v1.0\powershell.exe" ]
 
 ;===========================================================================
 ;    script vars
@@ -148,7 +149,7 @@ call-wait: func [ cmd [string!] /local ret ][
 ;     to not redirect)
 ;===========================================================================
 call-powershell: func [ cmd [string!] ][
-    call-wait rejoin [ powershell.exe " -executionpolicy bypass -command " cmd ]
+    call-wait rejoin [ powershell-exe " -executionpolicy bypass -command " cmd ]
 ]
 
 ;===========================================================================
