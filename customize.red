@@ -139,9 +139,14 @@ call-wait: func [ cmd [string!] /local ret ][
 ;===========================================================================
 ;   call/wait function for powershell with logging
 ;   script on command line
+;   need to use 64bit version for 64bit windows, or pintostart will not
+;     list pin/unpin status (since Red is 32bit for the moment, it ends up
+;     getting redirected to the 32bit version- use %windir%\Sysnative for
+;     %windir%\System32 which will tell Windows to not redirect)
 ;===========================================================================
-call-powershell: func [ cmd [string!] ][
-    call-wait rejoin [ "powershell -executionpolicy bypass -command " cmd ]
+call-powershell: func [ cmd [string!] /local ps ][
+    ps: copy "C:\Windows\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
+    call-wait rejoin [ ps " -executionpolicy bypass -command " cmd ]
 ]
 
 ;===========================================================================
@@ -164,40 +169,38 @@ create-link: func [ pathname [string!] target [string!] /local txt ][
 ;===========================================================================
 ;   unpin all apps from start menu and taskbar, pin our list if defined
 ;   can also call with /list to list all pinable apps
-;   (those already pinned start with .)
+;   (those already pinned start with >)
+;   #menu strings- '&Pin to Start' 'Un&pin from Start' 'Unpin from tas&kbar'
+;   explorer (File Explorer) requires a link in another location to get it
+;   unpinned from the taskbar  
 ;===========================================================================
 pintostart-ps1: {
-$list=$true
 $apps_topin = @()
-$pin_str = '&Pin to Start'
-$unpin_str = 'Un&pin from Start'
-$unpintb_str = 'Unpin from tas&kbar'
 $sh = new-object -com Shell.Application
 $allappobj = $sh.NameSpace('shell:AppsFolder').Items()
-if($list){
-    foreach($app in $allappobj){
-        $nam = $app.Name
-        if($app.Verbs() | ?{$_.Name -eq $unpin_str}){ $nam = ('>' + $nam) }
-        $nam | write-output
-        $app.Verbs() 
+if(!$apps_topin){
+  foreach($app in $allappobj){
+    $nam = $app.Name
+    if($app.Verbs() | ?{$_.Name -eq 'Un&pin from Start'}){ 
+      $nam = ('>' + $nam) 
     }
-    exit 0
+    $nam | write-output 
+  }
+  exit 0
 }
-foreach($appobj in $allappobj){
-    if($v = $appobj.Verbs() | where Name -eq $unpin_str){ $v.DoIt() }
-    if($v = $appobj.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
+#unpin everything from start menu and taskbar
+$allappobj | %{$_.Verbs()} | ?{$_.Name -like 'Un*pin from *ta*'} | %{$_.DoIt()}
+#file explorer - needs plan B
+$sh.Namespace($env:ProgramData + '\Microsoft\Windows\Start Menu Places').Items() |
+    ?{$_.Path -like '*File Explorer*'} | %{$_.Verbs()} |
+    ?{$_.Name -eq 'Unpin from tas&kbar'} | %{$_.DoIt()}
+#pin from list
+$allappobj | ?{$apps_topin.contains($_.Name)} | %{$_.Verbs()} | 
+    ?{$_.Name -eq '&Pin to Start'} | %{$_.DoIt()} 
 }
-foreach($nam in $apps_topin){ 
-    if($appobj = $allappobj | where Name -eq $nam){
-        if($v = $appobj.Verbs() | where Name -eq $pin_str){ $v.DoIt() } 
-    }
-}
-$fe_lnk = $sh.Namespace('$env:ProgramData\Microsoft\Windows\Start Menu Places').Items() | ?{ $_.Path -like '*File Explorer*' }
-if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
-}
+
 pintostart: func [ /list /local txt ret tmp ][
     txt: copy pintostart-ps1
-    unless list [ replace txt "$list=$true" "$list=$false" ]
     all [
         not list
         value? apps-to-pin
