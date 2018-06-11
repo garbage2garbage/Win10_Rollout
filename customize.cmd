@@ -12,7 +12,7 @@ rem     vars
 rem ===========================================================================
 rem --options--
 set timezone=Central Standard Time
-set newname=
+set newpcname=
 set newuser=
 set powerprofile_ac=0
 rem --our files--
@@ -204,12 +204,12 @@ if defined newuser (
 rem ===========================================================================
 rem     get serial number (for a suggested new name)
 rem ===========================================================================
-if not defined newname (
+if not defined newpcname (
     set sernum=" "
     rem sernum will normally be set twice, last time set is serial number
     for /f "skip=1 tokens=2 delims=," %%a in ('wmic bios get SerialNumber /format:csv') DO set sernum=%%a
     rem (the above seems to end up with one space char if fails)
-    if not !sernum! == " " set newname=PC-!sernum!
+    if not !sernum! == " " set newpcname=PC-!sernum!
 )
 
 rem ===========================================================================
@@ -217,14 +217,14 @@ rem     check if want a new computer name
 rem ===========================================================================
 echo  current computer name: %computername%
 echo.
-if defined newname (
-    echo  [ press ENTER for new name of %newname% ]
+if defined newpcname (
+    echo  [ press ENTER for new name of %newpcname% ]
 ) else (
     echo  [ press ENTER to keep %computername% ]
 )
-set /p newname="  new computer name: "
-if defined newname (
-    WMIC ComputerSystem where Name="%computername%" call Rename Name="%newname%" >NUL
+set /p newpcname="  new computer name: "
+if defined newpcname (
+    WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%" >NUL
 )
 echo.
 
