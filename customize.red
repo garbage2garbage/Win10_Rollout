@@ -84,6 +84,8 @@ startup-file: %firstrun.cmd ;create link in startup folder to this file
 startup-files: [ %remove-apps.ps1 %weather.hiv %pintostart.ps1 %firstrun.reg ]
 startup-files-to: %/c/users/default/appdata/local/temp
 default-startup-folder: %"/c/users/default/appdata/roaming/microsoft/windows/start menu/programs/Startup"
+;need 64bit version of powershell
+powershell.exe: "C:\Windows\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
 
 ;===========================================================================
 ;    script vars
@@ -141,12 +143,12 @@ call-wait: func [ cmd [string!] /local ret ][
 ;   script on command line
 ;   need to use 64bit version for 64bit windows, or pintostart will not
 ;     list pin/unpin status (since Red is 32bit for the moment, it ends up
-;     getting redirected to the 32bit version- use %windir%\Sysnative for
-;     %windir%\System32 which will tell Windows to not redirect)
+;     getting redirected to the 32bit version of powershell- use 
+;     %windir%\Sysnative for %windir%\System32 which will tell Windows
+;     to not redirect)
 ;===========================================================================
-call-powershell: func [ cmd [string!] /local ps ][
-    ps: copy "C:\Windows\Sysnative\WindowsPowerShell\v1.0\powershell.exe"
-    call-wait rejoin [ ps " -executionpolicy bypass -command " cmd ]
+call-powershell: func [ cmd [string!] ][
+    call-wait rejoin [ powershell.exe " -executionpolicy bypass -command " cmd ]
 ]
 
 ;===========================================================================
