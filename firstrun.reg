@@ -16,22 +16,17 @@ Windows Registry Editor Version 5.00
 "StartupPage"=dword:00000001
 
 
-;hide desktop icons (0 = show)
+;hide desktop icons (0 = show, 1 = hide)
 ;==============================================================================
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\\HideDesktopIcons\NewStartPanel]
+;user folder
 "{59031a47-3f72-44a7-89c5-5595fe6b30ee}"=dword:00000000
+;my computer
 "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"=dword:00000000
 ; control panel
-;"{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}"=dword:00000000
+"{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}"=dword:00000001
 ; network
-;"{018D5C66-4533-4307-9B53-224DE2ED1FE6}"=dword:00000000
-
-
-;does not seem to work- key/value is correct, but it seems explorer needs to do it
-;desktop auto-arrange icons
-;==============================================================================
-;[HKEY_CURRENT_USER\Software\Microsoft\Windows\Shell\Bags\1\Desktop]
-;"FFlags"=dword:40200225
+"{018D5C66-4533-4307-9B53-224DE2ED1FE6}"=dword:00000001
 
 
 ;ie connection settings (disable auto check connection script)
@@ -93,6 +88,7 @@ Windows Registry Editor Version 5.00
 
 
 ;Edge home button and url, new tab use blank page
+;cannot do homepage (is encrypted per machine)- have to do manually
 ;==============================================================================
 [HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\Main]
 "HomeButtonPage"="https://www.google.com/"
@@ -101,16 +97,6 @@ Windows Registry Editor Version 5.00
 "NewTabPageDisplayOption"=dword:00000002
 [HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\TabbedBrowsing]
 "NTPFirstRun"=dword:00000001
-
-;this is now done in pintostart.ps1
-;minimal taskband
-;==============================================================================
-;[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband]
-;"Favorites"=hex:ff
-;"FavoritesChanges"=-
-;"FavoritesVersion"=-
-;[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins]
-;"MailPin"=dword:00000000
 
 
 ;cortana hidden
