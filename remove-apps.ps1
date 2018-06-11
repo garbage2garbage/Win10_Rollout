@@ -48,12 +48,11 @@ write-host "Removing apps..."
 
 #list is big string so we don't have to quote each app in an array
 #but we then need to split up our list and trim 
-foreach ($app in $win10apps.split("`n")){
-    $app = $app.trim()
-    if($app[0] -eq '>'){
-        $app = $app.replace('>','')
-        write-host -f yel $app
-        Get-AppxPackage $app | Remove-AppxPackage -ErrorAction SilentlyContinue
+foreach ($nam in $win10apps.split("`n").trim()){
+    if($nam[0] -eq '>'){
+        $nam = $nam.replace('>','')
+        write-host -f yel $nam
+        Get-AppxPackage $nam | Remove-AppxPackage -ErrorAction SilentlyContinue
     }
 }
 
