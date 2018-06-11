@@ -35,7 +35,7 @@ $sh = new-object -com Shell.Application
 $allappobj = $sh.NameSpace('shell:AppsFolder').Items()
 
 # to get a list of app names, can run this command after above command
-#foreach($app in $allappobj){ echo $app.Name }
+#$allappobj | %{$_.Name}
 
 # menu strings
 $pin_str = "&Pin to Start"
@@ -43,22 +43,16 @@ $unpin_str = "Un&pin from Start"
 $unpintb_str = "Unpin from tas&kbar"
 
 # remove all apps from start menu and taskbar
-foreach($appobj in $allappobj){
-    if($v = $appobj.Verbs() | where Name -eq $unpin_str){ $v.DoIt() }
-    if($v = $appobj.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
-}
+$allappobj | %{$_.Verbs()} | ?{($_.Name -eq $unpin_str -or $_.Name -eq $unpintb_str)} | %{$_.DoIt()}
 
 # pin apps we want to start menu
-foreach($nam in $apps_topin){ 
-    if($appobj = $allappobj | where Name -eq $nam){
-        if($v = $appobj.Verbs() | where Name -eq $pin_str){ $v.DoIt() } 
-    }
-}
-
+$allappobj | ?{$apps_topin.contains($_.Name)} | %{$_.Verbs()} | ?{$_.Name -eq $pin_str} | %{$_.DoIt()} 
+  
 # need alternate method for File Explorer taskbar
 # the lnk in the following folder works ok
-$fe_lnk = $sh.Namespace("$env:ProgramData\Microsoft\Windows\Start Menu Places").Items() | ?{ $_.Path -like '*File Explorer*' }
-if($v = $fe_lnk.Verbs() | where Name -eq $unpintb_str){ $v.DoIt() }
+$sh.Namespace($env:ProgramData+'\Microsoft\Windows\Start Menu Places').Items() |
+  ?{$_.Path -like '*File Explorer*'} | %{$_.Verbs()} | ?{$_.Name -eq $unpintb_str} | %{$_.DoIt()}
+
 
 
 
