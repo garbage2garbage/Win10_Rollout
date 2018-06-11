@@ -1,12 +1,29 @@
 Red [ needs: 'view ]
+comment [
+    things to do-
+                            customize       firstrun
+    set timezone            set
+    wallpaper               copy            set
+    links                   create          create
+    power settings          set
+    install apps            run
+    new user                create
+    remove apps                             run
+    start menu tiles                        set
+    clear taskbar                           set
+    rename pc               set
+    HKLM registry           set
+    HKCU registry           set             set
+    weather app location                    set
+]
 
 ;===========================================================================
 ;    user vars - put in config file instead
 ;===========================================================================
 ;optional vars
-timezone: "Central Standard Time"
-wallpaper-from: %wallpaper
-wallpaper-to: %/c/users/public/pictures
+timezone: "Central Standard Time" ;quoted (Red string)
+wallpaper-from: %wallpaper ;relative to script folder, or absolute
+wallpaper-to: %/c/users/public/pictures ;absolute
 links: [ 
     ;pathname target (windows file format)
     ;env variables to expand put inside < >
@@ -14,8 +31,8 @@ links: [
     ;{<userprofile>\desktop\Notepad} {notepad.exe}
 ]
 power-ac-timeout: 0 ;current power profile (balanced) when on ac, timeout (0=off)
-win32-apps-script: %Win32Apps/install.cmd
-;newuser: {Owner}
+win32-apps-script: %Win32Apps/install.cmd ;relative to script folder, or absolute
+;newuser: {Owner} ;can set new user name to create
 
 ;apps starting with > will be REMOVED, all others remain
 ;(this list was generated in Win10 ver 1803, newer version will probably change)
@@ -77,8 +94,7 @@ apps-to-pin: [
 ;    required vars - functions will assume these vars are set
 ;===========================================================================
 reg-file: %customize.reg
-create-link-script: %create-link.ps1
-sys-drive: first get-env "systemdrive"
+sys-drive: first get-env "systemdrive" ;normally C
 default-hiv: rejoin [ %/ sys-drive %/users/default/ntuser.dat ]
 layout-xml: rejoin [ %/ sys-drive %/users/default/AppData/local/Microsoft/Windows/shell/DefaultLayouts.xml ]
 startup-file: %firstrun.cmd ;create link in startup folder to this file
@@ -91,7 +107,7 @@ powershell-exe: rejoin [ get-env "windir" "\Sysnative\WindowsPowerShell\v1.0\pow
 ;===========================================================================
 ;    script vars
 ;===========================================================================
-required-files: reduce [ reg-file create-link-script ]
+required-files: reduce [ reg-file ]
     append required-files startup-files
     append required-files startup-file
 username: get-env "username"
@@ -133,40 +149,37 @@ call-wait: func [ cmd [string!] /local ret ][
     append log rejoin [ "[" now "][" cmd "][exit code " ret "]" newline ]
     trim/tail last-out
     trim/tail last-err
-    unless empty? last-out [ append log rejoin [ "[OUTPUT]^/" last-out "^/^/" ] ]
-    unless empty? last-err [ append log rejoin [ "[ERROR]^/" last-err "^/^/" ] ] 
-    unless zero? ret [ err-count: err-count + 1 ]
+    any [ empty? last-out  append log rejoin [ "[OUTPUT]^/" last-out "^/^/" ] ]
+    any [ empty? last-err  append log rejoin [ "[ERROR!]^/" last-err "^/^/" ] ] 
+    any [ zero? ret  err-count: err-count + 1 ]
     zero? ret
 ]
 
 ;===========================================================================
-;   call/wait function for powershell with logging
-;   script on command line
+;   call/wait function for powershell with script on command line
 ;   need to use 64bit version for 64bit windows, or pintostart will not
 ;     list pin/unpin status (since Red is 32bit for the moment, it ends up
 ;     getting redirected to the 32bit version of powershell- use 
 ;     %windir%\Sysnative for %windir%\System32 which will tell Windows
 ;     to not redirect)
 ;===========================================================================
-call-powershell: func [ cmd [string!] ][
-    call-wait rejoin [ powershell-exe " -executionpolicy bypass -command " cmd ]
+call-powershell-cmd: func [ cmd [string!] ][
+    call-wait rejoin [ 
+        powershell-exe " -executionpolicy bypass -command " cmd
+    ]
 ]
 
 ;===========================================================================
 ;   create link (provide command line script to powershell)
 ;===========================================================================
 create-link-ps1: {
-$sc = (New-Object -Com WScript.Shell).CreateShortcut('$PATHNAME.lnk')
-$sc.TargetPath = '$TARGET'
-$sc.Save()
-exit $error.count
+$sc=(New-Object -Com WScript.Shell).CreateShortcut('$PATHNAME.lnk')
+$sc.TargetPath='$TARGET'; $sc.Save(); exit $error.count
 }
-create-link: func [ pathname [string!] target [string!] /local txt ][
-    txt: copy create-link-ps1
-    replace txt "$PATHNAME" pathname
-    replace txt "$TARGET" target
-    replace/all txt {"} {'} ;" will get stripped- use ' instead
-    call-powershell txt 
+create-link: func [ pathname [string!] target [string!] /local cmd ][
+    replace cmd: copy create-link-ps1 "$PATHNAME" pathname
+    replace cmd "$TARGET" target
+    call-powershell-cmd cmd 
 ]
 
 ;===========================================================================
@@ -178,67 +191,69 @@ create-link: func [ pathname [string!] target [string!] /local txt ][
 ;   unpinned from the taskbar  
 ;===========================================================================
 pintostart-ps1: {
-$apps_topin = @()
-$sh = new-object -com Shell.Application
+$apps_topin=@()
+$sh=new-object -com Shell.Application
 $allappobj = $sh.NameSpace('shell:AppsFolder').Items()
 if(!$apps_topin){
   foreach($app in $allappobj){
-    $nam = $app.Name
-    if($app.Verbs() | ?{$_.Name -eq 'Un&pin from Start'}){ 
-      $nam = ('>' + $nam) 
-    }
-    $nam | write-output 
+    $nam=$app.Name; $pinned=''
+    if($app.Verbs()|?{$_.Name -eq 'Un&pin from Start'}){$pinned='>'} 
+    ($pinned+$nam)|write-output 
   }
   exit 0
 }
 #unpin everything from start menu and taskbar
-$allappobj | %{$_.Verbs()} | ?{$_.Name -like 'Un*pin from *ta*'} | %{$_.DoIt()}
+$allappobj|%{$_.Verbs()}|?{$_.Name -like 'Un*pin from *ta*'}|%{$_.DoIt()}
 #file explorer - needs plan B
-$sh.Namespace($env:ProgramData + '\Microsoft\Windows\Start Menu Places').Items() |
-    ?{$_.Path -like '*File Explorer*'} | %{$_.Verbs()} |
-    ?{$_.Name -eq 'Unpin from tas&kbar'} | %{$_.DoIt()}
+$sh.Namespace($env:ProgramData+'\Microsoft\Windows\Start Menu Places').Items()|
+  ?{$_.Path -like '*File Explorer*'}|%{$_.Verbs()}|
+  ?{$_.Name -eq 'Unpin from tas&kbar'}|%{$_.DoIt()}
 #pin from list
-$allappobj | ?{$apps_topin.contains($_.Name)} | %{$_.Verbs()} | 
-    ?{$_.Name -eq '&Pin to Start'} | %{$_.DoIt()} 
+$allappobj|?{$apps_topin.contains($_.Name)}|%{$_.Verbs()}|
+  ?{$_.Name -eq '&Pin to Start'}|%{$_.DoIt()} 
 }
 
-pintostart: func [ /list /local txt ret tmp ][
-    txt: copy pintostart-ps1
+pintostart: func [ /list /local tmp ret cmd ][
+    cmd: copy pintostart-ps1
+    all [ not list  not 'value apps-to-pin  return false ] 
     all [
         not list
-        value? apps-to-pin
         tmp: copy "$apps_topin = @(^/"
         foreach app apps-to-pin [ append tmp rejoin [ "'" app "'^/" ] ]
         append tmp ")"
-        replace txt "$apps_topin = @()" tmp
+        replace cmd "$apps_topin = @()" tmp
     ]
-    replace/all txt {"} {'} ;" will get stripped- use ' instead
-    unless ret: call-powershell txt [ return false ]
+    any [ ret: call-powershell-cmd cmd  return false ]
     any [ list  return ret ]
-    all [ empty? last-out  return [] ]
-    ret: split copy last-out newline
-    ret
+    any [ empty? last-out  return false ]
+    split copy last-out newline
 ]
 
 ;===========================================================================
 ;    remove-apps
 ;===========================================================================
-list-apps: func [ /local ret ][
-    ret: call-powershell "get-appxpackage | %{$_.Name}"
-    all [ ret  ret: split copy last-out newline ]
-    ret
+list-apps: has [ ret ][
+    all [ 
+        ret: call-powershell-cmd "get-appxpackage | %{$_.Name}"
+        ret: split copy last-out newline
+        empty? ret
+        ret: false
+    ]
+    ret ;false, or block of 1 or more apps
 ]
 remove-apps: func [ /local ret ][
-    unless ret: value? win10apps-remove [ return false ]
+    any [ ret: value? win10apps-remove  return false ]
     foreach w win10apps-remove [
         w: to-string w
         all [ 
             equal? first w #">"
             w: skip w 1
-            ret: ret and call-powershell rejoin [ {$ProgressPreference='SilentlyContinue'; get-appxpackage } w { | remove-appxpackage} ]
+            ret: ret and call-powershell-cmd rejoin [ 
+                {$ProgressPreference='SilentlyContinue'; get-appxpackage } w { | remove-appxpackage} 
+            ]
         ]
     ]
-    ret
+    ret ;false=any failed, true=all succeeded
 ]
 
 ;===========================================================================
@@ -259,7 +274,9 @@ admin-error-view: compose [
 ;    required files check
 ;===========================================================================
 have-all-files?: does [
-    foreach fil required-files [ any [ exists? fil  return false ] ]
+    foreach fil required-files [ 
+        any [ exists? fil  return false ]
+    ]
 ]
 missing-files-view: compose [ 
     title "ERROR"
@@ -276,10 +293,13 @@ missing-files-view: compose [
 ;   view logs
 ;===========================================================================
 save-log: has [ nam ][
-    nam: request-file/save/file to-file rejoin [ 
-        get-env "userprofile" "\desktop\customize.txt" 
+    all [
+        nam: request-file/save/file to-file rejoin [ 
+            get-env "userprofile" "\desktop\customize.txt" 
+        ] ;not sure what write returns if error- just use try
+        return not error? try [ write nam log ] 
     ]
-    all [ nam  write nam log ]
+    false
 ]
 log-view: does [
     view/no-wait/flags compose [ 
@@ -310,10 +330,15 @@ log-view: does [
 ;   get serial number
 ;===========================================================================
 get-serial-number: has [ tmp ][
-    unless call-wait "wmic bios get SerialNumber" [ return false ]
+    any [ call-wait "wmic bios get SerialNumber"  return false ]
     tmp: split trim/lines copy last-out " "
-    all [ equal? length? tmp 2  equal? tmp/1 "SerialNumber"  pc-serial-number: tmp/2 ]
-    not none? pc-serial-number
+    all [ 
+        equal? length? tmp 2
+        equal? tmp/1 "SerialNumber"
+        not empty? tmp/2
+        pc-serial-number: tmp/2 
+    ]
+    pc-serial-number
 ]
 get-serial-number
 
@@ -321,7 +346,7 @@ get-serial-number
 ;    set timezone
 ;===========================================================================
 set-timezone: does [
-    unless value? 'timezone [ return false ]
+    any [ value? 'timezone  return false ]
     call-wait rejoin [ {tzutil /s "} timezone {"} ]
 ]
 
@@ -335,10 +360,8 @@ reg-update: has [ bak wbak whiv wreg ][
     wbak: to-local-file bak
     whiv: to-local-file default-hiv
     wreg: to-local-file reg-file
-    unless exists? bak [ 
-        call-wait rejoin [ "copy /y " whiv " " wbak ]
-    ]
-    unless call-wait rejoin [ "reg load HKLM\1 " whiv ] [ return false ]
+    any [ exists? bak  call-wait rejoin [ "copy /y " whiv " " wbak ] ]
+    any [ call-wait rejoin [ "reg load HKLM\1 " whiv ]  return false ]
     and~ call-wait rejoin [ "reg import " wreg ]
          call-wait "reg unload HKLM\1" ;both run regardless of first return value
 ]
@@ -364,7 +387,7 @@ copy-wallpaper: does [
 ;    will end up with settings, store and edge
 ;===========================================================================
 rename-layouts: does [
-    unless exists? layout-xml [ return true ] ;already gone
+    any [ exists? layout-xml  return true ] ;already gone
     call-wait rejoin [ "ren " to-local-file layout-xml " *.bak" ]
 ]
 
@@ -396,7 +419,7 @@ copy-startup-files: has [ ret ][
 ;    create any needed links from list
 ;===========================================================================
 create-links: has [ ret ][
-    unless ret: value? 'links [ return false ]
+    any [ ret: value? 'links   return false ]
     foreach [ p t ] links [
         ;replace env variables in links (only first one done)
         parse p [ thru "<" copy ev to ">" (replace p rejoin [ "<" ev ">" ] get-env ev) ]
@@ -411,7 +434,7 @@ create-links: has [ ret ][
 ;    plugged in settings to always stay on
 ;===========================================================================
 set-power-profile: does [
-    unless value? 'power-ac-timeout [ return false ]
+    any [ value? 'power-ac-timeout  return false ]
     and~ call-wait rejoin [ "powercfg /change monitor-timeout-ac " power-ac-timeout ]
          call-wait rejoin [ "powercfg /change standby-timeout-ac " power-ac-timeout ]
 ]
@@ -426,7 +449,7 @@ install-apps: does [
         exists? win32-apps-script
         return call-wait win32-apps-script
     ]
-    return false
+    false
 ]
 
 ;===========================================================================
