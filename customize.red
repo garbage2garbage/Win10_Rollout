@@ -101,8 +101,10 @@ startup-file: %firstrun.cmd ;create link in startup folder to this file
 startup-files: [ %remove-apps.ps1 %weather.hiv %pintostart.ps1 %firstrun.reg ]
 startup-files-to: rejoin [ %/ sys-drive %/users/default/appdata/local/temp ]
 default-startup-folder: rejoin [ %/ sys-drive %"/users/default/appdata/roaming/microsoft/windows/start menu/programs/Startup" ]
-;need to use 64bit version of powershell
-powershell-exe: rejoin [ get-env "windir" "\Sysnative\WindowsPowerShell\v1.0\powershell.exe" ]
+;need to specify 64bit version of powershell if this program (Red) is in 32bit mode
+powershell-exe: either find get-env "programfiles" "x86" [ ;is ..(x86) if in 32bit mode on 64bit system 
+    rejoin [ get-env "windir" "\Sysnative\WindowsPowerShell\v1.0\powershell.exe" ] ;specify 64bit
+    ][ "powershell.exe" ] ;else no need to specify
 
 ;===========================================================================
 ;    script vars
@@ -225,7 +227,7 @@ pintostart: func [ /list /local tmp ret cmd ][
     ]
     any [ ret: call-powershell-cmd cmd  return false ]
     any [ list  return ret ]
-    any [ empty? last-out  return false ]
+    all [ empty? last-out  return false ]
     split copy last-out newline
 ]
 
