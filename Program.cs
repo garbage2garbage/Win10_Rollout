@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.IO;
 
+
+//all strings- get to lowercase when need to make comparisons
+
 namespace ConsoleApp1
 {
     class Program
@@ -64,9 +67,10 @@ namespace ConsoleApp1
         {
             PinArg p = PinArg.NONE;
             var appslist = new List<string>();
-            string unpin_str = "Un&pin from Start";
-            string unpintb_str = "Unpin from tas&kbar";
-            string pin_str = "&Pin to Start";
+            //all lowercase and '&' removed- comparisons will be the same
+            string unpin_str = "unpin from start";
+            string unpintb_str = "unpin from taskbar";
+            string pin_str = "pin to start";
 
             //get command line options
             //first option
@@ -80,7 +84,7 @@ namespace ConsoleApp1
                 default:                usage();                    break;
             }
 
-            //get command line app name options
+            //get command line app name options if option requires it
             if (p == PinArg.UNPIN || p == PinArg.UNPINTASKBAR || p == PinArg.PIN) {
                 foreach (string str in args.Skip(1)) {
                     appslist.Add(str.ToLower());
@@ -98,7 +102,8 @@ namespace ConsoleApp1
             //convert list to array
             string[] apps = appslist.ToArray();
 
-            //check if all valid before continue
+            //check if apps list ok with option provided
+            //(-unpinall and -list so not need app list)
             if (apps.Length == 0 && p != PinArg.UNPINALL && p != PinArg.LIST) {
                 usage();
             }
@@ -139,7 +144,7 @@ namespace ConsoleApp1
                 bool is_tb_pinned = false;
 
                 foreach (var v in item.Verbs()) {
-                    switch (v.Name.ToString()){
+                    switch (v.Name.ToString().ToLower().Replace("&",""){
                         case unpin_str:
                             is_pinned = true;
                             if (p == PinArg.UNPIN && is_in_apps || p == PinArg.UNPINALL) { v.DoIt(); }
