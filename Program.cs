@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.IO;
 
-
-//all strings- get to lowercase when need to make comparisons
-
-namespace ConsoleApp1
+namespace ConsoleApp
 {
     class Program
     {
@@ -22,9 +19,7 @@ namespace ConsoleApp1
 
             Console.WriteLine(
                 NL +
-                "   " + this_exe + "                          2018 @ curtvm" +  NL +
-                NL +
-                "   options:" + NL +
+                "   options:        " + this_exe + "              2018@curtvm" + NL +
                 NL +
                 "   -list           list all pinnable apps" + NL +
                 NL +
@@ -34,21 +29,23 @@ namespace ConsoleApp1
                 "                   [B] = Both start menu and taskbar pinned" + NL +
                 NL +
                 "                   to save a list to a file-" + NL +
-                "                     " + this_exe +" -list > saved.txt" + NL +
+                "                   c:\\>" + this_exe + " -list > saved.txt" + NL +
                 NL +
                 "   -pin            appname1 [ appname2 \"app name 3\" ... ]" + NL +
                 "   -unpin          appname1 [ appname2 \"app name 3\" ... ]" + NL +
                 "   -unpintaskbar   appname1 [ appname2 \"app name 3\" ... ]" + NL +
+                NL +
                 "   -unpinall       unpin all (unpinnable) apps from the start menu and taskbar" + NL +
-                "   -restore        to restore saved list from a file-" + NL +
-                "                     type saved.txt | " + this_exe + " -restore" + NL
+                NL +
+                "   -restore        to restore from a -list saved file-" + NL +
+                "                   c:\\>type saved.txt | " + this_exe + " -restore" + NL
                 );
 
             Environment.Exit(1);
         }
 
-        //read stdin lines, add to apps list if [B] or [S] app
-        //fill list with lowercase
+        //read stdin lines, add to apps list if [B] or [S] app (same as -list format)
+        //convert all to lowercase
         //will efectively be same as command line provided list
         static void restore_list(ref List<string> ls)
         {
@@ -68,20 +65,24 @@ namespace ConsoleApp1
             PinArg p = PinArg.NONE;
             var appslist = new List<string>();
             //all lowercase and '&' removed- comparisons will be the same
-            string unpin_str = "unpin from start";
-            string unpintb_str = "unpin from taskbar";
-            string pin_str = "pin to start";
+            const string unpin_str = "unpin from start";
+            const string unpintb_str = "unpin from taskbar";
+            const string pin_str = "pin to start";
 
             //get command line options
-            //first option
-            switch (args[0].ToLower()) {
-                case "-unpin":          p = PinArg.UNPIN;           break;
-                case "-list":           p = PinArg.LIST;            break;
-                case "-unpinall":       p = PinArg.UNPINALL;        break;
-                case "-unpintaskbar":   p = PinArg.UNPINTASKBAR;    break;
-                case "-pin":            p = PinArg.PIN;             break;
-                case "-restore":        p = PinArg.RESTORE;         break;
-                default:                usage();                    break;
+            //check first option
+            if (args.Count() == 0) {
+                usage();
+            } else {
+                switch (args[0].ToLower()) {
+                    case "-unpin":          p = PinArg.UNPIN;           break;
+                    case "-list":           p = PinArg.LIST;            break;
+                    case "-unpinall":       p = PinArg.UNPINALL;        break;
+                    case "-unpintaskbar":   p = PinArg.UNPINTASKBAR;    break;
+                    case "-pin":            p = PinArg.PIN;             break;
+                    case "-restore":        p = PinArg.RESTORE;         break;
+                    default:                usage();                    break;
+                }
             }
 
             //get command line app name options if option requires it
@@ -94,7 +95,7 @@ namespace ConsoleApp1
             //if -restore, fill in list from stdin
             //then set p to same as -pin
             //(now is effectively same as -pin with command line list)
-            if(p == PinArg.RESTORE) {
+            if (p == PinArg.RESTORE) {
                 restore_list(ref appslist);
                 p = PinArg.PIN;
             }
@@ -120,6 +121,8 @@ namespace ConsoleApp1
                     Environment.GetEnvironmentVariable("ProgramData") +
                     "\\Microsoft\\Windows\\Start Menu Places"
                     );
+            //find file explorer, check its verbs, unpin from taskbar if needed
+            //set a bool to taskbar pin status for -list output
             foreach (var v in feobj.Items()) {
                 if (v.path.ToString().ToLower().Contains("file explorer")) {
                     foreach (var vv in v.Verbs()) {
@@ -138,36 +141,40 @@ namespace ConsoleApp1
             //if app needs the action done, do it
             //if need only list
             foreach (var item in appobj.Items()) {
-                string nam = item.Name.ToString().ToLower();
-                bool is_in_apps = apps.Contains(nam);
+                string Nam = item.Name.ToString();  //normal case as-is for console output
+                string nam = Nam.ToLower();         //lowercase for compares
+                bool is_in_apps = apps.Contains(nam);//check using lowercase version
                 bool is_pinned = false;
                 bool is_tb_pinned = false;
 
                 foreach (var v in item.Verbs()) {
-                    switch (v.Name.ToString().ToLower().Replace("&",""){
+                    //remove '&', compare using lowercase
+                    switch (v.Name.ToString().ToLower().Replace("&", "")){
                         case unpin_str:
                             is_pinned = true;
                             if (p == PinArg.UNPIN && is_in_apps || p == PinArg.UNPINALL) { v.DoIt(); }
                             break;
                         case pin_str:
-                            if(is_in_apps && p == PinArg.PIN) { v.DoIt(); }
+                            if (p == PinArg.PIN && is_in_apps) { v.DoIt(); }
                             break;
                         case unpintb_str:
                             is_tb_pinned = true;
-                            if(p == PinArg.UNPINTASKBAR && is_in_apps || p == PinArg.UNPINALL) { v.DoIt(); }
+                            if (p == PinArg.UNPINTASKBAR && is_in_apps || p == PinArg.UNPINALL) { v.DoIt(); }
                             break;
                     }
                 }
 
                 //for file explorer- use previous taskbar info instead
-                if(nam == "file explorer" && file_explorer_tbpinned) { is_tb_pinned = true; }
+                if (nam == "file explorer" && file_explorer_tbpinned) {
+                    is_tb_pinned = true;
+                }
 
-                if (p == PinArg.LIST){
+                if (p == PinArg.LIST) {
                     string s = "[ ] ";                              //not pinned
                     if (is_tb_pinned && is_pinned) { s = "[B] "; }  //pinned start and taskbar
-                    else if (is_pinned) { s = "[S] ";  }            //pinned start
+                    else if (is_pinned) { s = "[S] "; }             //pinned start
                     else if (is_tb_pinned) { s = "[T] "; }          //pinned taskbar
-                    Console.WriteLine(s + nam);
+                    Console.WriteLine(s + Nam);
                 }
             }
         }
