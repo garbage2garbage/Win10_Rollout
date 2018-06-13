@@ -38,27 +38,11 @@ namespace ConsoleApp
                 "   -unpinall       unpin all (unpinnable) apps from the start menu and taskbar" + NL +
                 NL +
                 "   -restore        to restore from a -list saved file-" + NL +
-                "                   c:\\>type saved.txt | " + this_exe + " -restore" + NL
+                "                   c:\\>" + this_exe + " -restore saved.txt" + NL
                 );
 
             Environment.Exit(1);
         }
-
-        //read stdin lines, add to apps list if [B] or [S] app (same as -list format)
-        //convert all to lowercase
-        //will efectively be same as command line provided list
-        static void restore_list(ref List<string> ls)
-        {
-            // This will allow input >256 chars
-            Console.SetIn(new StreamReader(Console.OpenStandardInput(8192)));
-            while (Console.In.Peek() != -1) {
-                string line = Console.In.ReadLine();
-                if (line.StartsWith("[B] ") || line.StartsWith("[S] ")) {
-                    ls.Add(line.Substring(4).ToLower());
-                };
-            }
-        }
-
 
         static void Main(string[] args)
         {
@@ -96,7 +80,16 @@ namespace ConsoleApp
             //then set p to same as -pin
             //(now is effectively same as -pin with command line list)
             if (p == PinArg.RESTORE) {
-                restore_list(ref appslist);
+                //check if file name not provided or file not found
+                if (args.Count() < 2 || !File.Exists(args[1])) { usage(); } 
+                //read file lines, add to apps list if [B] or [S] app (same as -list format)
+                //convert all to lowercase
+                //will efectively be same as command line provided list
+                foreach (string line in System.IO.File.ReadAllLines(args[1])) {
+                    if (line.StartsWith("[B] ") || line.StartsWith("[S] ")) {
+                        appslist.Add(line.Substring(4).ToLower());
+                    };
+                }
                 p = PinArg.PIN;
             }
 
