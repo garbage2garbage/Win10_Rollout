@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,30 +11,34 @@ namespace ConsoleApp
     class Program
     {
         enum PinArg { NONE, UNPIN, UNPINTASKBAR, UNPINALL, PIN, LIST, RESTORE };
+        public const string NL = "\r\n";
+        public static string this_exe; //name of this script without path, set in main
+        public const string version = "1.00";
 
         static void usage()
         {
-            string this_exe = Environment.GetCommandLineArgs()[0].Split('\\').Last();
-            string NL = "\r\n";
-
             Console.WriteLine(
                 NL +
-                "   options:        " + this_exe + "              2018@curtvm" + NL +
+                "   options:        " + this_exe + "  v" + version + "          2018@curtvm" + NL +
                 NL +
                 "   -list           list all available apps with current pin status" + NL +
                 NL +
                 "                   to save a list to a file-" + NL +
                 "                   c:\\>" + this_exe + " -list > saved.txt" + NL +
                 NL +
-                "   -restore        to restore from a -list saved file-" + NL +
-                "                   c:\\>" + this_exe + " -restore saved.txt" + NL
+                "   -restore        to restore from a list saved file-" + NL +
+                "                   c:\\>" + this_exe + " -restore saved.txt" + NL +
                 NL +
                 "   -pin            appname1 [ appname2 \"app name 3\" ... ]" + NL +
-                "   -unpin          appname1 [ appname2 \"app name 3\" ... ]" + NL +
-                "   -unpintaskbar   appname1 [ appname2 \"app name 3\" ... ]" + NL +
+                "   -unpin          | one or more space separated app name(s)" + NL +
+                "   -unpintaskbar   | app names with spaces need to be quoted" + NL +
+
+                //"   -pin            appname1 [ appname2 \"app name 3\" ... ]" + NL +
+                //"   -unpin          appname1 [ appname2 \"app name 3\" ... ]" + NL +
+                //"   -unpintaskbar   appname1 [ appname2 \"app name 3\" ... ]" + NL +
                 NL +
                 "   -unpinall       unpin all apps from the start menu and taskbar" + NL +
-                "                   (placeholders and suggested apps will not be removed)" + NL
+                "                   (placeholders/suggested apps will not be removed)" + NL
                 );
 
             Environment.Exit(1);
@@ -42,6 +46,9 @@ namespace ConsoleApp
 
         static void Main(string[] args)
         {
+            //script (exe) name
+            this_exe = Environment.GetCommandLineArgs()[0].Split('\\').Last();
+
             //cmd line option
             PinArg p = PinArg.NONE;
 
@@ -49,9 +56,9 @@ namespace ConsoleApp
             var appslist = new List<string>();
 
             //all lowercase and '&' removed- comparisons will be the same
-            const string unpin_str =    "unpin from start";
-            const string unpintb_str =  "unpin from taskbar";
-            const string pin_str =      "pin to start";
+            const string unpin_str = "unpin from start";
+            const string unpintb_str = "unpin from taskbar";
+            const string pin_str = "pin to start";
 
             //get command line options
             //check first option- need valid option as first arg
@@ -59,14 +66,14 @@ namespace ConsoleApp
                 usage();
             } else {
                 switch (args[0].ToLower()) {
-                    case "-unpin":          p = PinArg.UNPIN;           break;
-                    case "-list":           p = PinArg.LIST;            break;
-                    case "-unpinall":       p = PinArg.UNPINALL;        break;
-                    case "-unpintaskbar":   p = PinArg.UNPINTASKBAR;    break;
-                    case "-pin":            p = PinArg.PIN;             break;
-                    case "-restore":        p = PinArg.RESTORE;         break;
+                    case "-unpin": p = PinArg.UNPIN; break;
+                    case "-list": p = PinArg.LIST; break;
+                    case "-unpinall": p = PinArg.UNPINALL; break;
+                    case "-unpintaskbar": p = PinArg.UNPINTASKBAR; break;
+                    case "-pin": p = PinArg.PIN; break;
+                    case "-restore": p = PinArg.RESTORE; break;
                     //invalid arg
-                    default:                usage();                    break;
+                    default: usage(); break;
                 }
             }
 
@@ -139,16 +146,18 @@ namespace ConsoleApp
             //output header for -list
             //(make sure header doesn't match list/restore format-
             // simply make first char a space, then will be ok)
-            if (p == PinArg.LIST){
+            if (p == PinArg.LIST) {
                 Console.WriteLine(
                 NL +
+                "  " + this_exe + " : apps list with status" + NL +
+                "===============================================" + NL +
                 "  [ ] = not pinned" + NL +
                 "  [S] = Start menu pinned" + NL +
                 "  [T] = Taskbar pinned" + NL +
-                "  [B] = Both start menu and taskbar pinned" + NL + NL
+                "  [B] = Both start menu and taskbar pinned" + NL +
+                "===============================================" + NL
                 );
             }
-
 
             //get each app in appsfolder
             //get each menu option for app
@@ -163,7 +172,7 @@ namespace ConsoleApp
 
                 foreach (var v in item.Verbs()) {
                     //remove '&', compare using lowercase
-                    switch (v.Name.ToString().ToLower().Replace("&","")){
+                    switch (v.Name.ToString().ToLower().Replace("&", "")) {
                         case unpin_str:
                             is_pinned = true; //for -list ouput
                             if (p == PinArg.UNPIN && is_in_apps || p == PinArg.UNPINALL) {
@@ -198,6 +207,7 @@ namespace ConsoleApp
                     Console.WriteLine(s + Nam);
                 }
             }
+            if (p == PinArg.LIST) { Console.WriteLine(""); }
         }
     }
 }
