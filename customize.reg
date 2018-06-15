@@ -18,18 +18,4 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender Security Center\Virus and threat protection]
 "SummaryNotificationDisabled"=dword:00000001
 
-; HKCU for default user
-;default user hiv, assume loaded into HKLM\1
-
-;prevent OneDrive from installing for new users
-[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run] 
-"OneDriveSetup"=-
-
-;prevent welcome page shown in edge
-[HKEY_LOCAL_MACHINE\1\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
-"SubscribedContent-310093Enabled"=dword:00000000
-
-;default console font size to something more readable
-[HKEY_LOCAL_MACHINE\1\Console]
-"FontSize"=dword:00180000
 
