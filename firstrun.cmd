@@ -116,7 +116,6 @@ if exist "%bingwxhiv%" (
         mkdir "%bingwxfolder%\%%d" %silent%
     )
     copy /y "%bingwxhiv%" "%bingwxfolder%\Settings\settings.dat" %silent%
-    type NUL > "%bingwxfolder%\Settings\roaming.lock"
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
