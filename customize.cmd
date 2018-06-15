@@ -19,7 +19,8 @@ rem --our files--
 set firstrunscript=firstrun.cmd
 set helperfiles=remove-apps.ps1 weather.hiv pintostart.ps1 firstrun.reg
 set createlink=create-link.ps1
-set regfile=customize.reg
+set regfileHKLM=HKLM.reg
+set regfileHKCUdefault=HKCU_defaultuser.reg
 rem --our folders--
 set wallpaperfrom=Wallpaper
 set win32appsfrom=Win32Apps
@@ -67,15 +68,28 @@ rem     registry changes HKLM\SOFTWARE and default user
 rem     default user changes here have to be done before firstrun.cmd runs
 rem     backup default user hiv if not already done
 rem ===========================================================================
-if exist "%regfile%" (
+if exist %regfileHKCUdefault% (
     if not exist "%defaulthiv%.original" (
         <nul set /p nothing=backing up default user ntuser.dat...
         copy /y "%defaulthiv%" "%defaulthiv%.original" %silent%
         if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
         echo.
     )
-    <nul set /p nothing=HKLM and default user registry changes...
-    reg load HKLM\1 "%defaulthiv%" %silent% && reg import "%regfile%" %silent% && reg unload HKLM\1 %silent%
+    <nul set /p nothing=HKCU default user registry changes...
+    set fail=0
+    reg load HKLM\1 "%defaulthiv%" %silent%
+    if !errorlevel! == 0 ( 
+        reg import "%regfileHKCUdefault%" %silent%
+        if not !errorlevel! == 0 set fail=1
+        reg unload HKLM\1 %silent%
+        if not !errorlevel! == 0 set fail=1
+    ) else set fail=1
+    if !fail! == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+if exist "%regfileHKLM%" (
+    <nul set /p nothing=HKLM registry changes...
+    reg import "%regfileHKLM%" %silent%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
