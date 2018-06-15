@@ -31,7 +31,10 @@ namespace ConsoleApp1
             {
                 if (item.Path.Contains("!"))
                 {
-                    Console.WriteLine("{0,-" + maxl + "}    {1}",item.Name,item.Path.ToString().Split('!')[0]);
+                    Console.WriteLine("{0,-" + maxl + "}    {1}", item.Name, item.Path.ToString().Split('_')[0]);
+                }
+                else {
+                    Console.WriteLine(item.Name);
                 }
             }
 
@@ -43,18 +46,10 @@ namespace ConsoleApp1
             IEnumerable<Package> packages =
                 packageManager.FindPackagesForUser(WindowsIdentity.GetCurrent().User.Value);
 
-            var max_name_len = 0;
-            foreach (Package package in packages)
-            {
-                if (package.Id.Name.Length > max_name_len)
-                {
-                    max_name_len = package.Id.Name.Length;
-                }
-            }
 
             foreach (Package package in packages)
             {
-                DisplayPackageInfo(package, max_name_len);
+                Console.WriteLine(package.Id.Name);
             }
 
             if (args.Length == 1) {
@@ -70,10 +65,6 @@ namespace ConsoleApp1
             Console.ReadKey();
         }
 
-        static void DisplayPackageInfo(Windows.ApplicationModel.Package package, int maxlen)
-        {
-            Console.WriteLine("{0,-" + maxlen + "}    {1}", package.Id.Name, package.Id.FamilyName);
-        }
 
         static int remove_package(Windows.ApplicationModel.Package package)
         {
@@ -119,3 +110,52 @@ namespace ConsoleApp1
 
     }
 }
+
+
+
+/*
+ 
+     shell.NameSpace("shell:AppsFolder").Items()
+    Path: Microsoft.BingWeather_8wekyb3d8bbwe!App
+    Name: Weather                             
+    
+    
+Windows.ApplicationModel.Package
+    Id.Name: Microsoft.BingWeather
+    Id.FamilyName: Microsoft.BingWeather_8wekyb3d8bbwe
+    
+    
+shell.items() .Path.Split('_')[0] = package.Id.Name 
+
+
+-list
+-restore
+-pin
+-unpin
+-unpintaskbar
+-unpinall
+
+-unwinapp
+
+-wallpaper file | folder (random)
+
+
+
+
+
+S = Start Menu pinned
+T = Taskbar pinned
+W = Windows Store App
+
+[S  ] SageTV 9
+[   ] SageTV 9 Service Control
+[   ] Manual
+[S  ] sPlan 7.0
+[   ] sPlan 7.0 - Viewer
+[S W] Weather
+[  W] Mixed Reality Viewer
+[  W] Voice Recorder
+[  W] Alarms & Clock
+[S W] Calculator
+
+     */
