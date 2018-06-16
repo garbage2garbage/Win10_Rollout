@@ -513,7 +513,20 @@ shell.items() .Path.Split('_')[0] = package.Id.Name
 
 
 
+System.Net.WebClient wc = new System.Net.WebClient();
+string bingurl = "http://www.bing.com";
+string binghttp = wc.DownloadString(bingurl);
+string[] lines = = binghttp.Replace("\"","\n").Replace("'","\n").Replace("\\","").Split('\n');
+string jpgurl = "";
+foreach (var line in lines) {
+  if (line.StartsWith("/") && line.EndsWith(".jpg")) {
+    jpgurl = bingurl + line;
+    break;
+  }
+}
+if(jpgurl == ""){ return 1; }
 
+wc.DownloadFile(jpgurl, localname);
 
 
 
