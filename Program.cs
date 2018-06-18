@@ -105,6 +105,8 @@ namespace ConsoleApp
         public const string NL = "\n";
         public static string exe_name; //name of this script without path, set in main
         public const string version = "1.00";
+        public static string sysdrive; //normally C:
+        public static string bingfolder; //where to store bing wallpaper
 
         //set wallpaper dll
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -129,7 +131,7 @@ namespace ConsoleApp
                 "   -listapps" + NL + 
                 "      list all available apps with status" + NL +
                 "      to save a list to a file-" + NL +
-                "      c:\\>" + exe_name + " -listapps > saved.txt" + NL +
+                "      " + sysdrive + "\\>" + exe_name + " -listapps > saved.txt" + NL +
                 NL +
                 "   -pinstart filename | appname1 [ appname2 \"app name 3\" ... ]" + NL +
                 "      pin apps to start menu from a -listapps saved file or" + NL +
@@ -152,10 +154,12 @@ namespace ConsoleApp
                 "      set wallpaper to filename" + NL +
                 "      set wallpaper to random jpg picture from foldername" + NL +
                 "      set wallpaper to daily image from Bing.com" + NL +
-                "      (picture saved in c:\\Users\\Public\\Pictures\\Bing)" + NL +
+                "      (picture saved in " + bingfolder + ")" + NL +
                 NL +
-                "   -HKCUimport filename" + NL +
-                "       import a registry file for the current user" + NL +
+                "   -regimport [ -defaultuser ] filename" + NL +
+                "       import a .reg registry file" + NL +
+                "       -defaultuser option will import it into the default user" + NL +
+                "       (for a previously loaded/modified/saved reg file)" + NL +
                 NL +
                 "   -Weather [ settings.dat ]" + NL +
                 "       set Weather app to default location (51247)" + NL +
@@ -163,7 +167,7 @@ namespace ConsoleApp
                 NL +
                 "   -timezone \"timezonestring\"" + NL +
                 "       set system timezone" + NL +
-                "       c:\\" + exe_name + " -timezone \"Central Standard Time\"" + NL +
+                "       " + sysdrive + "\\>" + exe_name + " -timezone \"Central Standard Time\"" + NL +
                 NL +
                 "   Notes" + NL +
                 "      placeholders/suggested apps in start menu will not be removed" + NL +
@@ -188,6 +192,16 @@ namespace ConsoleApp
         {
             //script (exe) name
             exe_name = Environment.GetCommandLineArgs()[0].Split('\\').Last();
+            //maybe overkill, but in case os installed on something other than C:
+            sysdrive = Environment.GetEnvironmentVariable("systemdrive");
+            if (sysdrive == null) sysdrive = "C:"; //just in case
+            //bing picture folder -> public pictures \Bing
+            bingfolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures);
+            if (bingfolder == null) {
+                bingfolder = sysdrive + @"\users\public\pictures\Bing";
+            } else {
+                bingfolder = bingfolder + "\\Bing";
+            }
 
             //need at least one arg
             if (args.Length == 0) Usage();
@@ -207,7 +221,7 @@ namespace ConsoleApp
                 case "-removeappx":     RemoveAppx(ref argslist); break;
                 case "-wallpaper":      Wallpaper(ref argslist); break;
                 case "-timezone":       Timezone(ref argslist); break;
-                case "-hkcuimport":     HkcuImport(ref argslist); break;
+                case "-regimport":      RegImport(ref argslist); break;
                 case "-weather":        Weather(ref argslist); break;
                 case "-help":           Help(); break;
 
@@ -590,14 +604,10 @@ namespace ConsoleApp
                 Environment.Exit(1);
             }
             //get todays bing picture store in public pictures folder
-            string dst = @"c:\users\public\pictures\Bing";
-            if (!Directory.Exists(dst))
+            if (!Directory.Exists(bingfolder))
             {
-                Directory.CreateDirectory(dst);
-            }
-            if (!Directory.Exists(dst))
-            {
-                Error(dst, "cannot create directory");
+                try { Directory.CreateDirectory(bingfolder); }
+                catch (Exception) { Error(bingfolder, "cannot create directory"); }
             }
 
             System.Net.WebClient wc = new System.Net.WebClient();
@@ -617,7 +627,7 @@ namespace ConsoleApp
             {
                 Environment.Exit(1);
             }
-            string jpgname = dst + "\\" +jpgurl.Split('/').Last();
+            string jpgname = bingfolder + "\\" +jpgurl.Split('/').Last();
             //may have already downloaded, check
             if (!File.Exists(jpgname))
             {
@@ -631,23 +641,90 @@ namespace ConsoleApp
             Environment.Exit(1);
         }
 
-        static void HkcuImport(ref List<string> argslist) {
+        static void RegImport(ref List<string> argslist) {
             if (argslist.Count() == 0) Usage();
-            string fil = argslist[0];
-            if (!File.Exists(fil)) {
-                Error(fil, "file does not exist");
+            bool du = false;
+            if (argslist[0].ToLower() == "-defaultuser") {
+                du = true;
+                argslist.RemoveAt(0);
+                if (argslist.Count() == 0) Usage();
             }
+            string fil = argslist[0];
+            if (!File.Exists(fil)) Error(fil, "file does not exist");
+            if (du) {
+                if (!IsAdmin()) Error("command needs to be run as Administrator");
+                regimport_du(fil); //failure there will exit
+                Environment.Exit(0); //must have worked
+            } else { //normal import
+                bool ret = regdo("import " + fil);
+                if (!ret && !IsAdmin()) { Error("command may need to be run as Administrator"); }
+                Environment.Exit(ret?0:1);
+            }
+        }
+
+        static void regimport_du(string fil)
+        {
+            //get reg key where reg file was previously loaded
+            //[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run]
+            //would be HKEY_LOCAL_MACHINE\1 -> HKLM\1
+            string lkey = null;
+            foreach (string line in System.IO.File.ReadAllLines(fil)) {
+                //only get first one, assume all are the same
+                if (line.StartsWith("[HKEY_LOCAL_MACHINE\\")) {
+                    lkey = "HKLM";
+                } else if (line.StartsWith("[HKEY_CURRENT_USER\\")) {
+                    lkey = "HKU";
+                }
+                if (lkey == null) continue;
+                string[] ss = line.Split('\\');
+                if (ss.Count() > 2) lkey = lkey + "\\" + ss[1];
+                else lkey = null;
+                break;
+            }
+            if(lkey == null) Error("cannot decode reg file import location");
+
+            string ntuserdat = sysdrive + @"\users\default\ntuser.dat";
+            string ntuserbak = ntuserdat + ".original";
+            //backup ntuser.dat -> ntuser.dat.original if not done already
+            if (!File.Exists(ntuserbak)) {
+                try {
+                    File.Copy(ntuserdat, ntuserbak);
+                }
+                catch (Exception) {
+                    Error("could not backup default user ntuser.dat");
+                }
+            }
+
+            //check if key already exists (cannot load into existing key)
+            if (regdo("query " + lkey)) {
+                Error("reg file import location cannot be used");
+            }
+
+            //load ntuser.dat file to same location
+            if (!regdo("load " + lkey + " " + ntuserdat)) {
+                Error("Unable to load default user registry hive");
+            }
+
+            //import reg file
+            bool ret = regdo("import " + fil);
+            //unload ntuser.dat (if previous succeeded or not)
+            ret &= regdo("unload " + lkey);
+            //ret == true if both succeeded
+            Environment.Exit(ret ? 0 : 1);
+        }
+
+        static bool regdo(string cmd)
+        {
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "reg.exe",
-                Arguments = "/import " + fil,
+                Arguments = cmd,
                 UseShellExecute = false,
                 CreateNoWindow = true
             });
-            if (process == null) { Environment.Exit(1); }
-
+            if (process == null) { return false; }
             process.WaitForExit();
-            Environment.Exit(process.ExitCode);
+            return process.ExitCode == 0;
         }
 
         static void Weather(ref List<string> argslist) {
