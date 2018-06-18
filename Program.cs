@@ -16,7 +16,6 @@ using System.Net.NetworkInformation;
 
 namespace ConsoleApp
 {
-    //public class AppsList : List<Apps> { }
     public class Apps
     {
         public Apps() { }
@@ -29,17 +28,13 @@ namespace ConsoleApp
         const string pin_str = "&Pin to Start";
         public string ListPrint()
         {
-
-            if (is_appx_hidden())
-            {
-                return "[  W] " + FullName;
-            }
+            if (is_appx_hidden()) return "[  W] " + FullName;
             else
             {
                 char[] c = {'[',' ',' ',' ',']',' '};
-                if (is_pinned()) c[1] = 'S';
-                if (is_tbpinned()) c[2] = 'T';
-                if (is_appx()) c[3] = 'W';
+                if (is_pinned())    c[1] = 'S';
+                if (is_tbpinned())  c[2] = 'T';
+                if (is_appx())      c[3] = 'W';
                 string s = new string(c);
                 return s + Name;
             }
@@ -56,76 +51,50 @@ namespace ConsoleApp
         public bool is_tbpinned()
         {
             if (Verbs == null) return false;
-            foreach (var v in Verbs)
-            {
-                if (v.Name == unpintb_str)
-                {
-                    return true;
-                }
+            foreach (var v in Verbs) {
+                if (v.Name == unpintb_str) return true;
             }
             return false;
         }
         public bool is_pinned()
         {
             if (Verbs == null) return false;
-            foreach (var v in Verbs)
-            {
-                if (v.Name == unpin_str)
-                {
-                    return true;
-                }
+            foreach (var v in Verbs) {
+                if (v.Name == unpin_str) return true;
             }
             return false;
         }
         public bool appx_name_match(ref List<string> argslist)
         {
             if (!is_appx()) { return false; }
+            //argslist is all lowercase
             if (argslist.Contains(Name.ToLower())){ return true; }
-            foreach(var nam in argslist)
-            {
-                if (nam.Contains("_") && FullName.StartsWith(nam))
-                {
-                    return true;
-                }
+            foreach(var nam in argslist) {
+                if (nam.Contains("_") && FullName.StartsWith(nam)) return true;
             }
             return false;
         }
         public bool unpin()
         {
             if (Verbs == null || !is_pinned()) return false;
-            foreach (var v in Verbs)
-            {
-                if (v.Name == unpin_str)
-                {
-                    v.DoIt();
-                    return true;
-                }
+            foreach (var v in Verbs) {
+                if (v.Name == unpin_str) { v.DoIt(); return true; }
             }
             return false;
         }
         public bool unpintb()
         {
             if (Verbs == null || !is_tbpinned()) return false;
-            foreach (var v in Verbs)
-            {
-                if (v.Name == unpintb_str)
-                {
-                    v.DoIt();
-                    return true;
-                }
+            foreach (var v in Verbs) {
+                if (v.Name == unpintb_str) { v.DoIt(); return true; }
             }
             return false;
         }
         public bool pin()
         {
             if (Verbs == null || is_pinned()) return false;
-            foreach (var v in Verbs)
-            {
-                if (v.Name == pin_str)
-                {
-                    v.DoIt();
-                    return true;
-                }
+            foreach (var v in Verbs) {
+                if (v.Name == pin_str) { v.DoIt(); return true; }
             }
             return false;
         }
