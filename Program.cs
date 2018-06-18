@@ -112,6 +112,14 @@ namespace ConsoleApp
 
         static void Usage()
         {
+            Error(
+                NL + "   to see a valid arument list-> " +
+                exe_name + " -help" + NL
+                );
+        }
+
+        static void Help()
+        {
              Console.WriteLine(
                 NL +
                 "   " + exe_name + "    v" + version + "    2018@curtvm" + NL +
@@ -162,14 +170,15 @@ namespace ConsoleApp
                 "      there is currently no way to pin apps to the taskbar" + NL
                 );
 
-            Environment.Exit(1);
+            Environment.Exit(0);
         }
 
-        static void FileError(string filnam, string msg) {
+        static void Error(string filnam, string msg) {
             Console.WriteLine("   {0} : {1}", filnam, msg);
             Environment.Exit(1);
         }
-        static void AnyError(string msg)
+
+        static void Error(string msg)
         {
             Console.WriteLine(msg);
             Environment.Exit(1);
@@ -200,6 +209,7 @@ namespace ConsoleApp
                 case "-timezone":       Timezone(ref argslist); break;
                 case "-hkcuimport":     HkcuImport(ref argslist); break;
                 case "-weather":        Weather(ref argslist); break;
+                case "-help":           Help(); break;
 
                 default:                Usage(); break;
             }
@@ -553,7 +563,7 @@ namespace ConsoleApp
                 bingpaper(ref fil);
             }
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil))) {
-                FileError(fil, "file or directory does not exist");
+                Error(fil, "file or directory does not exist");
             }
             //if dir, get random jpg in provided dir
             if (is_dir) {
@@ -561,7 +571,7 @@ namespace ConsoleApp
                 var files = Directory.GetFiles(fil, "*.jpg");
                 if (files.Length == 0)
                 {
-                    FileError(fil, "no jpg files found");
+                    Error(fil, "no jpg files found");
                 }
                 fil = files[rand.Next(files.Length)];
             }
@@ -587,7 +597,7 @@ namespace ConsoleApp
             }
             if (!Directory.Exists(dst))
             {
-                FileError(dst, "cannot create directory");
+                Error(dst, "cannot create directory");
             }
 
             System.Net.WebClient wc = new System.Net.WebClient();
@@ -625,7 +635,7 @@ namespace ConsoleApp
             if (argslist.Count() == 0) Usage();
             string fil = argslist[0];
             if (!File.Exists(fil)) {
-                FileError(fil, "file does not exist");
+                Error(fil, "file does not exist");
             }
             var process = Process.Start(new ProcessStartInfo
             {
@@ -671,7 +681,7 @@ namespace ConsoleApp
                 System.IO.File.WriteAllBytes(wxdir + @"\Settings\settings.dat", AppZero.Properties.Resources.settings_dat);
             }
             else {
-                if (!File.Exists(fil)) { FileError(fil,"file does not exist"); }
+                if (!File.Exists(fil)) { Error(fil,"file does not exist"); }
                 File.Copy(fil, wxdir + @"\Settings\settings.dat");
             }
             Environment.Exit(0); //for now, should check above results
