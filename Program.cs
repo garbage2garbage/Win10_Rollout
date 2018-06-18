@@ -104,7 +104,7 @@ namespace ConsoleApp
 
     class Program
     {
-        public const string version = "1.00";
+        public const string version = "1803.00";
         public const string NL = "\n";
         public static string exe_name; //name of this script without path, set in main
         public static string sysdrive; //normally C:
@@ -117,7 +117,7 @@ namespace ConsoleApp
         static void Usage()
         {
             Error(
-                NL + "   to see a valid arument list-> " +
+                NL + "   to see a valid argument list-> " +
                 exe_name + " -help" + NL
                 );
         }
@@ -163,7 +163,7 @@ namespace ConsoleApp
                 "       -defaultuser option will import it into the default user" + NL +
                 "       (for a previously loaded/modified/saved reg file)" + NL +
                 NL +
-                "   -Weather [ settings.dat ]" + NL +
+                "   -weather [ settings.dat ]" + NL +
                 "       set Weather app to default location (51247)" + NL +
                 "       or provide a Weather settings.dat file" + NL +
                 NL +
@@ -176,6 +176,11 @@ namespace ConsoleApp
                 "       and name, -arg is for optional target arguments, and -wd for" + NL +
                 "       optional working directory path" + NL +
                 "       " + sysdrive + "\\>" + exe_name + " -shortcut \"c:\\users\\me\\desktop\\Notepad\" \"c:\\windows\\notepad.exe\"" + NL +
+                NL +
+                "   -hidelayoutxml" + NL +
+                "       rename default user DefaultLayouts.xml start menu file" + NL +
+                "       to get a minimal start menu layout for new users" + NL +
+                "       (no placeholders or suggested apps, just Settings/Store/Edge)" + NL +
                 NL +
                 "   Notes" + NL +
                 "      placeholders/suggested apps in start menu will not be removed" + NL +
@@ -232,6 +237,7 @@ namespace ConsoleApp
                 case "-regimport":      RegImport(ref argslist); break;
                 case "-weather":        Weather(ref argslist); break;
                 case "-shortcut":       Shortcut(ref argslist); break;
+                case "-hidelayoutxml":  HideLayoutXml(); break;
                 case "-help":           Help(); break;
 
                 default:                Usage(); break;
@@ -803,6 +809,19 @@ namespace ConsoleApp
                 shortcut.Save();
             } catch {
                 Error("creating shortcut failed");
+            }
+            Environment.Exit(0);
+        }
+
+        static void HideLayoutXml()
+        {
+            if (!IsAdmin()) Error("command needs to be run as Administrator");
+            string xml = sysdrive + @"\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml";
+            string xmlbak = xml + ".bak";
+            if (File.Exists(xml)) {
+                try { File.Move(xml, xmlbak); } catch {
+                    Error(xml.Split('\\').Last(), "Unable to rename");
+                }
             }
             Environment.Exit(0);
         }
