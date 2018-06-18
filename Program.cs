@@ -13,6 +13,8 @@ using Windows.Foundation;
 using Windows.Management.Deployment;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
+using iwr = IWshRuntimeLibrary;
+
 
 namespace ConsoleApp
 {
@@ -102,9 +104,9 @@ namespace ConsoleApp
 
     class Program
     {
+        public const string version = "1.00";
         public const string NL = "\n";
         public static string exe_name; //name of this script without path, set in main
-        public const string version = "1.00";
         public static string sysdrive; //normally C:
         public static string bingfolder; //where to store bing wallpaper
 
@@ -169,6 +171,12 @@ namespace ConsoleApp
                 "       set system timezone" + NL +
                 "       " + sysdrive + "\\>" + exe_name + " -timezone \"Central Standard Time\"" + NL +
                 NL +
+                "   -shortcut name target [ -arg arguments ][ -wd workingdir ]" + NL +
+                "       create shortcut, provide shortcut path and name, and target path" + NL +
+                "       and name, -arg is for optional target arguments, and -wd for" + NL +
+                "       optional working directory path" + NL +
+                "       " + sysdrive + "\\>" + exe_name + " -shortcut \"c:\\users\\me\\desktop\\Notepad\" \"c:\\windows\\notepad.exe\"" + NL +
+                NL +
                 "   Notes" + NL +
                 "      placeholders/suggested apps in start menu will not be removed" + NL +
                 "      there is currently no way to pin apps to the taskbar" + NL
@@ -223,6 +231,7 @@ namespace ConsoleApp
                 case "-timezone":       Timezone(ref argslist); break;
                 case "-regimport":      RegImport(ref argslist); break;
                 case "-weather":        Weather(ref argslist); break;
+                case "-shortcut":       Shortcut(ref argslist); break;
                 case "-help":           Help(); break;
 
                 default:                Usage(); break;
@@ -762,6 +771,40 @@ namespace ConsoleApp
                 File.Copy(fil, wxdir + @"\Settings\settings.dat");
             }
             Environment.Exit(0); //for now, should check above results
+        }
+
+        static void Shortcut(ref List<string> argslist)
+        {
+            if (argslist.Count() < 2) Usage();
+            //name target [ -arg arguments ][ -wd workingdir ]
+            string link = argslist[0] + ".lnk";
+            try
+            {
+                //using iwr as 'File' name collision with IWshRuntimeLibrary
+                //so- using iwr = IWshRuntimeLibrary; -at top of file
+                var shell = new iwr.WshShell();
+                var shortcut = shell.CreateShortcut(link) as iwr.IWshShortcut;
+                shortcut.TargetPath = argslist[1];
+                argslist.RemoveRange(0, 2);
+                while (argslist.Count() > 1)
+                {
+                    if (argslist[0].ToLower() == "-arg")
+                    {
+                        //added to target as arguments
+                        shortcut.Arguments = argslist[1];
+                    }
+                    else if (argslist[0].ToLower() == "-wd")
+                    {
+                        //Start In
+                        shortcut.WorkingDirectory = argslist[1];
+                    }
+                    argslist.RemoveRange(0, 2);
+                }
+                shortcut.Save();
+            } catch {
+                Error("creating shortcut failed");
+            }
+            Environment.Exit(0);
         }
     }
 }
