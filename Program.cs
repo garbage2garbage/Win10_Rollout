@@ -18,6 +18,18 @@ using iwr = IWshRuntimeLibrary;
 
 namespace ConsoleApp
 {
+    public delegate void optdo(ref List<string> argslist);
+
+    public class Options
+    {
+        public Options(string nam, optdo h) {
+            Name = nam;
+            Handler = h;
+        }
+        public string Name;
+        public optdo Handler;
+    }
+
     public class Apps
     {
         public Apps() { }
@@ -72,7 +84,7 @@ namespace ConsoleApp
             //argslist is all lowercase
             if (argslist.Contains(Name.ToLower())){ return true; }
             foreach(var nam in argslist) {
-                if (nam.Contains("_") && FullName.StartsWith(nam)) return true;
+                if (nam.Contains("_") && FullName.ToLower().StartsWith(nam)) return true;
             }
             return false;
         }
@@ -122,71 +134,128 @@ namespace ConsoleApp
                 );
         }
 
-        static void Help()
+        static void Help(ref List<string> argslist)
         {
-             Console.WriteLine(
-                NL +
-                "   " + exe_name + "    v" + version + "    2018@curtvm" + NL +
-                NL +
-                "   options:        " + NL +
-                NL +
-                "   -listapps" + NL + 
-                "      list all available apps with status" + NL +
-                "      to save a list to a file-" + NL +
-                "      " + sysdrive + "\\>" + exe_name + " -listapps > saved.txt" + NL +
-                NL +
-                "   -pinstart filename | appname1 [ appname2 \"app name 3\" ... ]" + NL +
-                "      pin apps to start menu from a -listapps saved file or" + NL +
-                "      specify app(s) with one or more space separated app name(s)" + NL +
-                "      app names with spaces need to be quoted" + NL +
-                "      (can use '-unpinstart all' to first clear pinned apps)" + NL +
-                NL +
-                "   -unpinstart all | appname1 [ appname2 \"app name 3\" ... ]" + NL +
-                "      unpin all apps or specified apps from start menu tiles" + NL +
-                NL +
-                "   -unpintaskbar all | appname1 [ appname2 \"app name 3\" ... ]" + NL +
-                "      unpin all apps or specified apps from taskbar" + NL +
-                NL + 
-                "   -removeappx appname1 [ appname2 \"app name 3\" ... ]" + NL +
-                "      remove Windows store app(s) for the current user" + NL +
-                "      use -listapps provided names, either friendly or full name" + NL +
-                "      (full name must include at least the first underscore _ character)" + NL +
-                NL +
-                "   -wallpaper filename | foldername | Bing" + NL +
-                "      set wallpaper to filename" + NL +
-                "      set wallpaper to random jpg picture from foldername" + NL +
-                "      set wallpaper to daily image from Bing.com" + NL +
-                "      (picture saved in " + bingfolder + ")" + NL +
-                NL +
-                "   -regimport [ -defaultuser ] filename" + NL +
-                "       import a .reg registry file" + NL +
-                "       -defaultuser option will import it into the default user" + NL +
-                "       (for a previously loaded/modified/saved reg file)" + NL +
-                NL +
-                "   -weather [ settings.dat ]" + NL +
-                "       set Weather app to default location (51247)" + NL +
-                "       or provide a Weather settings.dat file" + NL +
-                NL +
-                "   -timezone \"timezonestring\"" + NL +
-                "       set system timezone" + NL +
-                "       " + sysdrive + "\\>" + exe_name + " -timezone \"Central Standard Time\"" + NL +
-                NL +
-                "   -shortcut name target [ -arg arguments ][ -wd workingdir ]" + NL +
-                "       create shortcut, provide shortcut path and name, and target path" + NL +
-                "       and name, -arg is for optional target arguments, and -wd for" + NL +
-                "       optional working directory path" + NL +
-                "       " + sysdrive + "\\>" + exe_name + " -shortcut \"c:\\users\\me\\desktop\\Notepad\" \"c:\\windows\\notepad.exe\"" + NL +
-                NL +
-                "   -hidelayoutxml" + NL +
-                "       rename default user DefaultLayouts.xml start menu file" + NL +
-                "       to get a minimal start menu layout for new users" + NL +
-                "       (no placeholders or suggested apps, just Settings/Store/Edge)" + NL +
-                NL +
-                "   Notes" + NL +
-                "      placeholders/suggested apps in start menu will not be removed" + NL +
-                "      there is currently no way to pin apps to the taskbar" + NL
-                );
-
+            string specific_str = null;
+            bool specific = false;
+            //argslist will be empty if plain -help
+            //else argslist[0] will contain a valid option for specific help
+            if (argslist.Count() > 0) {
+                specific = true;
+                specific_str = argslist[0];
+            }                  //.........|.........|.........|.........|.........|.........|.........|.........|
+            Console.WriteLine();
+            Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
+            Console.WriteLine();
+            if (!specific) {
+            Console.WriteLine($@"   options:     for specific help, use -option -help");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-listapps") {
+            Console.WriteLine($@"   -listapps");
+            }
+            if (specific && specific_str == "-listapps") { 
+            Console.WriteLine($@"       list all available apps with status");
+            Console.WriteLine($@"       to save the apps list to a file-");
+            Console.WriteLine($@"       {sysdrive}\>{exe_name} -listapps > saved.txt");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-pinstart") {
+            Console.WriteLine($@"   -pinstart filename | appname1 [ appname2 ""app name 3"" ... ]");
+            }
+            if (specific && specific_str == "-pinstart") {
+            Console.WriteLine($@"       pin apps to start menu from a -listapps saved file or");
+            Console.WriteLine($@"       specify app(s) with one or more space separated app name(s)");
+            Console.WriteLine($@"       app names with spaces need to be quoted");
+            Console.WriteLine($@"       (can use '-unpinstart all' to first clear pinned apps)");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-unpinstart") {
+            Console.WriteLine($@"   -unpinstart all | appname1 [ appname2 ""app name 3"" ... ]");
+            }
+            if (specific && specific_str == "-unpinstart") {
+            Console.WriteLine($@"       unpin all apps or specified apps from start menu tiles");
+            Console.WriteLine($@"       (placeholders/suggested apps in start menu will not be removed)");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-unpintaskbar") {
+            Console.WriteLine($@"   -unpintaskbar all | appname1 [ appname2 ""app name 3"" ... ]");
+            }
+            if (specific && specific_str == "-unpintaskbar") {
+            Console.WriteLine($@"       unpin all apps or specified apps from taskbar");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-removeappx") {
+            Console.WriteLine($@"   -removeappx filename | appname1 [ appname2 ""app name 3"" ... ]");
+            }
+            if (specific && specific_str == "-removeappx") {
+            Console.WriteLine($@"       remove Windows store app(s) for the current user from a");
+            Console.WriteLine($@"       modified -listapps saved file or specify app(s) with one or more");
+            Console.WriteLine($@"       space separated app name(s), names with spaces need to be quoted,");
+            Console.WriteLine($@"       use either friendly name or full name (from -listapps)");
+            Console.WriteLine($@"       (full name must include at least the first underscore _ character)");
+            Console.WriteLine($@"       to modify a -listapps saved file, replace W marked app with X to remove");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-wallpaper") {
+            Console.WriteLine($@"   -wallpaper filename | foldername | Bing"); 
+            }
+            if (specific && specific_str == "-wallpaper") {
+            Console.WriteLine($@"       set wallpaper to filename");
+            Console.WriteLine($@"       set wallpaper to random jpg picture from foldername");
+            Console.WriteLine($@"       set wallpaper to daily image from Bing.com");
+            Console.WriteLine($@"       (picture saved in " + bingfolder + ")");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-regimport") {
+            Console.WriteLine($@"   -regimport [ -defaultuser ] filename");
+            }
+            if (specific && specific_str == "-regimport") {
+            Console.WriteLine($@"       import a .reg type registry file");
+            Console.WriteLine($@"       -defaultuser option will import a previously loaded/modified/saved");
+            Console.WriteLine($@"       registry hive file (.reg) into the default user hive (ntuser.dat)");
+            Console.WriteLine($@"       the hive will be loaded into the same key the reg file used, so");
+            Console.WriteLine($@"       the reg file will not have to be modified");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-weather") {
+            Console.WriteLine($@"   -weather [ settings.dat ]");
+            }
+            if (specific && specific_str == "-weather") {
+            Console.WriteLine($@"       set Weather app to default location (51247)");
+            Console.WriteLine($@"       or provide a Weather settings.dat file");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-timezone") {
+            Console.WriteLine($@"   -timezone ""timezonestring""");
+            }
+            if (specific && specific_str == "-timezone") {
+            Console.WriteLine($@"       set system timezone");
+            Console.WriteLine($@"       {sysdrive}\>{exe_name} -timezone ""Central Standard Time""");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-shortcut") {
+            Console.WriteLine($@"   -shortcut name target [ -arg arguments ][ -wd workingdir ]");
+            }
+            if (specific && specific_str == "-shortcut") {
+            Console.WriteLine($@"       create shortcut, provide shortcut path and name, and target path");
+            Console.WriteLine($@"       and name, -arg is for optional target arguments, and -wd for");
+            Console.WriteLine($@"       optional working directory path");
+            Console.WriteLine($@"       {sysdrive}\>{exe_name} -shortcut ""c:\users\me\desktop\Notepad"" ""c:\windows\notepad.exe""");
+            Console.WriteLine();
+            }
+            if (!specific || specific && specific_str == "-hidelayoutxml") {
+            Console.WriteLine($@"   -hidelayoutxml");
+            }
+            if (specific && specific_str == "-hidelayoutxml") {
+            Console.WriteLine($@"       rename default user DefaultLayouts.xml start menu file");
+            Console.WriteLine($@"       to get a minimal start menu layout for new users");
+            Console.WriteLine($@"       (no placeholders or suggested apps, just Settings/Store/Edge)");
+            Console.WriteLine();
+            }
+            if (!specific){ 
+            Console.WriteLine();
+            }
             Environment.Exit(0);
         }
 
@@ -219,32 +288,72 @@ namespace ConsoleApp
             //need at least one arg
             if (args.Length == 0) Usage();
 
-            //args list (cmd line as-is, excluding first arg)
-            var argslist = new List<string>(args.Skip(1));
+            //args list (cmd line as-is)
+            var argslist = new List<string>(args);
+
+            //options list
+            var optionslist = new List<Options>();
+            optionslist.Add(new Options("-unpinstart", UnpinStart));
+            optionslist.Add(new Options("-listapps", ListApps));
+            optionslist.Add(new Options("-unpintaskbar", UnpinTaskbar));
+            optionslist.Add(new Options("-pinstart", PinStart));
+            optionslist.Add(new Options("-removeappx", RemoveAppx));
+            optionslist.Add(new Options("-wallpaper", Wallpaper));
+            optionslist.Add(new Options("-timezone", Timezone));
+            optionslist.Add(new Options("-regimport", RegImport));
+            optionslist.Add(new Options("-weather", Weather));
+            optionslist.Add(new Options("-shortcut", Shortcut));
+            optionslist.Add(new Options("-hidelayoutxml", HideLayoutXml));
+            optionslist.Add(new Options("-help", Help));
+            
+            //check option against our list
+            var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
+
+            //if cannot find, show usage
+            if (opt == null) Usage();
+
+            //if -help, clear argslist and call function
+            if (opt.Name == "-help") {
+                argslist.Clear();
+                opt.Handler(ref argslist);
+            }
+
+            //specific help -listapps -help
+            if (argslist.Count() > 1 && argslist[1].ToLower() == "-help") {
+                Help(ref argslist); //argslist[0] contains specific help option
+            }
+
+            //if not -help, remove first arg
+            argslist.RemoveAt(0);
+
+            //now call function
+            opt.Handler(ref argslist);
+
+            
 
             //get command line options
             //check first option- need valid option as first arg
             //although skipped in above list, we still have it in args[0]
-            switch (args[0].ToLower())
-            {
-                case "-unpinstart":     UnpinStart(ref argslist); break;
-                case "-listapps":       ListApps(); break;
-                case "-unpintaskbar":   UnpinTaskbar(ref argslist); break;
-                case "-pinstart":       PinStart(ref argslist); break;
-                case "-removeappx":     RemoveAppx(ref argslist); break;
-                case "-wallpaper":      Wallpaper(ref argslist); break;
-                case "-timezone":       Timezone(ref argslist); break;
-                case "-regimport":      RegImport(ref argslist); break;
-                case "-weather":        Weather(ref argslist); break;
-                case "-shortcut":       Shortcut(ref argslist); break;
-                case "-hidelayoutxml":  HideLayoutXml(); break;
-                case "-help":           Help(); break;
+            //switch (args[0].ToLower())
+            //{
+            //    case "-unpinstart":     UnpinStart(ref argslist); break;
+            //    case "-listapps":       ListApps(ref argslist); break;
+            //    case "-unpintaskbar":   UnpinTaskbar(ref argslist); break;
+            //    case "-pinstart":       PinStart(ref argslist); break;
+            //    case "-removeappx":     RemoveAppx(ref argslist); break;
+            //    case "-wallpaper":      Wallpaper(ref argslist); break;
+            //    case "-timezone":       Timezone(ref argslist); break;
+            //    case "-regimport":      RegImport(ref argslist); break;
+            //    case "-weather":        Weather(ref argslist); break;
+            //    case "-shortcut":       Shortcut(ref argslist); break;
+            //    case "-hidelayoutxml":  HideLayoutXml(ref argslist); break;
+            //    case "-help":           Help(ref argslist); break;
 
-                default:                Usage(); break;
-            }
+            //    default:                Usage(); break;
+            //}
         } //Main
 
-        static void ListApps()
+        static void ListApps(ref List<string> argslist)
         {
             var myapps = new List<Apps>();
             GetAppsList(ref myapps, true); //true=get appx also
@@ -486,7 +595,24 @@ namespace ConsoleApp
         static void RemoveAppx(ref List<string> argslist)
         {
             if (argslist.Count() == 0) Usage();
-            argslist = argslist.Select(x => x.ToLower()).ToList();
+            string fil = argslist[0];
+            if (argslist.Count() == 1 && File.Exists(fil))
+            {
+                argslist.Clear();
+                foreach (string line in System.IO.File.ReadAllLines(fil))
+                {
+                    if (line.Length > 6 && line.Substring(3).StartsWith("X] "))
+                    {
+                        argslist.Add(line.Substring(6).ToLower().Trim());
+                    };
+                }
+            }
+            else
+            {
+                //user provided
+                argslist = argslist.Select(x => x.ToLower()).ToList();
+            }
+
             var myapps = new List<Apps>();
             GetAppsList(ref myapps, true); //true=get appx also
 
@@ -813,7 +939,7 @@ namespace ConsoleApp
             Environment.Exit(0);
         }
 
-        static void HideLayoutXml()
+        static void HideLayoutXml(ref List<string> argslist)
         {
             if (!IsAdmin()) Error("command needs to be run as Administrator");
             string xml = sysdrive + @"\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml";
