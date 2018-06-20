@@ -14,7 +14,7 @@ using Windows.Management.Deployment;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using iwr = IWshRuntimeLibrary; //using alias to prevent File name clash
-using System.Text.RegularExpressions;
+
 
 
 namespace ConsoleApp
@@ -1057,19 +1057,28 @@ namespace ConsoleApp
             string fil = argslist[0];
             if (argslist.Count() == 1 && !File.Exists(fil)) Usage();
 
-            //prevent exits, help, usage
-            script_is_running = true;
-
+            FileInfo filsiz = new FileInfo(fil);
+            if(filsiz.Length > 0xFFFF){ 
+                Error("file too large (>64k, so probably not a script file)");
+                return; //not needed here, but do anyway
+            };
             Console.WriteLine();
             Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
             Console.WriteLine();
             Console.WriteLine($@"   script : {fil.Split('\\').Last()}");
             Console.WriteLine();
             
+            //prevent exits, help, usage
+            script_is_running = true;
+
+            //each line separated into list of strings
+            //just like cmdline arguements
             var scriptargs = new List<string>();
+
+            //number of lines executed
             int cmd_count = 0;
             
-            foreach (string cmdline in System.IO.File.ReadAllLines(fil))
+            foreach (string cmdline in File.ReadAllLines(fil))
             {
                 if(cmdline.Length == 0) continue;
 
@@ -1104,58 +1113,48 @@ namespace ConsoleApp
 
                 //now call function
                 opt.Handler(ref scriptargs);
-
             }
-            script_is_running = false;
+
+            //info
             Console.WriteLine();
             Console.WriteLine($@"   script : {fil.Split('\\').Last()} : {cmd_count} commands : {error_count} error{(error_count==1?"":"s")}");
             Console.WriteLine();
+
+            //turn off script mode,let exit exit
+            script_is_running = false;
+            
+            //done, will return number of errors
             Exit(error_count);
         }
 
         static string[] cmdlineArray(string cmdline)
         {
-            var re = @"\G(""((""""|[^""])+)""|(\S+)) *";
-            var ms = Regex.Matches(cmdline, re);
-            var str_array = ms.Cast<Match>()
-                .Select(m => Regex.Replace(
-                    m.Groups[2].Success
-                    ? m.Groups[2].Value
-                    : m.Groups[4].Value, @"""""", @""""))
-                .ToArray();
-            return str_array;
+            //simple version - double quotes only
+            //no nested quotes
+            var lc = new List<char>();
+            bool inquote = false;
+            foreach(var ch in cmdline){ 
+                if(ch == '"'){ 
+                    inquote = !inquote; //toggle
+                    continue; //quotes not kept
+                }
+                //save non-quoted spaces as \n
+                if(!inquote && ch == ' ') lc.Add('\n'); 
+                else lc.Add(ch); //add to our list of chars
+            }
+            //list of chars to string, then split by \n, discard empties
+            return string.Concat(lc)
+                .Split(new char[]{'\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }
 
 
-/*
-     static string[] ParseArguments(string commandLine)
-    {
-        char[] parmChars = commandLine.ToCharArray();
-        bool inQuote = false;
-        for (int index = 0; index < parmChars.Length; index++)
-        {
-            if (parmChars[index] == '"')
-                inQuote = !inQuote;
-            if (!inQuote && parmChars[index] == ' ')
-                parmChars[index] = '\n';
-        }
-        return (new string(parmChars)).Split('\n');
-    }
 
-Console.WriteLine(ParseArguments(@"-weather ""c:\users\me\pictures\a picture.jpg""")[1]);
 
-    var CmdLine = @"-weather ""c:\users\me\pictures\a picture.jpg""";
-      var re = @"\G(""((""""|[^""])+)""|(\S+)) *";
-      var ms = Regex.Matches(CmdLine, re);
-      var list = ms.Cast<Match>()
-        .Select(m => Regex.Replace(
-            m.Groups[2].Success
-            ? m.Groups[2].Value
-            : m.Groups[4].Value, @"""""", @"""")).ToArray();
 
-     */
+
+  
 
 
 
