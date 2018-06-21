@@ -23,7 +23,8 @@ namespace ConsoleApp
 
     public class Options
     {
-        public Options(string nam, optdo h) {
+        public Options(string nam, optdo h)
+        {
             Name = nam;
             Handler = h;
         }
@@ -47,16 +48,16 @@ namespace ConsoleApp
             else
             {
                 return String.Format("[{0}{1}{2}] {3}",
-                    is_pinned()?"S":" ",
-                    is_tbpinned()?"T":" ",
-                    is_appx()?"W":" ",
+                    is_pinned() ? "S" : " ",
+                    is_tbpinned() ? "T" : " ",
+                    is_appx() ? "W" : " ",
                     Name);
             }
 
         }
         public bool is_appx()
         {
-            return  FullName != null;
+            return FullName != null;
         }
         public bool is_appx_hidden()
         {
@@ -65,7 +66,8 @@ namespace ConsoleApp
         public bool is_tbpinned()
         {
             if (Verbs == null) return false;
-            foreach (var v in Verbs) {
+            foreach (var v in Verbs)
+            {
                 if (v.Name == unpintb_str) return true;
             }
             return false;
@@ -73,7 +75,8 @@ namespace ConsoleApp
         public bool is_pinned()
         {
             if (Verbs == null) return false;
-            foreach (var v in Verbs) {
+            foreach (var v in Verbs)
+            {
                 if (v.Name == unpin_str) return true;
             }
             return false;
@@ -82,8 +85,9 @@ namespace ConsoleApp
         {
             if (!is_appx()) { return false; }
             //argslist is all lowercase
-            if (argslist.Contains(Name.ToLower())){ return true; }
-            foreach(var nam in argslist) {
+            if (argslist.Contains(Name.ToLower())) { return true; }
+            foreach (var nam in argslist)
+            {
                 if (nam.Contains("_") && FullName.ToLower().StartsWith(nam)) return true;
             }
             return false;
@@ -91,9 +95,11 @@ namespace ConsoleApp
         public bool unpin()
         {
             if (!is_pinned()) return false;
-            foreach (var v in Verbs) {
-                if (v.Name == unpin_str) { 
-                    v.DoIt(); 
+            foreach (var v in Verbs)
+            {
+                if (v.Name == unpin_str)
+                {
+                    v.DoIt();
                     return true;
                 }
             }
@@ -102,8 +108,10 @@ namespace ConsoleApp
         public bool unpintb()
         {
             if (!is_tbpinned()) return false;
-            foreach (var v in Verbs) {
-                if (v.Name == unpintb_str) { 
+            foreach (var v in Verbs)
+            {
+                if (v.Name == unpintb_str)
+                {
                     v.DoIt();
                     return true;
                 }
@@ -113,8 +121,10 @@ namespace ConsoleApp
         public bool pin()
         {
             if (is_pinned()) return false;
-            foreach (var v in Verbs) {
-                if (v.Name == pin_str) {
+            foreach (var v in Verbs)
+            {
+                if (v.Name == pin_str)
+                {
                     v.DoIt();
                     return true;
                 }
@@ -140,187 +150,207 @@ namespace ConsoleApp
 
         static void Exit(int exitcode)
         {
-            if(script_is_running){
+            if (script_is_running)
+            {
                 error_count += exitcode;
                 return; //back to script
             }
             Environment.Exit(exitcode);
         }
 
-        static void Usage()
-        {
-            if(script_is_running){
-                Error("unknown command");
-                return;
-            }
-            Error(
-                NL + "   to see a valid argument list-> " +
-                exe_name + " -help" + NL
-                );
-        }
-
         static void Help(ref List<string> argslist)
         {
-            if(script_is_running) return; //just ignore for scripts
+            if (script_is_running)
+            {
+                error_count++; //inc error count
+                return; //and ignore for scripts
+            }
             //not pretty (:
             string specific_str = "";
             bool specific = false;
-            //if argslist[0] is -help, no specific help wanted
-            //else argslist[0] will be the specific help wanted
-            if (argslist[0].ToLower() != "-help") {
+            if (argslist.Count() > 0)
+            {
                 specific = true;
                 specific_str = argslist[0];
             }                  //.........|.........|.........|.........|.........|.........|.........|.........|
             Console.WriteLine();
             Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
             Console.WriteLine();
-            if (!specific) {
-            Console.WriteLine($@"   options:     for specific help, use -optionname -help");
-            Console.WriteLine();
+            if (!specific)
+            {
+                Console.WriteLine($@"   options:     for specific help, use -optionname -help");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-listapps") {
-            Console.WriteLine($@"   -listapps");
+            if (!specific || specific_str == "-listapps")
+            {
+                Console.WriteLine($@"   -listapps");
             }
-            if (specific_str == "-listapps") { 
-            Console.WriteLine();
-            Console.WriteLine($@"       list all available apps with status");
-            Console.WriteLine($@"       to save the apps list to a file-");
-            Console.WriteLine($@"       {sysdrive}\>{exe_name} -listapps > saved.txt");
-            Console.WriteLine();
+            if (specific_str == "-listapps")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       list all available apps with status");
+                Console.WriteLine($@"       to save the apps list to a file-");
+                Console.WriteLine($@"       {sysdrive}\>{exe_name} -listapps > saved.txt");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-pinstart") {
-            Console.WriteLine($@"   -pinstart filename | appname1 [ appname2 ""app name 3"" ... ]");
+            if (!specific || specific_str == "-pinstart")
+            {
+                Console.WriteLine($@"   -pinstart filename | appname1 [ appname2 ""app name 3"" ... ]");
             }
-            if (specific_str == "-pinstart") {
-            Console.WriteLine();
-            Console.WriteLine($@"       pin apps to start menu from a -listapps saved file or");
-            Console.WriteLine($@"       specify app(s) with one or more space separated app name(s)");
-            Console.WriteLine($@"       app names with spaces need to be quoted");
-            Console.WriteLine($@"       (can use '-unpinstart all' to first clear pinned apps)");
-            Console.WriteLine();
+            if (specific_str == "-pinstart")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       pin apps to start menu from a -listapps saved file or");
+                Console.WriteLine($@"       specify app(s) with one or more space separated app name(s)");
+                Console.WriteLine($@"       app names with spaces need to be quoted");
+                Console.WriteLine($@"       (can use '-unpinstart all' to first clear pinned apps)");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-unpinstart") {
-            Console.WriteLine($@"   -unpinstart all | appname1 [ appname2 ""app name 3"" ... ]");
+            if (!specific || specific_str == "-unpinstart")
+            {
+                Console.WriteLine($@"   -unpinstart all | appname1 [ appname2 ""app name 3"" ... ]");
             }
-            if (specific_str == "-unpinstart") {
-            Console.WriteLine();
-            Console.WriteLine($@"       unpin all apps or specified apps from start menu tiles");
-            Console.WriteLine($@"       (placeholders/suggested apps in start menu will not be removed)");
-            Console.WriteLine();
+            if (specific_str == "-unpinstart")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       unpin all apps or specified apps from start menu tiles");
+                Console.WriteLine($@"       (placeholders/suggested apps in start menu will not be removed)");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-unpintaskbar") {
-            Console.WriteLine($@"   -unpintaskbar all | appname1 [ appname2 ""app name 3"" ... ]");
+            if (!specific || specific_str == "-unpintaskbar")
+            {
+                Console.WriteLine($@"   -unpintaskbar all | appname1 [ appname2 ""app name 3"" ... ]");
             }
-            if (specific_str == "-unpintaskbar") {
-            Console.WriteLine();
-            Console.WriteLine($@"       unpin all apps or specified apps from taskbar");
-            Console.WriteLine();
+            if (specific_str == "-unpintaskbar")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       unpin all apps or specified apps from taskbar");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-removeappx") {
-            Console.WriteLine($@"   -removeappx filename | appname1 [ appname2 ""app name 3"" ... ]");
+            if (!specific || specific_str == "-removeappx")
+            {
+                Console.WriteLine($@"   -removeappx filename | appname1 [ appname2 ""app name 3"" ... ]");
             }
-            if (specific_str == "-removeappx") {
-            Console.WriteLine();
-            Console.WriteLine($@"       remove Windows store app(s) for the current user from a");
-            Console.WriteLine($@"       modified -listapps saved file or specify app(s) with one or more");
-            Console.WriteLine($@"       space separated app name(s), names with spaces need to be quoted,");
-            Console.WriteLine($@"       use either friendly name or full name (from -listapps)");
-            Console.WriteLine($@"       (full name must include at least the first underscore _ character)");
-            Console.WriteLine($@"       to modify a -listapps saved file, replace W marked app with X to remove");
-            Console.WriteLine();
+            if (specific_str == "-removeappx")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       remove Windows store app(s) for the current user from a");
+                Console.WriteLine($@"       modified -listapps saved file or specify app(s) with one or more");
+                Console.WriteLine($@"       space separated app name(s), names with spaces need to be quoted,");
+                Console.WriteLine($@"       use either friendly name or full name (from -listapps)");
+                Console.WriteLine($@"       (full name must include at least the first underscore _ character)");
+                Console.WriteLine($@"       to modify a -listapps saved file, replace W marked app with X to remove");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-wallpaper") {
-            Console.WriteLine($@"   -wallpaper filename | foldername | Bing"); 
+            if (!specific || specific_str == "-wallpaper")
+            {
+                Console.WriteLine($@"   -wallpaper filename | foldername | Bing");
             }
-            if (specific_str == "-wallpaper") {
-            Console.WriteLine();
-            Console.WriteLine($@"       set wallpaper to filename");
-            Console.WriteLine($@"       set wallpaper to random jpg picture from foldername");
-            Console.WriteLine($@"       set wallpaper to daily image from Bing.com");
-            Console.WriteLine($@"       (picture saved in " + bingfolder + ")");
-            Console.WriteLine();
+            if (specific_str == "-wallpaper")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       set wallpaper to filename");
+                Console.WriteLine($@"       set wallpaper to random jpg picture from foldername");
+                Console.WriteLine($@"       set wallpaper to daily image from Bing.com");
+                Console.WriteLine($@"       (picture saved in " + bingfolder + ")");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-regimport") {
-            Console.WriteLine($@"   -regimport [ -defaultuser ] filename");
+            if (!specific || specific_str == "-regimport")
+            {
+                Console.WriteLine($@"   -regimport [ -defaultuser ] filename");
             }
-            if (specific_str == "-regimport") {
-            Console.WriteLine();
-            Console.WriteLine($@"       import a .reg type registry file");
-            Console.WriteLine($@"       -defaultuser option will import a previously loaded/modified/saved");
-            Console.WriteLine($@"       registry hive file (.reg) into the default user hive (ntuser.dat)");
-            Console.WriteLine($@"       the hive will be loaded into the same key the reg file used, so");
-            Console.WriteLine($@"       the reg file will not have to be modified");
-            Console.WriteLine();
+            if (specific_str == "-regimport")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       import a .reg type registry file");
+                Console.WriteLine($@"       -defaultuser option will import a previously loaded/modified/saved");
+                Console.WriteLine($@"       registry hive file (.reg) into the default user hive (ntuser.dat)");
+                Console.WriteLine($@"       the hive will be loaded into the same key the reg file used, so");
+                Console.WriteLine($@"       the reg file will not have to be modified");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-weather") {
-            Console.WriteLine($@"   -weather [ settings.dat ]");
+            if (!specific || specific_str == "-weather")
+            {
+                Console.WriteLine($@"   -weather [ settings.dat ]");
             }
-            if (specific_str == "-weather") {
-            Console.WriteLine();
-            Console.WriteLine($@"       set Weather app to default location (51247)");
-            Console.WriteLine($@"       or provide a Weather settings.dat file");
-            Console.WriteLine();
+            if (specific_str == "-weather")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       set Weather app to default location (51247)");
+                Console.WriteLine($@"       or provide a Weather settings.dat file");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-timezone") {
-            Console.WriteLine($@"   -timezone ""timezonestring""");
+            if (!specific || specific_str == "-timezone")
+            {
+                Console.WriteLine($@"   -timezone ""timezonestring""");
             }
-            if (specific_str == "-timezone") {
-            Console.WriteLine();
-            Console.WriteLine($@"       set system timezone");
-            Console.WriteLine($@"       {sysdrive}\>{exe_name} -timezone ""Central Standard Time""");
-            Console.WriteLine();
+            if (specific_str == "-timezone")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       set system timezone");
+                Console.WriteLine($@"       {sysdrive}\>{exe_name} -timezone ""Central Standard Time""");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-shortcut") {
-            Console.WriteLine($@"   -shortcut name target [ -arg arguments ][ -wd workingdir ]");
+            if (!specific || specific_str == "-shortcut")
+            {
+                Console.WriteLine($@"   -shortcut name target [ -arg arguments ][ -wd workingdir ]");
             }
-            if (specific_str == "-shortcut") {
-            Console.WriteLine();
-            Console.WriteLine($@"       create shortcut, provide shortcut path and name, and target path");
-            Console.WriteLine($@"       and name, -arg is for optional target arguments, and -wd for");
-            Console.WriteLine($@"       optional working directory path");
-            Console.WriteLine($@"       {sysdrive}\>{exe_name} -shortcut ""c:\users\me\desktop\Notepad"" ""c:\windows\notepad.exe""");
-            Console.WriteLine();
+            if (specific_str == "-shortcut")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       create shortcut, provide shortcut path and name, and target path");
+                Console.WriteLine($@"       and name, -arg is for optional target arguments, and -wd for");
+                Console.WriteLine($@"       optional working directory path");
+                Console.WriteLine($@"       {sysdrive}\>{exe_name} -shortcut ""c:\users\me\desktop\Notepad"" ""c:\windows\notepad.exe""");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-hidelayoutxml") {
-            Console.WriteLine($@"   -hidelayoutxml");
+            if (!specific || specific_str == "-hidelayoutxml")
+            {
+                Console.WriteLine($@"   -hidelayoutxml");
             }
-            if (specific_str == "-hidelayoutxml") {
-            Console.WriteLine();
-            Console.WriteLine($@"       rename default user DefaultLayouts.xml start menu file");
-            Console.WriteLine($@"       to get a minimal start menu layout for new users");
-            Console.WriteLine($@"       (no placeholders or suggested apps, just Settings/Store/Edge)");
-            Console.WriteLine();
+            if (specific_str == "-hidelayoutxml")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       rename default user DefaultLayouts.xml start menu file");
+                Console.WriteLine($@"       to get a minimal start menu layout for new users");
+                Console.WriteLine($@"       (no placeholders or suggested apps, just Settings/Store/Edge)");
+                Console.WriteLine();
             }
-            if (!specific || specific_str == "-scriptfile") {
-            Console.WriteLine($@"   -scriptfile filename");
+            if (!specific || specific_str == "-scriptfile")
+            {
+                Console.WriteLine($@"   -scriptfile filename");
             }
-            if (specific_str == "-scriptfile") {
-            Console.WriteLine();
-            Console.WriteLine($@"       run one or more commands provided by a file where each");
-            Console.WriteLine($@"       line in the file will be processed the same as if it were");
-            Console.WriteLine($@"       entered on the command line, one complete command per line");
-            Console.WriteLine($@"       (do not include the exe name)");
-            Console.WriteLine($@"       lines without a valid command will be ignored, the script");
-            Console.WriteLine($@"       will attempt to run all commands, regardless of any errors");
-            Console.WriteLine($@"       sample file below named myscript.txt-");
-            Console.WriteLine();
-            Console.WriteLine($@"         -unpinstart all");
-            Console.WriteLine($@"         -pinstart calculator ""Microsoft Edge"" weather");
-            Console.WriteLine($@"         -wallpaper bing");
-            Console.WriteLine();
-            Console.WriteLine($@"       would be run as follows-");
-            Console.WriteLine($@"       c:\>{exe_name} -scriptfile myscript.txt");
-            Console.WriteLine();
+            if (specific_str == "-scriptfile")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       run one or more commands provided by a file where each");
+                Console.WriteLine($@"       line in the file will be processed the same as if it were");
+                Console.WriteLine($@"       entered on the command line, one complete command per line");
+                Console.WriteLine($@"       (do not include the exe name)");
+                Console.WriteLine($@"       lines without a valid command will be ignored, the script");
+                Console.WriteLine($@"       will attempt to run all commands, regardless of any errors");
+                Console.WriteLine($@"       sample file below named myscript.txt-");
+                Console.WriteLine();
+                Console.WriteLine($@"         -unpinstart all");
+                Console.WriteLine($@"         -pinstart calculator ""Microsoft Edge"" weather");
+                Console.WriteLine($@"         -wallpaper bing");
+                Console.WriteLine();
+                Console.WriteLine($@"       would be run as follows-");
+                Console.WriteLine($@"       c:\>{exe_name} -scriptfile myscript.txt");
+                Console.WriteLine();
             }
-            if (!specific){ 
-            Console.WriteLine();
+            if (!specific)
+            {
+                Console.WriteLine();
             }
             Environment.Exit(0);
         }
 
-        static void Error(string filnam, string msg) {
+        static void Error(string filnam, string msg)
+        {
             Console.WriteLine("   {0} : {1}", filnam, msg);
-            if(script_is_running) {
+            if (script_is_running)
+            {
                 error_count++;
                 return;
             }
@@ -330,7 +360,8 @@ namespace ConsoleApp
         static void Error(string msg)
         {
             Console.WriteLine(msg);
-            if(script_is_running) {
+            if (script_is_running)
+            {
                 error_count++;
                 return;
             }
@@ -346,50 +377,50 @@ namespace ConsoleApp
             if (sysdrive == null) sysdrive = "C:"; //just in case
             //bing picture folder -> public pictures \Bing
             bingfolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures);
-            if (bingfolder == null) {
+            if (bingfolder == null)
+            {
                 bingfolder = sysdrive + @"\users\public\pictures\Bing";
-            } else {
+            }
+            else
+            {
                 bingfolder = bingfolder + "\\Bing";
             }
-
-            //need at least one arg
-            if (args.Length == 0) Usage();
 
             //args list (cmd line as-is)
             var argslist = new List<string>(args);
 
+            if (argslist.Count() == 0) Help(ref argslist);
+
             //options list- name, function name
             optionslist = new List<Options>();
-            optionslist.Add(new Options("-unpinstart",      UnpinStart));
-            optionslist.Add(new Options("-listapps",        ListApps));
-            optionslist.Add(new Options("-unpintaskbar",    UnpinTaskbar));
-            optionslist.Add(new Options("-pinstart",        PinStart));
-            optionslist.Add(new Options("-removeappx",      RemoveAppx));
-            optionslist.Add(new Options("-wallpaper",       Wallpaper));
-            optionslist.Add(new Options("-timezone",        Timezone));
-            optionslist.Add(new Options("-regimport",       RegImport));
-            optionslist.Add(new Options("-weather",         Weather));
-            optionslist.Add(new Options("-shortcut",        Shortcut));
-            optionslist.Add(new Options("-hidelayoutxml",   HideLayoutXml));
-            optionslist.Add(new Options("-help",            Help));
-            optionslist.Add(new Options("-scriptfile",      ScriptFile));
-            
+            optionslist.Add(new Options("-unpinstart", UnpinStart));
+            optionslist.Add(new Options("-listapps", ListApps));
+            optionslist.Add(new Options("-unpintaskbar", UnpinTaskbar));
+            optionslist.Add(new Options("-pinstart", PinStart));
+            optionslist.Add(new Options("-removeappx", RemoveAppx));
+            optionslist.Add(new Options("-wallpaper", Wallpaper));
+            optionslist.Add(new Options("-timezone", Timezone));
+            optionslist.Add(new Options("-regimport", RegImport));
+            optionslist.Add(new Options("-weather", Weather));
+            optionslist.Add(new Options("-shortcut", Shortcut));
+            optionslist.Add(new Options("-hidelayoutxml", HideLayoutXml));
+            optionslist.Add(new Options("-scriptfile", ScriptFile));
+
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
 
-            //if cannot find any, show usage
-            if (opt == null) Usage();
-
-            //if -help, call function
-            if (opt.Name == "-help") opt.Handler(ref argslist);
-
-            //check if specific help, like ->  -listapps -help
-            if (argslist.Count() > 1 && argslist[1].ToLower() == "-help") {
-                Help(ref argslist); //argslist[0] contains specific help option
+            //if cannot find any, show help
+            if (opt == null)
+            {
+                argslist.Clear();
+                Help(ref argslist);
             }
 
-            //not -help, delete first arg
-            argslist.RemoveAt(0);
+            //check if specific help, like ->  -listapps -help
+            if (argslist.Count() > 1 && argslist[1].ToLower() == "-help")
+            {
+                Help(ref argslist); //argslist[0] contains specific help option
+            }
 
             //now call function
             opt.Handler(ref argslist);
@@ -433,7 +464,8 @@ namespace ConsoleApp
             Exit(0);
         }
 
-        static dynamic fileExplorerVerbs() {
+        static dynamic fileExplorerVerbs()
+        {
             //File Explorer needs alternate location for verbs()
             Type t = Type.GetTypeFromProgID("Shell.Application");
             dynamic shell = Activator.CreateInstance(t);
@@ -453,7 +485,8 @@ namespace ConsoleApp
             return null;
         }
 
-        static bool isAdmin() {
+        static bool isAdmin()
+        {
             return new WindowsPrincipal(WindowsIdentity.GetCurrent())
                 .IsInRole(WindowsBuiltInRole.Administrator);
         }
@@ -481,7 +514,7 @@ namespace ConsoleApp
 
             //get Appx list first
             var appxlist = new List<string>();
-            if (getappx){ getAppxList(ref appxlist); }
+            if (getappx) { getAppxList(ref appxlist); }
 
             //get apps in appsfolder namespace
             Type t = Type.GetTypeFromProgID("Shell.Application");
@@ -499,20 +532,21 @@ namespace ConsoleApp
                 a.Path = item.Path;
                 a.Verbs = item.Verbs();
                 //file explorer, need alternate location for verbs
-                if (item.Name.ToLower() == "file explorer") {
+                if (item.Name.ToLower() == "file explorer")
+                {
                     var v = fileExplorerVerbs();
                     if (v != null)
                     {
                         a.Verbs = v;
                     }
-                }               
+                }
                 //check if win app (for -listapps and removeappx)
-                if(getappx && item.Path.Contains("_") && item.Path.Contains("!"))
+                if (getappx && item.Path.Contains("_") && item.Path.Contains("!"))
                 {
                     var tmp = item.Path.Split('_')[0];
                     foreach (var n in appxlist)
                     {
-                        if(n.StartsWith(tmp))
+                        if (n.StartsWith(tmp))
                         {
                             a.FullName = n;
                             alreadydone.Add(n);
@@ -525,7 +559,7 @@ namespace ConsoleApp
             if (!getappx) return;
 
             //now add remaining appxlist
-            foreach(var nam in appxlist)
+            foreach (var nam in appxlist)
             {
                 if (alreadydone.Contains(nam)) continue;
                 var a = new Apps();
@@ -548,8 +582,9 @@ namespace ConsoleApp
 
         static void UnpinStart(ref List<string> argslist)
         {
-            if (argslist.Count() == 0){
-                Usage();
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             bool doall = false;
@@ -570,7 +605,7 @@ namespace ConsoleApp
                 if (doall || argslist.Contains(app.Name.ToLower()))
                 {
                     //just do it- Apps class will check if valid to do
-                    app.unpin(); 
+                    app.unpin();
                 }
             }
             Exit(0);
@@ -578,8 +613,9 @@ namespace ConsoleApp
 
         static void UnpinTaskbar(ref List<string> argslist)
         {
-            if (argslist.Count() == 0){
-                Usage();
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             bool doall = false;
@@ -607,8 +643,9 @@ namespace ConsoleApp
 
         static void PinStart(ref List<string> argslist)
         {
-            if (argslist.Count() == 0){
-                Usage();
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             string fil = argslist[0];
@@ -644,8 +681,9 @@ namespace ConsoleApp
 
         static void RemoveAppx(ref List<string> argslist)
         {
-            if (argslist.Count() == 0){
-                Usage();
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             string fil = argslist[0];
@@ -691,7 +729,7 @@ namespace ConsoleApp
             //has to at least include first _ in name, 
             //to prevent 'wildcard' type match (since using StartsWith to match)
             int ret = argslist.Count();
-            foreach(var app in myapps)
+            foreach (var app in myapps)
             {
                 if (app.appx_name_match(ref argslist))
                 {
@@ -746,8 +784,9 @@ namespace ConsoleApp
 
         static void Timezone(ref List<string> argslist)
         {
-            if (argslist.Count() == 0){
-                Usage();
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             var process = Process.Start(new ProcessStartInfo
@@ -758,7 +797,8 @@ namespace ConsoleApp
                 CreateNoWindow = true
             });
 
-            if (process == null) { 
+            if (process == null)
+            {
                 Exit(1);
                 return; //if script
             }
@@ -768,23 +808,27 @@ namespace ConsoleApp
             Exit(process.ExitCode);
         }
 
-        static void Wallpaper(ref List<string> argslist) {
-            if (argslist.Count() == 0){
-                Usage();
+        static void Wallpaper(ref List<string> argslist)
+        {
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
-            string fil = argslist[0];
+            string fil = argslist[1];
             bool is_dir = false;
             if (fil.ToLower() == "bing")
             {
                 bingpaper(ref fil);
             }
-            if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil))) {
+            if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
+            {
                 Error(fil, "file or directory does not exist");
                 return; //if script
             }
             //if dir, get random jpg in provided dir
-            if (is_dir) {
+            if (is_dir)
+            {
                 var rand = new Random();
                 var files = Directory.GetFiles(fil, "*.jpg");
                 if (files.Length == 0)
@@ -795,7 +839,8 @@ namespace ConsoleApp
                 fil = files[rand.Next(files.Length)];
             }
             //0=fail, non-zero=success   
-            if (0 == SystemParametersInfo(20, 0, Path.GetFullPath(fil), 2)) {
+            if (0 == SystemParametersInfo(20, 0, Path.GetFullPath(fil), 2))
+            {
                 Exit(1);
                 return; //if script
             }
@@ -833,7 +878,7 @@ namespace ConsoleApp
             {
                 Environment.Exit(1);
             }
-            string jpgname = bingfolder + "\\" +jpgurl.Split('/').Last();
+            string jpgname = bingfolder + "\\" + jpgurl.Split('/').Last();
             //may have already downloaded, check
             if (!File.Exists(jpgname))
             {
@@ -847,40 +892,51 @@ namespace ConsoleApp
             Environment.Exit(1);
         }
 
-        static void RegImport(ref List<string> argslist) {
-            if (argslist.Count() == 0){
-                Usage();
+        static void RegImport(ref List<string> argslist)
+        {
+            if (argslist.Count() == 1)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             bool du = false;
-            if (argslist[0].ToLower() == "-defaultuser") {
+            string fil;
+            if (argslist[1].ToLower() == "-defaultuser")
+            {
                 du = true;
-                argslist.RemoveAt(0);
-                if (argslist.Count() == 0){
-                    Usage();
+                if (argslist.Count() == 2)
+                {
+                    Help(ref argslist);
                     return; //if script
                 }
-            }
-            string fil = argslist[0];
-            if (!File.Exists(fil)){
+                fil = argslist[2];
+            } else fil = argslist[1];
+
+            if (!File.Exists(fil))
+            {
                 Error(fil, "file does not exist");
                 return; //if script
             }
-            if (du) {
-                if (!isAdmin()){
+            if (du)
+            {
+                if (!isAdmin())
+                {
                     Error("command needs to be run as Administrator");
                     return; //if script
                 }
                 regimport_du(fil); //failure there will exit
                 Exit(0); //must have worked
                 return; //if script
-            } else { //normal import
+            }
+            else
+            { //normal import
                 bool ret = regdo("import " + fil);
-                if (!ret && !isAdmin()) { 
-                    Error("command may need to be run as Administrator"); 
+                if (!ret && !isAdmin())
+                {
+                    Error("command may need to be run as Administrator");
                     return; //if script
                 }
-                Exit(ret?0:1);
+                Exit(ret ? 0 : 1);
             }
         }
 
@@ -890,11 +946,15 @@ namespace ConsoleApp
             //[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run]
             //would be HKEY_LOCAL_MACHINE\1 -> HKLM\1
             string lkey = null;
-            foreach (string line in System.IO.File.ReadAllLines(fil)) {
+            foreach (string line in System.IO.File.ReadAllLines(fil))
+            {
                 //only get first one, assume all are the same
-                if (line.StartsWith("[HKEY_LOCAL_MACHINE\\")) {
+                if (line.StartsWith("[HKEY_LOCAL_MACHINE\\"))
+                {
                     lkey = "HKLM";
-                } else if (line.StartsWith("[HKEY_CURRENT_USER\\")) {
+                }
+                else if (line.StartsWith("[HKEY_CURRENT_USER\\"))
+                {
                     lkey = "HKU";
                 }
                 if (lkey == null) continue;
@@ -903,27 +963,32 @@ namespace ConsoleApp
                 else lkey = null;
                 break;
             }
-            if(lkey == null) Error("cannot decode reg file import location");
+            if (lkey == null) Error("cannot decode reg file import location");
 
             string ntuserdat = sysdrive + @"\users\default\ntuser.dat";
             string ntuserbak = ntuserdat + ".original";
             //backup ntuser.dat -> ntuser.dat.original if not done already
-            if (!File.Exists(ntuserbak)) {
-                try {
+            if (!File.Exists(ntuserbak))
+            {
+                try
+                {
                     File.Copy(ntuserdat, ntuserbak);
                 }
-                catch (Exception) {
+                catch (Exception)
+                {
                     Error("could not backup default user ntuser.dat");
                 }
             }
 
             //check if key already exists (cannot load into existing key)
-            if (regdo("query " + lkey)) {
+            if (regdo("query " + lkey))
+            {
                 Error("reg file import location cannot be used");
             }
 
             //load ntuser.dat file to same location
-            if (!regdo("load " + lkey + " " + ntuserdat)) {
+            if (!regdo("load " + lkey + " " + ntuserdat))
+            {
                 Error("Unable to load default user registry hive");
             }
 
@@ -949,15 +1014,17 @@ namespace ConsoleApp
             return process.ExitCode == 0;
         }
 
-        static void Weather(ref List<string> argslist) {
+        static void Weather(ref List<string> argslist)
+        {
             string fil = null;
-            if (argslist.Count() > 0)
+            if (argslist.Count() > 1)
             {
-                fil = argslist[0];
+                fil = argslist[1];
             }
             string up = Environment.GetEnvironmentVariable("userprofile");
-            if(up == null) { 
-                Exit(1); 
+            if (up == null)
+            {
+                Exit(1);
                 return; //if script
             }
             //weather app folder
@@ -966,7 +1033,8 @@ namespace ConsoleApp
             string[] fol = { "AC", "AppData", "LocalCache", "LocalState", "RoamingState", "Settings", "SystemAppData", "TempState" };
             //delete everything
             try { Directory.Delete(wxdir, recursive: true); }
-            catch (IOException) {
+            catch (IOException)
+            {
                 //try again- AC dir seems to sometimes take 2 tries
                 try { Directory.Delete(wxdir, recursive: true); }
                 //ignore if happens again, just try to copy file
@@ -982,12 +1050,14 @@ namespace ConsoleApp
             {
                 System.IO.File.WriteAllBytes(wxdir + @"\Settings\settings.dat", AppZero.Properties.Resources.settings_dat);
             }
-            else {
-                if (!File.Exists(fil)) { 
+            else
+            {
+                if (!File.Exists(fil))
+                {
                     //just provide internal file data instead
                     System.IO.File.WriteAllBytes(wxdir + @"\Settings\settings.dat", AppZero.Properties.Resources.settings_dat);
                     //but still show error
-                    Error(fil,"file does not exist"); 
+                    Error(fil, "file does not exist");
                     return; //if script
                 }
                 File.Copy(fil, wxdir + @"\Settings\settings.dat");
@@ -997,20 +1067,21 @@ namespace ConsoleApp
 
         static void Shortcut(ref List<string> argslist)
         {
-            if (argslist.Count() < 2){
-                Usage();
+            if (argslist.Count() < 3)
+            {
+                Help(ref argslist);
                 return; //if script
             }
             //name target [ -arg arguments ][ -wd workingdir ]
-            string link = argslist[0] + ".lnk";
+            string link = argslist[1] + ".lnk";
             try
             {
                 //using iwr as 'File' name collision with IWshRuntimeLibrary
                 //so- using iwr = IWshRuntimeLibrary; -at top of file
                 var shell = new iwr.WshShell();
                 var shortcut = shell.CreateShortcut(link) as iwr.IWshShortcut;
-                shortcut.TargetPath = argslist[1];
-                argslist.RemoveRange(0, 2);
+                shortcut.TargetPath = argslist[2];
+                argslist.RemoveRange(0, 3);
                 while (argslist.Count() > 1)
                 {
                     if (argslist[0].ToLower() == "-arg")
@@ -1026,7 +1097,9 @@ namespace ConsoleApp
                     argslist.RemoveRange(0, 2);
                 }
                 shortcut.Save();
-            } catch {
+            }
+            catch
+            {
                 Error("creating shortcut failed");
                 return; //if script
             }
@@ -1035,15 +1108,18 @@ namespace ConsoleApp
 
         static void HideLayoutXml(ref List<string> argslist)
         {
-            if (!isAdmin()) {
+            if (!isAdmin())
+            {
                 Error("command needs to be run as Administrator");
                 return; //if script
             }
             string xml = sysdrive + @"\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml";
             string xmlbak = xml + ".bak";
-            if (File.Exists(xml)) {
-                try { File.Move(xml, xmlbak); } 
-                catch {
+            if (File.Exists(xml))
+            {
+                try { File.Move(xml, xmlbak); }
+                catch
+                {
                     Error(xml.Split('\\').Last(), "Unable to rename");
                     return; //if script
                 }
@@ -1053,12 +1129,15 @@ namespace ConsoleApp
 
         static void ScriptFile(ref List<string> argslist)
         {
-            if (argslist.Count() == 0) Usage();
-            string fil = argslist[0];
-            if (argslist.Count() == 1 && !File.Exists(fil)) Usage();
+            if (argslist.Count() == 1) Help(ref argslist);
+            string fil = argslist[1];
+            if (!File.Exists(fil)) { 
+                Error(fil, "script file not found");
+            }
 
             FileInfo filsiz = new FileInfo(fil);
-            if(filsiz.Length > 0xFFFF){ 
+            if (filsiz.Length > 0xFFFF)
+            {
                 Error("file too large (>64k, so probably not a script file)");
                 return; //not needed here, but do anyway
             };
@@ -1067,8 +1146,8 @@ namespace ConsoleApp
             Console.WriteLine();
             Console.WriteLine($@"   script : {fil.Split('\\').Last()}");
             Console.WriteLine();
-            
-            //prevent exits, help, usage
+
+            //prevent exits, help
             script_is_running = true;
 
             //each line separated into list of strings
@@ -1077,16 +1156,16 @@ namespace ConsoleApp
 
             //number of lines executed
             int cmd_count = 0;
-            
+
             foreach (string cmdline in File.ReadAllLines(fil))
             {
-                if(cmdline.Length == 0) continue;
+                if (cmdline.Length == 0) continue;
 
                 scriptargs.Clear();
 
                 //line -> scriptargs
                 string[] s = cmdlineArray(cmdline);
-                if(s.Length == 0) continue;
+                if (s.Length == 0) continue;
 
                 //string[] -> scriptargs list
                 scriptargs.AddRange(s);
@@ -1094,19 +1173,17 @@ namespace ConsoleApp
                 //check cmdline option against our optionslist
                 var opt = optionslist.Find(x => x.Name == scriptargs[0].ToLower());
 
-                //if cannot find any, show usage
+                //if cannot find any, skip to next line
                 if (opt == null) continue;
 
-                //ignore -help and -scriptfile
-                if (opt.Name == "-help" || opt.Name == "-scriptfile") continue;
+                //ignore -scriptfile
+                if (opt.Name == "-scriptfile") continue;
 
                 //skip specific help, like ->  -listapps -help
-                if (scriptargs.Count() > 1 && scriptargs[1].ToLower() == "-help") {
+                if (scriptargs.Count() > 1 && scriptargs[1].ToLower() == "-help")
+                {
                     continue;
                 }
-
-                //not -help, delete first arg
-                scriptargs.RemoveAt(0);
 
                 //inc cmd count
                 cmd_count++;
@@ -1117,12 +1194,12 @@ namespace ConsoleApp
 
             //info
             Console.WriteLine();
-            Console.WriteLine($@"   script : {fil.Split('\\').Last()} : {cmd_count} commands : {error_count} error{(error_count==1?"":"s")}");
+            Console.WriteLine($@"   script : {fil.Split('\\').Last()} : {cmd_count} commands : {error_count} error{(error_count == 1 ? "" : "s")}");
             Console.WriteLine();
 
             //turn off script mode,let exit exit
             script_is_running = false;
-            
+
             //done, will return number of errors
             Exit(error_count);
         }
@@ -1133,30 +1210,20 @@ namespace ConsoleApp
             //no nested quotes
             var lc = new List<char>();
             bool inquote = false;
-            foreach(var ch in cmdline){ 
-                if(ch == '"'){ 
+            foreach (var ch in cmdline)
+            {
+                if (ch == '"')
+                {
                     inquote = !inquote; //toggle
                     continue; //quotes not kept
                 }
                 //save non-quoted spaces as \n
-                if(!inquote && ch == ' ') lc.Add('\n'); 
+                if (!inquote && ch == ' ') lc.Add('\n');
                 else lc.Add(ch); //add to our list of chars
             }
             //list of chars to string, then split by \n, discard empties
             return string.Concat(lc)
-                .Split(new char[]{'\n' }, StringSplitOptions.RemoveEmptyEntries);
+                .Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }
-
-
-
-
-
-
-  
-
-
-
-
-
