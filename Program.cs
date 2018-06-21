@@ -339,6 +339,21 @@ namespace ConsoleApp
                 Console.WriteLine($@"       c:\>{exe_name} -scriptfile myscript.txt");
                 Console.WriteLine();
             }
+            if (!specific || specific_str == "-delstartuplnk")
+            {
+                Console.WriteLine($@"   -delstartuplnk");
+            }
+            if (specific_str == "-delstartuplnk")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"       delete any links (.lnk) to this exe ({exe_name}) in the");
+                Console.WriteLine($@"       current user's startup folder- for a run once script place a");
+                Console.WriteLine($@"       shortcut to this exe with a scriptfile as the argument, into");
+                Console.WriteLine($@"       the startup folder (typically default user profile), with this");
+                Console.WriteLine($@"       option in the script");
+                Console.WriteLine();
+            }
+            
             if (!specific)
             {
                 Console.WriteLine();
@@ -405,6 +420,7 @@ namespace ConsoleApp
             optionslist.Add(new Options("-shortcut", Shortcut));
             optionslist.Add(new Options("-hidelayoutxml", HideLayoutXml));
             optionslist.Add(new Options("-scriptfile", ScriptFile));
+            optionslist.Add(new Options("-delstartuplnk", DelStartupLnk));
 
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
@@ -1225,5 +1241,28 @@ namespace ConsoleApp
             return string.Concat(lc)
                 .Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
         }
+
+        static void DelStartupLnk(ref List<string> argslist)
+        {
+            int ret = 1;
+            //delete any links to this exe in this userprofile's startup folder
+            var sdir = Environment.GetEnvironmentVariable("userprofile");
+            if (sdir == null) return;
+            //"C:\\Users\\User1"
+            sdir = sdir + @"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
+            foreach (var f in Directory.EnumerateFiles(sdir)
+                .Where(n => n.ToLower().EndsWith("lnk"))) 
+            {
+                if (File.ReadAllText(f).Contains(exe_name)){
+                    File.Delete(f);
+                    ret = 0; //exit code 0, found at least one
+                }
+            }
+            Exit(ret);
+        }
     }
 }
+
+/*
+ File.ReadAllText(@"c:\users\user1\desktop\test.lnk").Contains("AppZero.exe")
+     */
