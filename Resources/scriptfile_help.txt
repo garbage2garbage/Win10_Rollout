@@ -6,8 +6,8 @@
     to run all commands, with the exe returning the number of errors
     
     for script files only, environment variables can be embedded when 
-    specifying filenames byenclosing the environment variable in <brackets>
-    example-
+    specifying filenames by enclosing the environment variable in 
+    <brackets>, example-
     -regimport <tmp>\hkcu.reg
     
     a few lines from a sample file named myscript.txt- 
@@ -15,8 +15,8 @@
      -pinstart calculator "Microsoft Edge" weather 
      -wallpaper bing 
     would be run as follows- {exe_name} -scriptfile myscript.txt 
-
-    additional options available only for scripts- 
+    
+    == additional options available only for scripts ==
 
     -delstartuplnk 
 
@@ -24,6 +24,7 @@
     folder- useful for run once scripts where a shortcut to this exe is 
     placed in the user's startup folder
 
+    
     -writefile [ filename ]
     
     write the following lines in the script to a file, the start is marked 
@@ -42,3 +43,32 @@
     "SubscribedContent-338388Enabled"=dword:00000000
     -writefile
     -regimport <tmp>\hkcu.reg
+
+    
+    -message
+    
+    write the following lines in the script to the console, the end is
+    marked by another -message option
+
+    
+    -continue?
+
+    give the option to stop the script- anything starting with Y or y will
+    continue with the script (enter key required), or else the script will
+    exit
+    normally preceded with a -message option
+ 
+ 
+    -maximize
+    -minimize
+    
+    maximize or minimize the script console window
+    
+    
+    -needadmin
+    
+    checks if the user running the script is a member of the administrators
+    group, and exits if not
+    place at the start of the script if any commands require administrator
+    priveleges to prevent partial script completion because the script was
+    not run as adminstrator

@@ -1,0 +1,7 @@
+
+    rename pc to newname and optionally append the pc serial# to the name
+    if the serial number option is specified and it cannot be found, the pc
+    will not be renamed
+    example, if the pc serial# is 123ABC-
+    -renamepc PC- -s#
+    will rename the pc to PC-123ABC

@@ -283,6 +283,22 @@ namespace ConsoleApp
             {
                 Console.WriteLine(AppZero.Properties.Resources.hidelayoutxml_help);
             }
+            if (!specific || specific_str == "-createuser")
+            {
+                Console.WriteLine($@"   -createuser [ -admin ] username [ password ]");
+            }
+            if (specific_str == "-createuser")
+            {
+                Console.WriteLine(AppZero.Properties.Resources.createuser_help);
+            } 
+            if (!specific || specific_str == "-renamepc")
+            {
+                Console.WriteLine($@"   -renamepc newname [ -s# ]");
+            }
+            if (specific_str == "-renamepc")
+            {
+                Console.WriteLine(AppZero.Properties.Resources.renamepc_help);
+            } 
             if (!specific || specific_str == "-scriptfile")
             {
                 Console.WriteLine($@"   -scriptfile filename");
@@ -300,7 +316,9 @@ namespace ConsoleApp
 
         static void Error(string filnam, string msg)
         {
+            Console.WriteLine();
             Console.WriteLine("   {0} : {1}", filnam, msg);
+            Console.WriteLine();
             if (script_is_running)
             {
                 error_count++;
@@ -311,13 +329,33 @@ namespace ConsoleApp
 
         static void Error(string msg)
         {
-            Console.WriteLine(msg);
+            Console.WriteLine();
+            Console.WriteLine("   " + msg);
+            Console.WriteLine();
             if (script_is_running)
             {
                 error_count++;
                 return;
             }
             Exit(1);
+        }
+
+        static void ErrorAdmin(){
+            Error("need to run this command as Administrator");
+        }
+
+        //maximize/minimize window
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
+        static void Maximize()
+        {
+            Process p = Process.GetCurrentProcess();
+            ShowWindow(p.MainWindowHandle, 3); //SW_MAXIMIZE = 3
+        }
+        static void Minimize()
+        {
+            Process p = Process.GetCurrentProcess();
+            ShowWindow(p.MainWindowHandle, 6); //SW_MINIMIZE = 6
         }
 
         static void Main(string[] args)
@@ -357,7 +395,8 @@ namespace ConsoleApp
             optionslist.Add(new Options("-shortcut", Shortcut));
             optionslist.Add(new Options("-hidelayoutxml", HideLayoutXml));
             optionslist.Add(new Options("-scriptfile", ScriptFile));
-            optionslist.Add(new Options("-delstartuplnk", DelStartupLnk));
+            optionslist.Add(new Options("-createuser", CreateUser));
+            optionslist.Add(new Options("-renamepc", RenamePC));
 
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
@@ -874,7 +913,7 @@ namespace ConsoleApp
             {
                 if (!isAdmin())
                 {
-                    Error("command needs to be run as Administrator");
+                    ErrorAdmin();
                     return; //if script
                 }
                 regimport_du(fil); //failure there will exit
@@ -886,7 +925,7 @@ namespace ConsoleApp
                 bool ret = regdo("import " + fil);
                 if (!ret && !isAdmin())
                 {
-                    Error("command may need to be run as Administrator");
+                    ErrorAdmin();
                     return; //if script
                 }
                 Exit(ret ? 0 : 1);
@@ -1063,7 +1102,7 @@ namespace ConsoleApp
         {
             if (!isAdmin())
             {
-                Error("command needs to be run as Administrator");
+                ErrorAdmin();
                 return; //if script
             }
             string xml = sysdrive + @"\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml";
@@ -1097,8 +1136,7 @@ namespace ConsoleApp
 
             //add script-only options
             optionslist.Add(new Options("-delstartuplnk", DelStartupLnk));
-            // -writefile filename
-            //will just handle here
+            //other additional options will be handled here
 
             Console.WriteLine();
             Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
@@ -1141,20 +1179,52 @@ namespace ConsoleApp
                 //string[] -> scriptargs list
                 scriptargs.AddRange(args);
 
+                //maximize/minimize window
+                if(scriptargs[0].ToLower() == "-maximize"){
+                    Maximize();
+                    continue;
+                }
+                if(scriptargs[0].ToLower() == "-minimize"){
+                    Minimize();
+                    continue;
+                }
+                //exit if not admin
+                if(scriptargs[0].ToLower() == "-needadmin"){ 
+                    if(!isAdmin()){ 
+                        ErrorAdmin();
+                        break;
+                    }
+                }
+
                 //check -writefile filename
-                if(scriptargs[0] == "-writefile" && scriptargs.Count() == 2){
+                if(scriptargs[0].ToLower() == "-writefile" && scriptargs.Count() == 2){
                     //replace any <stuff> with environment variables
                     if(!getEnvVar(ref scriptargs)){ 
-                        Error("bad environment variable substitution");
-                        continue; //the embedd lines will be skipped
-                        //along the -writefile end marker
+                        continue; //if error the embedd lines will be skipped
+                        //along with the -writefile end marker
                     }
-                    i = writeFile(ref lines, scriptargs[1], i);
+                    writeFile(ref lines, scriptargs[1], ref i);
                     //i = second -writefile line, now will ++ in for loop
                     //and back to normal
                     continue;                    
                 }
+                //check -message
+                if(scriptargs[0].ToLower() == "-message"){ 
+                    Message(ref lines, ref i);
+                    //i = second -message line, now will ++ in for loop
+                    //and back to normal
+                    continue;                    
+                }
 
+                //check -continue?
+                if(scriptargs[0].ToLower() == "-continue?"){
+                    Console.Write("   ");
+                    string ans = Console.ReadLine();
+                    if(ans.ToLower().StartsWith("y")) continue;
+                    break;
+                }
+
+                //now check regular commands
 
                 //check cmdline option against our optionslist
                 var opt = optionslist.Find(x => x.Name == scriptargs[0].ToLower());
@@ -1176,8 +1246,7 @@ namespace ConsoleApp
 
                 //replace any <stuff> with environment variables
                 if(!getEnvVar(ref scriptargs)){ 
-                    error_count++;
-                    continue;
+                    continue; //do not run if failed
                 }
 
                 //now call function
@@ -1238,8 +1307,9 @@ namespace ConsoleApp
             Exit(ret); //even though will not exit, it will record the exit code
         }
 
-        static int writeFile(ref string[] lines, string fil, int idx)
+        static void writeFile(ref string[] lines, string fil, ref int idx)
         {
+            //scripts only
             //lines[idx] is line with -writefile filename
             //so advance 1
             idx++;
@@ -1262,6 +1332,23 @@ namespace ConsoleApp
                     break;
                 }  
             }
+        }
+
+        static int Message(ref string[] lines, ref int idx)
+        {
+            //scripts only
+            //lines[idx] is line with -message
+            //so advance 1
+            idx++;
+            var idx_start = idx;
+            for( ; idx < lines.Length; idx++)
+            { 
+                if(lines[idx].ToLower().StartsWith("-message"))
+                {
+                    return idx;
+                }
+                Console.WriteLine(lines[idx]);
+            }
             return idx;
         }
 
@@ -1278,15 +1365,154 @@ namespace ConsoleApp
                         str.Replace("<","").Replace(">","")
                         );
                     m = m.NextMatch();
-                    if(e == null) return false; //any failure bad
+                    if(e == null){
+                        Error("bad environment variable substitution");
+                        return false; //any failure bad
+                    }
                     scriptargs[i] = scriptargs[i].Replace(str,e);
                 }
             }
             return true;
         }
 
+        static void CreateUser(ref List<string> argslist)
+        {
+            //-createuser [ -admin ] username [ password ]
+            if(argslist.Count() < 2) { 
+                Help(ref argslist);
+                return;
+            }             
+            bool admingroup = false;
+            if(argslist.Count() > 1 && argslist[1].ToLower() == "-admin"){ 
+                admingroup = true;
+                argslist.RemoveAt(1);
+            }
+            if(argslist.Count() == 1){
+                Help(ref argslist);
+                return;
+            }
+            if(!isAdmin())
+            {
+                ErrorAdmin();
+                return;
+            }
+            //now 2 or more args
+            string cmd = "user /add " + argslist[1];
+            if(argslist.Count() > 2){
+                cmd = cmd + " " + argslist[2];
+            }
+            if(!netdo(cmd)){
+                Error("add user failed");
+                return; 
+            }
+            if(!admingroup) return;
+            if(!netdo("localgroup administrators /add " + argslist[1])){
+                Error("add to administrators group failed");
+            }
+        }
 
+        static bool netdo(string cmd)
+        {
+            var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "net.exe",
+                Arguments = cmd,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            if (process == null) { return false; }
+            process.WaitForExit();
+            return process.ExitCode == 0;
+        }
+
+        static string getSerialNumber()
+        { 
+            Process p = new Process();
+            // Redirect the output stream of the child process.
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = "wmic.exe";
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.Arguments = "bios get SerialNumber";
+            p.Start();
+            if(p == null) return null;
+            string output = p.StandardOutput.ReadToEnd();
+            p.WaitForExit();
+            if(output != null && output.StartsWith("SerialNumber")){ 
+                return output.Split(new char[]{'\r','\n',' '}, 
+                    System.StringSplitOptions.RemoveEmptyEntries)[1];
+            }
+            return null;
+        }
+
+        static void RenamePC(ref List<string> argslist)
+        { 
+            if(argslist.Count() < 2){ 
+                Help(ref argslist);
+                return;
+            }
+            string newname = argslist[1];
+            if(argslist.Count() > 2 && argslist[2].ToLower() == "-s#"){ 
+                string s = getSerialNumber();
+                if(s == null)
+                {
+                    Error("could not get pc serial number");
+                    return;
+                }
+                newname = newname + s;
+            }
+
+            //-renamepc newname [ -s# ]
+            string oldname = Environment.GetEnvironmentVariable("computername");
+            if(oldname == null){ 
+                Error("could not get current computer name");
+                return;
+            }
+            if(!isAdmin()){ 
+                ErrorAdmin();
+                return;
+            }
+            //WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%"            
+            var p = Process.Start(new ProcessStartInfo
+            {
+                FileName = "wmic.exe",
+                Arguments = "ComputerSystem where Name=" + oldname +
+                    " call Rename Name=" + newname,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            if (p == null) {
+                Error("failed to rename pc");
+                return;
+            }
+            p.WaitForExit();
+            if(p.ExitCode != 0){ 
+                Error("failed to rename pc");    
+            }
+        }
     }
 }
 
 
+/*
+            Maximize();
+ 
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(exe_name);
+
+            Console.ReadKey();
+
+[DllImport("user32.dll", SetLastError = true)]
+static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
+
+public static bool WindowsLogOff() {
+  return ExitWindowsEx(0, 0); // (4,0) force logout
+
+('wmic bios get SerialNumber /format:csv') 
+ WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%"
+
+}
+     
+     */
