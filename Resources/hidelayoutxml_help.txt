@@ -1,0 +1,4 @@
+
+    rename default user DefaultLayouts.xml start menu file to get a minimal 
+    start menu layout for new users
+    (no placeholders or suggested apps, just Settings/Store/Edge)

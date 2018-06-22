@@ -1,0 +1,8 @@
+
+    remove Windows store app(s) for the current user from a modified 
+    -listapps saved file (to modify a -listapps saved file, replace 
+    W marked apps with an X to mark for removal)
+    or specify app(s) with one or more space separated app name(s)
+    names with spaces need to be quoted- use either friendly 
+    name or full name (as shown in -listapps) 
+    (full name must include at least the first underscore _ character)

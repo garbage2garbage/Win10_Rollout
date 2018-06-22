@@ -1,0 +1,8 @@
+    
+    create shortcut, provide shortcut path and name, target path and 
+    name, -arg is for optional target arguments, and -wd for optional 
+    working directory path
+    
+    example- to place a shortcut to Notepad in a folder called temp, 
+    with a link name of Notepad-
+    {exe_name} -shortcut "c:\temp\Notepad" "c:\windows\notepad.exe" 

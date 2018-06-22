@@ -1,0 +1,6 @@
+
+    import a .reg type registry file into the current registry 
+    -defaultuser option will import a previously loaded/modified/exported 
+    registry hive file into the default user hive (ntuser.dat)
+    the hive will be loaded into the same temporary key as previously used 
+    according to the reg file, so file will not have to be modified 

@@ -1,0 +1,44 @@
+
+    run one or more commands provided by a file where each line in the file 
+    will be processed the same as if it were entered on the command line, 
+    one complete command per line (do not include the exe name)
+    lines without a valid command will be ignored, the script will attempt
+    to run all commands, with the exe returning the number of errors
+    
+    for script files only, environment variables can be embedded when 
+    specifying filenames byenclosing the environment variable in <brackets>
+    example-
+    -regimport <tmp>\hkcu.reg
+    
+    a few lines from a sample file named myscript.txt- 
+     -unpinstart all 
+     -pinstart calculator "Microsoft Edge" weather 
+     -wallpaper bing 
+    would be run as follows- {exe_name} -scriptfile myscript.txt 
+
+    additional options available only for scripts- 
+
+    -delstartuplnk 
+
+    delete any links (.lnk) to this exe in the current user's startup 
+    folder- useful for run once scripts where a shortcut to this exe is 
+    placed in the user's startup folder
+
+    -writefile [ filename ]
+    
+    write the following lines in the script to a file, the start is marked 
+    by the -writefile filename option, the end is marked with just the 
+    -writefile option
+    the main purpose is to allow embedding of reg files in a script
+    
+    example script which will write the embedded reg file to the current
+    user's temp folder, then import it with the -regimport option
+    
+    -writefile <tmp>\hkcu.reg
+    Windows Registry Editor Version 5.00
+
+    [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+    "SystemPaneSuggestionsEnabled"=dword:00000000
+    "SubscribedContent-338388Enabled"=dword:00000000
+    -writefile
+    -regimport <tmp>\hkcu.reg

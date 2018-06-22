@@ -14,8 +14,7 @@ using Windows.Management.Deployment;
 using System.Diagnostics;
 using System.Net.NetworkInformation;
 using iwr = IWshRuntimeLibrary; //using alias to prevent File name clash
-
-
+using System.Text.RegularExpressions;
 
 namespace ConsoleApp
 {
@@ -172,7 +171,7 @@ namespace ConsoleApp
             {
                 specific = true;
                 specific_str = argslist[0];
-            }                  //.........|.........|.........|.........|.........|.........|.........|.........|
+            }
             Console.WriteLine();
             Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
             Console.WriteLine();
@@ -188,9 +187,9 @@ namespace ConsoleApp
             if (specific_str == "-listapps")
             {
                 Console.WriteLine();
-                Console.WriteLine($@"       list all available apps with status");
-                Console.WriteLine($@"       to save the apps list to a file-");
-                Console.WriteLine($@"       {sysdrive}\>{exe_name} -listapps > saved.txt");
+                Console.WriteLine($@"    list all available apps with status");
+                Console.WriteLine($@"    to save the apps list to a file-");
+                Console.WriteLine($@"    c:\>{exe_name} -listapps > saved.txt");
                 Console.WriteLine();
             }
             if (!specific || specific_str == "-pinstart")
@@ -199,12 +198,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-pinstart")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       pin apps to start menu from a -listapps saved file or");
-                Console.WriteLine($@"       specify app(s) with one or more space separated app name(s)");
-                Console.WriteLine($@"       app names with spaces need to be quoted");
-                Console.WriteLine($@"       (can use '-unpinstart all' to first clear pinned apps)");
-                Console.WriteLine();
+                Console.WriteLine(AppZero.Properties.Resources.pinstart_help);
             }
             if (!specific || specific_str == "-unpinstart")
             {
@@ -213,8 +207,8 @@ namespace ConsoleApp
             if (specific_str == "-unpinstart")
             {
                 Console.WriteLine();
-                Console.WriteLine($@"       unpin all apps or specified apps from start menu tiles");
-                Console.WriteLine($@"       (placeholders/suggested apps in start menu will not be removed)");
+                Console.WriteLine($@"    unpin all apps or specified apps from start menu tiles");
+                Console.WriteLine($@"    (placeholders/suggested apps in start menu will not be removed)");
                 Console.WriteLine();
             }
             if (!specific || specific_str == "-unpintaskbar")
@@ -224,7 +218,7 @@ namespace ConsoleApp
             if (specific_str == "-unpintaskbar")
             {
                 Console.WriteLine();
-                Console.WriteLine($@"       unpin all apps or specified apps from taskbar");
+                Console.WriteLine($@"    unpin all apps or specified apps from taskbar");
                 Console.WriteLine();
             }
             if (!specific || specific_str == "-removeappx")
@@ -233,14 +227,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-removeappx")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       remove Windows store app(s) for the current user from a");
-                Console.WriteLine($@"       modified -listapps saved file or specify app(s) with one or more");
-                Console.WriteLine($@"       space separated app name(s), names with spaces need to be quoted,");
-                Console.WriteLine($@"       use either friendly name or full name (from -listapps)");
-                Console.WriteLine($@"       (full name must include at least the first underscore _ character)");
-                Console.WriteLine($@"       to modify a -listapps saved file, replace W marked app with X to remove");
-                Console.WriteLine();
+                Console.WriteLine(AppZero.Properties.Resources.removeappx_help);
             }
             if (!specific || specific_str == "-wallpaper")
             {
@@ -248,12 +235,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-wallpaper")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       set wallpaper to filename");
-                Console.WriteLine($@"       set wallpaper to random jpg picture from foldername");
-                Console.WriteLine($@"       set wallpaper to daily image from Bing.com");
-                Console.WriteLine($@"       (picture saved in " + bingfolder + ")");
-                Console.WriteLine();
+                Console.WriteLine(AppZero.Properties.Resources.wallpaper_help.Replace("{bingfolder}",bingfolder));
             }
             if (!specific || specific_str == "-regimport")
             {
@@ -261,13 +243,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-regimport")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       import a .reg type registry file");
-                Console.WriteLine($@"       -defaultuser option will import a previously loaded/modified/saved");
-                Console.WriteLine($@"       registry hive file (.reg) into the default user hive (ntuser.dat)");
-                Console.WriteLine($@"       the hive will be loaded into the same key the reg file used, so");
-                Console.WriteLine($@"       the reg file will not have to be modified");
-                Console.WriteLine();
+                Console.WriteLine(AppZero.Properties.Resources.regimport_help.Replace("{exe_name}",exe_name));
             }
             if (!specific || specific_str == "-weather")
             {
@@ -276,8 +252,8 @@ namespace ConsoleApp
             if (specific_str == "-weather")
             {
                 Console.WriteLine();
-                Console.WriteLine($@"       set Weather app to default location (51247)");
-                Console.WriteLine($@"       or provide a Weather settings.dat file");
+                Console.WriteLine($@"    set Weather app to default location (51247)");
+                Console.WriteLine($@"    or provide a Weather settings.dat file");
                 Console.WriteLine();
             }
             if (!specific || specific_str == "-timezone")
@@ -287,8 +263,8 @@ namespace ConsoleApp
             if (specific_str == "-timezone")
             {
                 Console.WriteLine();
-                Console.WriteLine($@"       set system timezone");
-                Console.WriteLine($@"       {sysdrive}\>{exe_name} -timezone ""Central Standard Time""");
+                Console.WriteLine($@"    set system timezone");
+                Console.WriteLine($@"    {sysdrive}\>{exe_name} -timezone ""Central Standard Time""");
                 Console.WriteLine();
             }
             if (!specific || specific_str == "-shortcut")
@@ -297,12 +273,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-shortcut")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       create shortcut, provide shortcut path and name, and target path");
-                Console.WriteLine($@"       and name, -arg is for optional target arguments, and -wd for");
-                Console.WriteLine($@"       optional working directory path");
-                Console.WriteLine($@"       {sysdrive}\>{exe_name} -shortcut ""c:\users\me\desktop\Notepad"" ""c:\windows\notepad.exe""");
-                Console.WriteLine();
+                Console.WriteLine(AppZero.Properties.Resources.shortcut_help.Replace("{exe_name}",exe_name));
             }
             if (!specific || specific_str == "-hidelayoutxml")
             {
@@ -310,11 +281,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-hidelayoutxml")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       rename default user DefaultLayouts.xml start menu file");
-                Console.WriteLine($@"       to get a minimal start menu layout for new users");
-                Console.WriteLine($@"       (no placeholders or suggested apps, just Settings/Store/Edge)");
-                Console.WriteLine();
+                Console.WriteLine(AppZero.Properties.Resources.hidelayoutxml_help);
             }
             if (!specific || specific_str == "-scriptfile")
             {
@@ -322,38 +289,8 @@ namespace ConsoleApp
             }
             if (specific_str == "-scriptfile")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"       run one or more commands provided by a file where each");
-                Console.WriteLine($@"       line in the file will be processed the same as if it were");
-                Console.WriteLine($@"       entered on the command line, one complete command per line");
-                Console.WriteLine($@"       (do not include the exe name)");
-                Console.WriteLine($@"       lines without a valid command will be ignored, the script");
-                Console.WriteLine($@"       will attempt to run all commands, regardless of any errors");
-                Console.WriteLine($@"       sample file below named myscript.txt-");
-                Console.WriteLine();
-                Console.WriteLine($@"         -unpinstart all");
-                Console.WriteLine($@"         -pinstart calculator ""Microsoft Edge"" weather");
-                Console.WriteLine($@"         -wallpaper bing");
-                Console.WriteLine();
-                Console.WriteLine($@"       would be run as follows-");
-                Console.WriteLine($@"       c:\>{exe_name} -scriptfile myscript.txt");
-                Console.WriteLine();
-            }
-            if (!specific || specific_str == "-delstartuplnk")
-            {
-                Console.WriteLine($@"   -delstartuplnk");
-            }
-            if (specific_str == "-delstartuplnk")
-            {
-                Console.WriteLine();
-                Console.WriteLine($@"       delete any links (.lnk) to this exe ({exe_name}) in the");
-                Console.WriteLine($@"       current user's startup folder- for a run once script place a");
-                Console.WriteLine($@"       shortcut to this exe with a scriptfile as the argument, into");
-                Console.WriteLine($@"       the startup folder (typically default user profile), with this");
-                Console.WriteLine($@"       option in the script");
-                Console.WriteLine();
-            }
-            
+                Console.WriteLine(AppZero.Properties.Resources.scriptfile_help.Replace("{exe_name}",exe_name));
+            }            
             if (!specific)
             {
                 Console.WriteLine();
@@ -1157,6 +1094,12 @@ namespace ConsoleApp
                 Error("file too large (>64k, so probably not a script file)");
                 return; //not needed here, but do anyway
             };
+
+            //add script-only options
+            optionslist.Add(new Options("-delstartuplnk", DelStartupLnk));
+            // -writefile filename
+            //will just handle here
+
             Console.WriteLine();
             Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
             Console.WriteLine();
@@ -1167,24 +1110,51 @@ namespace ConsoleApp
             script_is_running = true;
 
             //each line separated into list of strings
-            //just like cmdline arguements
+            //just like cmdline arguments
             var scriptargs = new List<string>();
 
             //number of lines executed
             int cmd_count = 0;
 
-            foreach (string cmdline in File.ReadAllLines(fil))
+            string[] lines = null;
+            try{
+                lines = File.ReadAllLines(fil);
+            } catch(Exception){ 
+                Error(fil, "cannot read file");
+                return;
+            }
+            if(lines.Length == 0){ 
+                Error(fil, "file is empty");
+                return; //not needed, script not started so Error exits
+            }
+
+            for(int i = 0; i < lines.Length; i++)
             {
-                if (cmdline.Length == 0) continue;
+                if (lines[i].Length == 0) continue;
 
                 scriptargs.Clear();
 
-                //line -> scriptargs
-                string[] s = cmdlineArray(cmdline);
-                if (s.Length == 0) continue;
-
+                //split line into args
+                string[] args = cmdlineArray(lines[i]);
+                //check if somehow no results on non-empty line
+                if (args.Length == 0) continue;
                 //string[] -> scriptargs list
-                scriptargs.AddRange(s);
+                scriptargs.AddRange(args);
+
+                //check -writefile filename
+                if(scriptargs[0] == "-writefile" && scriptargs.Count() == 2){
+                    //replace any <stuff> with environment variables
+                    if(!getEnvVar(ref scriptargs)){ 
+                        Error("bad environment variable substitution");
+                        continue; //the embedd lines will be skipped
+                        //along the -writefile end marker
+                    }
+                    i = writeFile(ref lines, scriptargs[1], i);
+                    //i = second -writefile line, now will ++ in for loop
+                    //and back to normal
+                    continue;                    
+                }
+
 
                 //check cmdline option against our optionslist
                 var opt = optionslist.Find(x => x.Name == scriptargs[0].ToLower());
@@ -1203,6 +1173,12 @@ namespace ConsoleApp
 
                 //inc cmd count
                 cmd_count++;
+
+                //replace any <stuff> with environment variables
+                if(!getEnvVar(ref scriptargs)){ 
+                    error_count++;
+                    continue;
+                }
 
                 //now call function
                 opt.Handler(ref scriptargs);
@@ -1244,6 +1220,7 @@ namespace ConsoleApp
 
         static void DelStartupLnk(ref List<string> argslist)
         {
+            //option is exclusive to scriptfile
             int ret = 1;
             //delete any links to this exe in this userprofile's startup folder
             var sdir = Environment.GetEnvironmentVariable("userprofile");
@@ -1258,11 +1235,58 @@ namespace ConsoleApp
                     ret = 0; //exit code 0, found at least one
                 }
             }
-            Exit(ret);
+            Exit(ret); //even though will not exit, it will record the exit code
         }
+
+        static int writeFile(ref string[] lines, string fil, int idx)
+        {
+            //lines[idx] is line with -writefile filename
+            //so advance 1
+            idx++;
+            var idx_start = idx;
+            for( ; idx < lines.Length; idx++)
+            { 
+                if(lines[idx].ToLower().StartsWith("-writefile"))
+                {
+                    if(idx - idx_start > 0)
+                    { 
+                        var w = new List<string>(lines).GetRange(idx_start, idx).ToArray();
+                        try { 
+                            File.WriteAllLines(fil, w); 
+                        } catch(Exception) { 
+                            Error(fil, "could not write to file"); 
+                        }
+                    } else { 
+                        Error("no data to write");    
+                    }
+                    break;
+                }  
+            }
+            return idx;
+        }
+
+        static bool getEnvVar(ref List<string> scriptargs)
+        {
+            if(scriptargs.Count() == 1) return true; //nothing to do
+            for(var i = 1;i < scriptargs.Count();i++)
+            {
+                Match m = Regex.Match(scriptargs[i],"<.*>");
+                while(m.Success)
+                {
+                    var str = m.ToString();
+                    var e = Environment.GetEnvironmentVariable(
+                        str.Replace("<","").Replace(">","")
+                        );
+                    m = m.NextMatch();
+                    if(e == null) return false; //any failure bad
+                    scriptargs[i] = scriptargs[i].Replace(str,e);
+                }
+            }
+            return true;
+        }
+
+
     }
 }
 
-/*
- File.ReadAllText(@"c:\users\user1\desktop\test.lnk").Contains("AppZero.exe")
-     */
+
