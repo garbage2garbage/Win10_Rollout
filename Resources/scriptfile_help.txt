@@ -72,3 +72,13 @@
     place at the start of the script if any commands require administrator
     priveleges to prevent partial script completion because the script was
     not run as adminstrator
+
+    
+    -runexe exename [ arguments ]
+    
+    run an executable program with optional arguments, if exename has 
+    spaces it will need to be quoted
+    arguments can be quoted, but is not necessary
+    examples-
+    -runexe cmd.exe /c mybatchfile.cmd
+    -runexe powercfg /change monitor-timeout-ac 0

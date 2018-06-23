@@ -398,6 +398,7 @@ namespace ConsoleApp
             optionslist.Add(new Options("-createuser", CreateUser));
             optionslist.Add(new Options("-renamepc", RenamePC));
 
+
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
 
@@ -781,23 +782,12 @@ namespace ConsoleApp
                 Help(ref argslist);
                 return; //if script
             }
-            var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "tzutil.exe",
-                Arguments = "/s \"" + argslist[0] + "\"",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-
-            if (process == null)
-            {
-                Exit(1);
-                return; //if script
-            }
-
-            process.WaitForExit();
-            TimeZoneInfo.ClearCachedData();
-            Exit(process.ExitCode);
+            if(processDo("tzutil.exe", "/s \"" + argslist[0] + "\"")){ 
+                TimeZoneInfo.ClearCachedData();
+                Exit(0);
+                return;
+            }  
+            Exit(1);
         }
 
         static void Wallpaper(ref List<string> argslist)
@@ -922,7 +912,7 @@ namespace ConsoleApp
             }
             else
             { //normal import
-                bool ret = regdo("import " + fil);
+                bool ret = processDo("reg.exe", "import " + fil);
                 if (!ret && !isAdmin())
                 {
                     ErrorAdmin();
@@ -973,37 +963,23 @@ namespace ConsoleApp
             }
 
             //check if key already exists (cannot load into existing key)
-            if (regdo("query " + lkey))
+            if (processDo("reg.exe", "query " + lkey))
             {
                 Error("reg file import location cannot be used");
             }
 
             //load ntuser.dat file to same location
-            if (!regdo("load " + lkey + " " + ntuserdat))
+            if (!processDo("reg.exe", "load " + lkey + " " + ntuserdat))
             {
                 Error("Unable to load default user registry hive");
             }
 
             //import reg file
-            bool ret = regdo("import " + fil);
+            bool ret = processDo("reg.exe", "import " + fil);
             //unload ntuser.dat (if previous succeeded or not)
-            ret &= regdo("unload " + lkey);
+            ret &= processDo("reg.exe", "unload " + lkey);
             //ret == true if both succeeded
             Environment.Exit(ret ? 0 : 1);
-        }
-
-        static bool regdo(string cmd)
-        {
-            var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "reg.exe",
-                Arguments = cmd,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            if (process == null) { return false; }
-            process.WaitForExit();
-            return process.ExitCode == 0;
         }
 
         static void Weather(ref List<string> argslist)
@@ -1136,6 +1112,7 @@ namespace ConsoleApp
 
             //add script-only options
             optionslist.Add(new Options("-delstartuplnk", DelStartupLnk));
+            optionslist.Add(new Options("-runexe", RunExe));
             //other additional options will be handled here
 
             Console.WriteLine();
@@ -1397,47 +1374,25 @@ namespace ConsoleApp
                 return;
             }
             //now 2 or more args
-            string cmd = "user /add " + argslist[1];
+            string args = "user /add " + argslist[1];
             if(argslist.Count() > 2){
-                cmd = cmd + " " + argslist[2];
+                args = args + " " + argslist[2];
             }
-            if(!netdo(cmd)){
+            if(!processDo("net.exe", args)){
                 Error("add user failed");
                 return; 
             }
             if(!admingroup) return;
-            if(!netdo("localgroup administrators /add " + argslist[1])){
+            if(!processDo("net.exe", 
+                "localgroup administrators /add " + argslist[1])){
                 Error("add to administrators group failed");
             }
         }
 
-        static bool netdo(string cmd)
-        {
-            var process = Process.Start(new ProcessStartInfo
-            {
-                FileName = "net.exe",
-                Arguments = cmd,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            if (process == null) { return false; }
-            process.WaitForExit();
-            return process.ExitCode == 0;
-        }
-
         static string getSerialNumber()
         { 
-            Process p = new Process();
-            // Redirect the output stream of the child process.
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.FileName = "wmic.exe";
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.Arguments = "bios get SerialNumber";
-            p.Start();
-            if(p == null) return null;
-            string output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
+            string output = null;
+            processDo("wmic.exe", "bios get SerialNumber", ref output);
             if(output != null && output.StartsWith("SerialNumber")){ 
                 return output.Split(new char[]{'\r','\n',' '}, 
                     System.StringSplitOptions.RemoveEmptyEntries)[1];
@@ -1472,22 +1427,55 @@ namespace ConsoleApp
                 ErrorAdmin();
                 return;
             }
-            //WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%"            
-            var p = Process.Start(new ProcessStartInfo
-            {
-                FileName = "wmic.exe",
-                Arguments = "ComputerSystem where Name=" + oldname +
-                    " call Rename Name=" + newname,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            if (p == null) {
+            if(!processDo("wmic.exe", 
+                 "ComputerSystem where Name=" + oldname + " call Rename Name=" + newname)){
                 Error("failed to rename pc");
+            }
+        }
+
+        static bool processDo(string cmd, string args, ref string output)
+        {
+            output = null;
+            Process p = new Process();
+            // Redirect the output stream of the child process.
+            p.StartInfo.UseShellExecute = false;
+            p.StartInfo.RedirectStandardOutput = true;
+            p.StartInfo.FileName = cmd;
+            p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.Arguments = args;
+            p.Start();
+            if(p == null) return false;
+            output = p.StandardOutput.ReadToEnd();            
+            p.WaitForExit();
+            return p.ExitCode == 0;
+        }
+        static bool processDo(string cmd, string args)
+        { 
+            string dummy = null;
+            return processDo(cmd, args, ref dummy);
+        }
+        
+        static void RunExe(ref List<string> argslist)
+        { 
+            //script only
+            //-runexe exename [ arguments ]
+            if(argslist.Count() < 2){ 
+                Help(ref argslist);
                 return;
             }
-            p.WaitForExit();
-            if(p.ExitCode != 0){ 
-                Error("failed to rename pc");    
+            Process p = new Process();
+            p.StartInfo.FileName = argslist[1];
+            if(argslist.Count() > 2){
+                p.StartInfo.Arguments = string.Join(" ", argslist.Skip(2));
+            }
+            p.StartInfo.UseShellExecute = false;
+
+            try
+            {
+                p.Start();
+                p.WaitForExit();
+            } catch(Exception){ 
+                Error("cannot run process");
             }
         }
     }
@@ -1504,15 +1492,13 @@ namespace ConsoleApp
 
             Console.ReadKey();
 
+
 [DllImport("user32.dll", SetLastError = true)]
 static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
 
 public static bool WindowsLogOff() {
   return ExitWindowsEx(0, 0); // (4,0) force logout
-
-('wmic bios get SerialNumber /format:csv') 
- WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%"
-
 }
+
      
      */
