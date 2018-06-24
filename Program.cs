@@ -15,6 +15,7 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using iwr = IWshRuntimeLibrary; //using alias to prevent File name clash
 using System.Text.RegularExpressions;
+using System.IO.Compression;
 
 namespace ConsoleApp
 {
@@ -142,10 +143,17 @@ namespace ConsoleApp
         public static List<Options> optionslist;
         public static bool script_is_running = false; //if script running, no exits
         public static int error_count = 0;
+        public static string userprofile; //userprofile env variable
 
         //set wallpaper dll
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+
+        //Exit will exit with exitcode, unless currently running a script
+        //  then will inc error_count and return
+        //Error will write error message to console, then Exit(1)
+        //Help will inc error_count and return if running script, else
+        //  will print help and Exit(1)
 
         static void Exit(int exitcode)
         {
@@ -202,7 +210,7 @@ namespace ConsoleApp
             }
             if (!specific || specific_str == "-unpinstart")
             {
-                Console.WriteLine($@"   -unpinstart all | appname1 [ appname2 ""app name 3"" ... ]");
+                Console.WriteLine($@"   -unpinstart -all | appname1 [ appname2 ""app name 3"" ... ]");
             }
             if (specific_str == "-unpinstart")
             {
@@ -213,7 +221,7 @@ namespace ConsoleApp
             }
             if (!specific || specific_str == "-unpintaskbar")
             {
-                Console.WriteLine($@"   -unpintaskbar all | appname1 [ appname2 ""app name 3"" ... ]");
+                Console.WriteLine($@"   -unpintaskbar -all | appname1 [ appname2 ""app name 3"" ... ]");
             }
             if (specific_str == "-unpintaskbar")
             {
@@ -293,7 +301,7 @@ namespace ConsoleApp
             } 
             if (!specific || specific_str == "-renamepc")
             {
-                Console.WriteLine($@"   -renamepc newname [ -s# ]");
+                Console.WriteLine($@"   -renamepc newname [ description ] (<s#> <date> <rand>)");
             }
             if (specific_str == "-renamepc")
             {
@@ -311,7 +319,7 @@ namespace ConsoleApp
             {
                 Console.WriteLine();
             }
-            Environment.Exit(0);
+            Exit(1);
         }
 
         static void Error(string filnam, string msg)
@@ -369,17 +377,24 @@ namespace ConsoleApp
             bingfolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures);
             if (bingfolder == null)
             {
-                bingfolder = sysdrive + @"\users\public\pictures\Bing";
+                bingfolder = $@"{sysdrive}\users\public\pictures\Bing";
             }
             else
             {
-                bingfolder = bingfolder + "\\Bing";
+                bingfolder = $@"{bingfolder}\Bing";
             }
+            //current user's profile folder
+            //I assume it will always get something, functions that use can
+            //check if null
+            userprofile = Environment.GetEnvironmentVariable("userprofile");
 
             //args list (cmd line as-is)
             var argslist = new List<string>(args);
 
-            if (argslist.Count() == 0) Help(ref argslist);
+            if (argslist.Count() == 0)
+            {
+                Help(ref argslist);
+            }
 
             //options list- name, function name
             optionslist = new List<Options>();
@@ -397,7 +412,6 @@ namespace ConsoleApp
             optionslist.Add(new Options("-scriptfile", ScriptFile));
             optionslist.Add(new Options("-createuser", CreateUser));
             optionslist.Add(new Options("-renamepc", RenamePC));
-
 
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
@@ -418,22 +432,26 @@ namespace ConsoleApp
             //now call function
             opt.Handler(ref argslist);
 
+            //exit with error count (function may have already exit)
+            script_is_running = false;
+            Exit(error_count);
+
         } //Main
 
         static void ListApps(ref List<string> argslist)
         {
+            //-listapps
             var myapps = new List<Apps>();
             getAppsList(ref myapps, true); //true=get appx also
-            Console.WriteLine(
-            NL +
-            "    " + exe_name + " : apps list with status" + NL +
-            "  ===============================================" + NL +
-            "    [   ] = not pinned, regular app" + NL +
-            "    [S  ] = Start menu pinned" + NL +
-            "    [ T ] = Taskbar pinned" + NL +
-            "    [  W] = Windows store app" + NL +
-            "  ===============================================" + NL
-            );
+            Console.WriteLine();
+            Console.WriteLine($@"    {exe_name} : apps list with status");
+            Console.WriteLine($@"  ===============================================");
+            Console.WriteLine($@"    [   ] = not pinned, regular app");
+            Console.WriteLine($@"    [S  ] = Start menu pinned");
+            Console.WriteLine($@"    [ T ] = Taskbar pinned");
+            Console.WriteLine($@"    [  W] = Windows store app");
+            Console.WriteLine($@"  ===============================================");
+            Console.WriteLine();
 
             foreach (var app in myapps.OrderBy(m => m.Name))
             {
@@ -441,12 +459,11 @@ namespace ConsoleApp
                 if (app.is_appx_hidden()) continue;
                 Console.WriteLine(app.ListPrint());
             }
-            Console.WriteLine(
-            NL +
-            "  ===============================================" + NL +
-            "    other Windows apps not in AppsFolder" + NL +
-            "  ===============================================" + NL
-            );
+            Console.WriteLine();
+            Console.WriteLine(@"  ===============================================");
+            Console.WriteLine(@"    other Windows apps not in AppsFolder");
+            Console.WriteLine(@"  ===============================================");
+            Console.WriteLine();
             foreach (var app in myapps.OrderBy(m => m.FullName))
             {
                 //hidden windows apps
@@ -465,7 +482,7 @@ namespace ConsoleApp
             //use another namespace where File Explorer is located- start menu places
             var feobj = shell.NameSpace(
                     Environment.GetEnvironmentVariable("ProgramData") +
-                    "\\Microsoft\\Windows\\Start Menu Places"
+                    @"\Microsoft\Windows\Start Menu Places"
                     );
             //find file explorer, return its Verbs()
             foreach (var v in feobj.Items())
@@ -575,24 +592,16 @@ namespace ConsoleApp
 
         static void UnpinStart(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            //-unpinstart -all | list ...
+            bool doall = argslist.RemoveAll(x => x.ToLower() == "-all") > 0;
+            if (!doall && argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; //if script
+                return;
             }
-            bool doall = false;
-            if (argslist.Count() == 1 && argslist[0].ToLower() == "all")
-            {
-                doall = true;
-            }
-            else
-            {
-                argslist = argslist.Select(x => x.ToLower()).ToList();
-            }
-
+            argslist = argslist.Select(x => x.ToLower()).ToList();
             var myapps = new List<Apps>();
             getAppsList(ref myapps, false); //false=appx not needed
-
             foreach (var app in myapps)
             {
                 if (doall || argslist.Contains(app.Name.ToLower()))
@@ -601,28 +610,20 @@ namespace ConsoleApp
                     app.unpin();
                 }
             }
-            Exit(0);
         }
 
         static void UnpinTaskbar(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            //-unpintaskbar -all | list ...
+            bool doall = argslist.RemoveAll(x => x.ToLower() == "-all") > 0;
+            if (!doall && argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
             }
-            bool doall = false;
-            if (argslist.Count() == 1 && argslist[0].ToLower() == "all")
-            {
-                doall = true;
-            }
-            else
-            {
-                argslist = argslist.Select(x => x.ToLower()).ToList();
-            }
+            argslist = argslist.Select(x => x.ToLower()).ToList();
             var myapps = new List<Apps>();
             getAppsList(ref myapps, false); //false=appx not needed
-
             foreach (var app in myapps)
             {
                 if (doall || argslist.Contains(app.Name.ToLower()))
@@ -631,16 +632,17 @@ namespace ConsoleApp
                     app.unpintb();
                 }
             }
-            Exit(0);
         }
 
         static void PinStart(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            //-pinstart filename | list ...
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
             }
+            argslist.RemoveAt(0);
             string fil = argslist[0];
             if (argslist.Count() == 1 && File.Exists(fil))
             {
@@ -657,10 +659,8 @@ namespace ConsoleApp
             {
                 argslist = argslist.Select(x => x.ToLower()).ToList();
             }
-
             var myapps = new List<Apps>();
             getAppsList(ref myapps, false); //false=appx not needed
-
             foreach (var app in myapps)
             {
                 if (argslist.Contains(app.Name.ToLower()))
@@ -669,16 +669,17 @@ namespace ConsoleApp
                     app.pin();
                 }
             }
-            Exit(0);
         }
 
         static void RemoveAppx(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            //-removeappx filename | list...
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
             }
+            argslist.RemoveAt(0);
             string fil = argslist[0];
             if (argslist.Count() == 1 && File.Exists(fil))
             {
@@ -732,7 +733,7 @@ namespace ConsoleApp
                     }
                 }
             }
-            Exit(ret);
+            Exit(ret); //record number of failures if script
         }
 
         static bool remove_package(string fullname)
@@ -777,31 +778,36 @@ namespace ConsoleApp
 
         static void Timezone(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
             }
-            if(processDo("tzutil.exe", "/s \"" + argslist[0] + "\"")){ 
-                TimeZoneInfo.ClearCachedData();
-                Exit(0);
+            if(!processDo("tzutil.exe", $@"/s ""{argslist[1]}""")){ 
+                Error("unable to set timezone");
                 return;
-            }  
-            Exit(1);
+            }
+            TimeZoneInfo.ClearCachedData();
         }
 
         static void Wallpaper(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            //-wallpaper filename | foldername | bing
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; //if script
+                return;
             }
             string fil = argslist[1];
             bool is_dir = false;
             if (fil.ToLower() == "bing")
             {
                 bingpaper(ref fil);
+            }
+            if(fil == null)
+            {
+                Error("unable to get bing picture");
+                return;
             }
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
             {
@@ -816,31 +822,35 @@ namespace ConsoleApp
                 if (files.Length == 0)
                 {
                     Error(fil, "no jpg files found");
-                    return; //if script
+                    return;
                 }
                 fil = files[rand.Next(files.Length)];
             }
-            //0=fail, non-zero=success   
-            if (0 == SystemParametersInfo(20, 0, Path.GetFullPath(fil), 2))
-            {
-                Exit(1);
-                return; //if script
-            }
-            Exit(0);
+            //0=fail, non-zero=success 
+            Exit(0 == SystemParametersInfo(20, 0, Path.GetFullPath(fil), 2) ? 1 : 0);
         }
 
         static void bingpaper(ref string fil)
         {
+            fil = null; //caller can now test
             //no need to try if no internet
             if (!isInternetUp())
             {
-                Environment.Exit(1);
+                Error("no internet connection to bing.com");
+                return;
             }
             //get todays bing picture store in public pictures folder
             if (!Directory.Exists(bingfolder))
             {
-                try { Directory.CreateDirectory(bingfolder); }
-                catch (Exception) { Error(bingfolder, "cannot create directory"); }
+                try 
+                { 
+                    Directory.CreateDirectory(bingfolder);
+                }
+                catch (Exception) 
+                { 
+                    Error(bingfolder, "cannot create directory"); 
+                    return;
+                }
             }
 
             System.Net.WebClient wc = new System.Net.WebClient();
@@ -858,9 +868,9 @@ namespace ConsoleApp
             }
             if (jpgurl == "")
             {
-                Environment.Exit(1);
+                return;
             }
-            string jpgname = bingfolder + "\\" + jpgurl.Split('/').Last();
+            string jpgname = $@"{bingfolder}\{jpgurl.Split('/').Last()}";
             //may have already downloaded, check
             if (!File.Exists(jpgname))
             {
@@ -869,31 +879,20 @@ namespace ConsoleApp
             if (File.Exists(jpgname))
             {
                 fil = jpgname;
-                return;
             }
-            Environment.Exit(1);
         }
 
         static void RegImport(ref List<string> argslist)
         {
-            if (argslist.Count() == 1)
+            //-regimport [ -defaultuser ] filename
+            bool du = argslist.RemoveAll(x => x.ToLower() == "-defaultuser") > 0;
+            //-regimport filename
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
-            }
-            bool du = false;
-            string fil;
-            if (argslist[1].ToLower() == "-defaultuser")
-            {
-                du = true;
-                if (argslist.Count() == 2)
-                {
-                    Help(ref argslist);
-                    return; //if script
-                }
-                fil = argslist[2];
-            } else fil = argslist[1];
-
+            }            
+            string fil = argslist[1];
             if (!File.Exists(fil))
             {
                 Error(fil, "file does not exist");
@@ -906,19 +905,22 @@ namespace ConsoleApp
                     ErrorAdmin();
                     return; //if script
                 }
-                regimport_du(fil); //failure there will exit
-                Exit(0); //must have worked
-                return; //if script
+                regimport_du(fil);
+                return;
             }
             else
             { //normal import
-                bool ret = processDo("reg.exe", "import " + fil);
-                if (!ret && !isAdmin())
+                if (!processDo("reg.exe", $@"import {fil}"))
                 {
-                    ErrorAdmin();
-                    return; //if script
+                    if(!isAdmin())
+                    {
+                        ErrorAdmin();
+                    }
+                    else 
+                    {
+                        Error("failed to import registry file");
+                    }
                 }
-                Exit(ret ? 0 : 1);
             }
         }
 
@@ -927,28 +929,39 @@ namespace ConsoleApp
             //get reg key where reg file was previously loaded
             //[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run]
             //would be HKEY_LOCAL_MACHINE\1 -> HKLM\1
-            string lkey = null;
+            string loadkey = null;
             foreach (string line in System.IO.File.ReadAllLines(fil))
             {
                 //only get first one, assume all are the same
-                if (line.StartsWith("[HKEY_LOCAL_MACHINE\\"))
+                if (line.StartsWith(@"[HKEY_LOCAL_MACHINE\"))
                 {
-                    lkey = "HKLM";
+                    loadkey = @"HKLM\";
                 }
-                else if (line.StartsWith("[HKEY_CURRENT_USER\\"))
+                else if (line.StartsWith(@"[HKEY_CURRENT_USER\"))
                 {
-                    lkey = "HKU";
+                    loadkey = @"HKU\";
                 }
-                if (lkey == null) continue;
+                if (loadkey == null) 
+                {
+                    continue;
+                }
                 string[] ss = line.Split('\\');
-                if (ss.Count() > 2) lkey = lkey + "\\" + ss[1];
-                else lkey = null;
+                if (ss.Count() > 2) 
+                {
+                    loadkey = $@"{loadkey}{ss[1]}";
+                }
+                else 
+                { 
+                    loadkey = null;    
+                }
                 break;
             }
-            if (lkey == null) Error("cannot decode reg file import location");
-
-            string ntuserdat = sysdrive + @"\users\default\ntuser.dat";
-            string ntuserbak = ntuserdat + ".original";
+            if(loadkey == null) { 
+                Error("cannot decode reg file import location");
+                return;    
+            }
+            string ntuserdat = $@"{sysdrive}\users\default\ntuser.dat";
+            string ntuserbak = $@"{ntuserdat}.original";
             //backup ntuser.dat -> ntuser.dat.original if not done already
             if (!File.Exists(ntuserbak))
             {
@@ -959,155 +972,201 @@ namespace ConsoleApp
                 catch (Exception)
                 {
                     Error("could not backup default user ntuser.dat");
+                    return;
                 }
             }
-
             //check if key already exists (cannot load into existing key)
-            if (processDo("reg.exe", "query " + lkey))
+            if (processDo("reg.exe", $@"query {loadkey}"))
             {
                 Error("reg file import location cannot be used");
+                return;
             }
-
             //load ntuser.dat file to same location
-            if (!processDo("reg.exe", "load " + lkey + " " + ntuserdat))
+            if (!processDo("reg.exe", $@"load {loadkey} {ntuserdat}"))
             {
-                Error("Unable to load default user registry hive");
+                Error("unable to load default user registry hive");
+                return;
             }
-
             //import reg file
-            bool ret = processDo("reg.exe", "import " + fil);
+            bool ret = processDo("reg.exe", $@"import {fil}");
             //unload ntuser.dat (if previous succeeded or not)
-            ret &= processDo("reg.exe", "unload " + lkey);
+            ret &= processDo("reg.exe", $@"unload {loadkey}");
             //ret == true if both succeeded
-            Environment.Exit(ret ? 0 : 1);
+            if(!ret)
+            {
+                Error("failed to import registry file");
+                return;
+            }            
         }
 
         static void Weather(ref List<string> argslist)
         {
-            string fil = null;
-            if (argslist.Count() > 1)
+            //-weather [ settings.dat ]
+            string fil = argslist.Count() > 1 ? argslist[1] : null;
+            if (fil != null && !File.Exists(fil))
             {
-                fil = argslist[1];
-            }
-            string up = Environment.GetEnvironmentVariable("userprofile");
-            if (up == null)
-            {
-                Exit(1);
+                Error(fil, "file does not exist");
                 return; //if script
             }
+            if (userprofile == null)
+            {
+                Error("cannot get current user's profile folder");
+                return;
+            }
             //weather app folder
-            string wxdir = up + @"\AppData\Local\Packages\microsoft.Bingweather_8wekyb3d8bbwe";
+            string wxdir = $@"{userprofile}\AppData\Local\Packages\microsoft.Bingweather_8wekyb3d8bbwe";
+            //delete everything (try a few times- AC dir can be stubborn)
+            for(var i = 0; i < 2; i++)
+            { 
+                try 
+                { 
+                    Directory.Delete(wxdir, recursive: true);
+                }
+                catch (Exception)
+                { 
+                    continue;
+                } //try again
+            }
+            //continue with whatever we have
+
             //folders to create
             string[] fol = { "AC", "AppData", "LocalCache", "LocalState", "RoamingState", "Settings", "SystemAppData", "TempState" };
-            //delete everything
-            try { Directory.Delete(wxdir, recursive: true); }
-            catch (IOException)
-            {
-                //try again- AC dir seems to sometimes take 2 tries
-                try { Directory.Delete(wxdir, recursive: true); }
-                //ignore if happens again, just try to copy file
-                catch { }
-            }
+
             //create all folders
             foreach (string d in fol)
             {
-                Directory.CreateDirectory(wxdir + @"\" + d);
+                try 
+                {
+                    Directory.CreateDirectory($@"{wxdir}\{d}"); 
+                } 
+                catch(Exception)
+                {
+                }
             }
             //if filename not provided, use resource data instead
             if (fil == null)
             {
-                System.IO.File.WriteAllBytes(wxdir + @"\Settings\settings.dat", AppZero.Properties.Resources.settings_dat);
+                System.IO.File.WriteAllBytes(
+                    $@"{wxdir}\Settings\settings.dat", 
+                    AppZero.Properties.Resources.settings_dat
+                    );
             }
             else
             {
-                if (!File.Exists(fil))
-                {
-                    //just provide internal file data instead
-                    System.IO.File.WriteAllBytes(wxdir + @"\Settings\settings.dat", AppZero.Properties.Resources.settings_dat);
-                    //but still show error
-                    Error(fil, "file does not exist");
-                    return; //if script
+                try
+                { 
+                    File.Copy(fil, wxdir + @"\Settings\settings.dat"); 
                 }
-                File.Copy(fil, wxdir + @"\Settings\settings.dat");
+                catch(Exception)
+                { 
+                    //use resource data
+                    System.IO.File.WriteAllBytes(
+                        $@"{wxdir}\Settings\settings.dat", 
+                        AppZero.Properties.Resources.settings_dat
+                        );
+                    Error(fil, "failed to copy file");
+                    return;
+                }
             }
-            Exit(0); //for now, should check above results
         }
 
         static void Shortcut(ref List<string> argslist)
         {
+            //-shortcut name target [ -arg arguments ][ -wd workingdir ]
+            //check for -arg and -wd
+            string arg = null;
+            string wd = null;
+            int ai = argslist.IndexOf("-arg");
+            if(ai > 0)
+            {
+                arg = argslist.ElementAtOrDefault(ai + 1);
+                if(arg == null)
+                { 
+                    Help(ref argslist);
+                    return;
+                }
+                argslist.RemoveRange(ai, 2);
+            }
+            int wi = argslist.IndexOf("-wd");
+            if(wi > 0)
+            { 
+                wd = argslist.ElementAtOrDefault(wi + 1);
+                if(wd == null)
+                { 
+                    Help(ref argslist);
+                    return;
+                }
+                argslist.RemoveRange(wi, 2);
+            }
+            //-shortcut name target
             if (argslist.Count() < 3)
             {
                 Help(ref argslist);
-                return; //if script
-            }
-            //name target [ -arg arguments ][ -wd workingdir ]
-            string link = argslist[1] + ".lnk";
+                return;
+            }            
             try
             {
                 //using iwr as 'File' name collision with IWshRuntimeLibrary
                 //so- using iwr = IWshRuntimeLibrary; -at top of file
                 var shell = new iwr.WshShell();
+                string link = argslist[1] + ".lnk";
                 var shortcut = shell.CreateShortcut(link) as iwr.IWshShortcut;
                 shortcut.TargetPath = argslist[2];
-                argslist.RemoveRange(0, 3);
-                while (argslist.Count() > 1)
-                {
-                    if (argslist[0].ToLower() == "-arg")
-                    {
-                        //added to target as arguments
-                        shortcut.Arguments = argslist[1];
-                    }
-                    else if (argslist[0].ToLower() == "-wd")
-                    {
-                        //Start In
-                        shortcut.WorkingDirectory = argslist[1];
-                    }
-                    argslist.RemoveRange(0, 2);
-                }
+                if(arg != null) shortcut.Arguments = arg;
+                if(wd != null) shortcut.WorkingDirectory = wd;
                 shortcut.Save();
             }
             catch
             {
                 Error("creating shortcut failed");
-                return; //if script
+                return;
             }
-            Exit(0);
         }
 
         static void HideLayoutXml(ref List<string> argslist)
         {
+            //-hidelayoutxml
             if (!isAdmin())
             {
                 ErrorAdmin();
                 return; //if script
             }
-            string xml = sysdrive + @"\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml";
-            string xmlbak = xml + ".bak";
+            string xml = $@"{sysdrive}\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml";
+            string xmlbak = $@"{xml}.bak";
             if (File.Exists(xml))
             {
-                try { File.Move(xml, xmlbak); }
+                try 
+                { 
+                    File.Move(xml, xmlbak); 
+                }
                 catch
                 {
                     Error(xml.Split('\\').Last(), "Unable to rename");
-                    return; //if script
+                    return;
                 }
             }
-            Exit(0);
         }
 
         static void ScriptFile(ref List<string> argslist)
         {
-            if (argslist.Count() == 1) Help(ref argslist);
+            //-scriptfile filename
+            if (argslist.Count() < 2)
+            {
+                Help(ref argslist);
+                return;
+            }
             string fil = argslist[1];
-            if (!File.Exists(fil)) { 
+            if (!File.Exists(fil)) 
+            { 
                 Error(fil, "script file not found");
+                return;
             }
 
             FileInfo filsiz = new FileInfo(fil);
             if (filsiz.Length > 0xFFFF)
             {
                 Error("file too large (>64k, so probably not a script file)");
-                return; //not needed here, but do anyway
+                return;
             };
 
             //add script-only options
@@ -1132,20 +1191,27 @@ namespace ConsoleApp
             int cmd_count = 0;
 
             string[] lines = null;
-            try{
+            try
+            {
                 lines = File.ReadAllLines(fil);
-            } catch(Exception){ 
+            } 
+            catch(Exception)
+            { 
                 Error(fil, "cannot read file");
                 return;
             }
-            if(lines.Length == 0){ 
+            if(lines.Length == 0)
+            { 
                 Error(fil, "file is empty");
                 return; //not needed, script not started so Error exits
             }
 
             for(int i = 0; i < lines.Length; i++)
             {
-                if (lines[i].Length == 0) continue;
+                if (lines[i].Length == 0) 
+                {
+                    continue;
+                }
 
                 scriptargs.Clear();
 
@@ -1156,27 +1222,14 @@ namespace ConsoleApp
                 //string[] -> scriptargs list
                 scriptargs.AddRange(args);
 
-                //maximize/minimize window
-                if(scriptargs[0].ToLower() == "-maximize"){
-                    Maximize();
-                    continue;
-                }
-                if(scriptargs[0].ToLower() == "-minimize"){
-                    Minimize();
-                    continue;
-                }
-                //exit if not admin
-                if(scriptargs[0].ToLower() == "-needadmin"){ 
-                    if(!isAdmin()){ 
-                        ErrorAdmin();
-                        break;
-                    }
-                }
-
                 //check -writefile filename
-                if(scriptargs[0].ToLower() == "-writefile" && scriptargs.Count() == 2){
+                //do first as other commands may be embedded
+                //to embed a -writefile command, use --writefile (handled in writeFile)
+                if(scriptargs[0].ToLower() == "-writefile" && scriptargs.Count() == 2)
+                {
                     //replace any <stuff> with environment variables
-                    if(!getEnvVar(ref scriptargs)){ 
+                    if(!getEnvVar(ref scriptargs))
+                    { 
                         continue; //if error the embedd lines will be skipped
                         //along with the -writefile end marker
                     }
@@ -1185,19 +1238,46 @@ namespace ConsoleApp
                     //and back to normal
                     continue;                    
                 }
+                //maximize/minimize window
+                if(scriptargs[0].ToLower() == "-maximize")
+                {
+                    Maximize();
+                    continue;
+                }
+                if(scriptargs[0].ToLower() == "-minimize")
+                {
+                    Minimize();
+                    continue;
+                }
+                //exit if not admin
+                if(scriptargs[0].ToLower() == "-needadmin")
+                { 
+                    if(!isAdmin())
+                    { 
+                        Error("need to run this script as Administrator");
+                        Console.WriteLine();
+                        Console.WriteLine("   closing in 10 seconds...");
+                        System.Threading.Thread.Sleep(10000);
+                        break;
+                    }
+                }
                 //check -message
-                if(scriptargs[0].ToLower() == "-message"){ 
+                if(scriptargs[0].ToLower() == "-message")
+                { 
                     Message(ref lines, ref i);
                     //i = second -message line, now will ++ in for loop
                     //and back to normal
                     continue;                    
                 }
-
                 //check -continue?
-                if(scriptargs[0].ToLower() == "-continue?"){
+                if(scriptargs[0].ToLower() == "-continue?")
+                {
                     Console.Write("   ");
                     string ans = Console.ReadLine();
-                    if(ans.ToLower().StartsWith("y")) continue;
+                    if(ans.ToLower().StartsWith("y"))
+                    {
+                        continue;
+                    }
                     break;
                 }
 
@@ -1205,27 +1285,28 @@ namespace ConsoleApp
 
                 //check cmdline option against our optionslist
                 var opt = optionslist.Find(x => x.Name == scriptargs[0].ToLower());
-
                 //if cannot find any, skip to next line
-                if (opt == null) continue;
-
+                if (opt == null)
+                {
+                    continue;
+                }
                 //ignore -scriptfile
-                if (opt.Name == "-scriptfile") continue;
-
+                if (opt.Name == "-scriptfile")
+                {
+                    continue;
+                }
                 //skip specific help, like ->  -listapps -help
                 if (scriptargs.Count() > 1 && scriptargs[1].ToLower() == "-help")
                 {
                     continue;
                 }
-
                 //inc cmd count
                 cmd_count++;
-
                 //replace any <stuff> with environment variables
-                if(!getEnvVar(ref scriptargs)){ 
+                if(!getEnvVar(ref scriptargs))
+                { 
                     continue; //do not run if failed
                 }
-
                 //now call function
                 opt.Handler(ref scriptargs);
             }
@@ -1235,11 +1316,8 @@ namespace ConsoleApp
             Console.WriteLine($@"   script : {fil.Split('\\').Last()} : {cmd_count} commands : {error_count} error{(error_count == 1 ? "" : "s")}");
             Console.WriteLine();
 
-            //turn off script mode,let exit exit
+            //turn off script mode
             script_is_running = false;
-
-            //done, will return number of errors
-            Exit(error_count);
         }
 
         static string[] cmdlineArray(string cmdline)
@@ -1256,8 +1334,14 @@ namespace ConsoleApp
                     continue; //quotes not kept
                 }
                 //save non-quoted spaces as \n
-                if (!inquote && ch == ' ') lc.Add('\n');
-                else lc.Add(ch); //add to our list of chars
+                if (!inquote && ch == ' ') 
+                {
+                    lc.Add('\n');
+                }
+                else
+                {
+                    lc.Add(ch); //add to our list of chars
+                }
             }
             //list of chars to string, then split by \n, discard empties
             return string.Concat(lc)
@@ -1266,22 +1350,33 @@ namespace ConsoleApp
 
         static void DelStartupLnk(ref List<string> argslist)
         {
+            //-delstartuplnk
             //option is exclusive to scriptfile
-            int ret = 1;
+            int ret = 0;
             //delete any links to this exe in this userprofile's startup folder
-            var sdir = Environment.GetEnvironmentVariable("userprofile");
-            if (sdir == null) return;
+            if (userprofile == null) 
+            {
+                Error("could not get userprofile");
+                return;
+            }
             //"C:\\Users\\User1"
-            sdir = sdir + @"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
+            string sdir = $@"{userprofile}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
             foreach (var f in Directory.EnumerateFiles(sdir)
                 .Where(n => n.ToLower().EndsWith("lnk"))) 
             {
-                if (File.ReadAllText(f).Contains(exe_name)){
-                    File.Delete(f);
-                    ret = 0; //exit code 0, found at least one
+                if (File.ReadAllText(f).Contains(exe_name))
+                {
+                    try 
+                    { 
+                        File.Delete(f); 
+                    } 
+                    catch(Exception)
+                    { 
+                        ret++;
+                    }
                 }
             }
-            Exit(ret); //even though will not exit, it will record the exit code
+            Exit(ret); //record the exit code
         }
 
         static void writeFile(ref string[] lines, string fil, ref int idx)
@@ -1298,21 +1393,33 @@ namespace ConsoleApp
                     if(idx - idx_start > 0)
                     { 
                         var w = new List<string>(lines).GetRange(idx_start, idx).ToArray();
-                        try { 
+                        try 
+                        { 
                             File.WriteAllLines(fil, w); 
-                        } catch(Exception) { 
-                            Error(fil, "could not write to file"); 
+                        } 
+                        catch(Exception) 
+                        { 
+                            Error(fil, "could not write to file");
                         }
-                    } else { 
-                        Error("no data to write");    
+                    } 
+                    else 
+                    { 
+                        Error("no data to write");
                     }
-                    break;
-                }  
+                    return;
+                } 
+                //check for embedded -writefile (after above code)
+                if(lines[idx].ToLower().StartsWith("--writefile"))
+                { 
+                    //make normal -writefile
+                    lines[idx] = lines[idx].Substring(1); 
+                }
             }
         }
 
         static int Message(ref string[] lines, ref int idx)
         {
+            //-message
             //scripts only
             //lines[idx] is line with -message
             //so advance 1
@@ -1331,8 +1438,11 @@ namespace ConsoleApp
 
         static bool getEnvVar(ref List<string> scriptargs)
         {
-            if(scriptargs.Count() == 1) return true; //nothing to do
-            for(var i = 1;i < scriptargs.Count();i++)
+            if(scriptargs.Count() < 2)
+            {
+                return true; //no args, nothing to do
+            }
+            for(var i = 1; i < scriptargs.Count(); i++)
             {
                 Match m = Regex.Match(scriptargs[i],"<.*>");
                 while(m.Success)
@@ -1342,7 +1452,8 @@ namespace ConsoleApp
                         str.Replace("<","").Replace(">","")
                         );
                     m = m.NextMatch();
-                    if(e == null){
+                    if(e == null)
+                    {
                         Error("bad environment variable substitution");
                         return false; //any failure bad
                     }
@@ -1355,37 +1466,38 @@ namespace ConsoleApp
         static void CreateUser(ref List<string> argslist)
         {
             //-createuser [ -admin ] username [ password ]
-            if(argslist.Count() < 2) { 
+            bool admin = argslist.RemoveAll(x => x.ToLower() == "-admin") > 0;
+            //-createuser username [ password ]
+            if(argslist.Count() < 2) 
+            { 
                 Help(ref argslist);
                 return;
             }             
-            bool admingroup = false;
-            if(argslist.Count() > 1 && argslist[1].ToLower() == "-admin"){ 
-                admingroup = true;
-                argslist.RemoveAt(1);
-            }
-            if(argslist.Count() == 1){
-                Help(ref argslist);
-                return;
-            }
             if(!isAdmin())
             {
                 ErrorAdmin();
                 return;
             }
-            //now 2 or more args
-            string args = "user /add " + argslist[1];
-            if(argslist.Count() > 2){
-                args = args + " " + argslist[2];
+            //now has 2 or more args
+            string username = argslist[1];
+            string password = null;
+            if(argslist.Count() > 2)
+            {
+                password = argslist[2];
             }
-            if(!processDo("net.exe", args)){
+            string args = $@"user /add {username} {password}";
+            //(if password null, will get harmless space after username)
+
+            if(!processDo("net.exe", args))
+            {
                 Error("add user failed");
                 return; 
             }
-            if(!admingroup) return;
-            if(!processDo("net.exe", 
-                "localgroup administrators /add " + argslist[1])){
+            if(admin && !processDo("net.exe", 
+                $@"localgroup administrators /add {username}"))
+            {
                 Error("add to administrators group failed");
+                return;
             }
         }
 
@@ -1393,43 +1505,65 @@ namespace ConsoleApp
         { 
             string output = null;
             processDo("wmic.exe", "bios get SerialNumber", ref output);
-            if(output != null && output.StartsWith("SerialNumber")){ 
-                return output.Split(new char[]{'\r','\n',' '}, 
-                    System.StringSplitOptions.RemoveEmptyEntries)[1];
+            if(output != null && output.StartsWith("SerialNumber"))
+            { 
+                var arr = output.Split(new char[]{'\r','\n',' '}, 
+                    System.StringSplitOptions.RemoveEmptyEntries);
+                if(arr.Length == 2)
+                {
+                    return arr[1];
+                }
             }
             return null;
         }
 
         static void RenamePC(ref List<string> argslist)
         { 
-            if(argslist.Count() < 2){ 
+            //-renamepc newname [ description ] (<s#> <date> <rand>)
+            if(argslist.Count() < 2)
+            { 
                 Help(ref argslist);
                 return;
             }
-            string newname = argslist[1];
-            if(argslist.Count() > 2 && argslist[2].ToLower() == "-s#"){ 
-                string s = getSerialNumber();
-                if(s == null)
+            //replace <s#> <date> <rand>
+            string sernum = getSerialNumber();
+            string date = DateTime.Now.ToLocalTime().ToString("MMddyyyy");
+            string rand = ((UInt64)DateTime.Now.ToBinary()).ToString();
+            rand = rand.Substring(rand.Length - 8); //last 8 digits
+            for(var i = 1; i < argslist.Count(); i++)
+            {
+                if(argslist[i].Contains("<s#>") && sernum == null)
                 {
                     Error("could not get pc serial number");
                     return;
                 }
-                newname = newname + s;
+                argslist[i] = argslist[i].Replace("<s#>", sernum)
+                    .Replace("<date>", date).Replace("<rand>", rand);
             }
-
-            //-renamepc newname [ -s# ]
+            string newname = argslist[1]; 
+            string desc = argslist.Count() > 2 ? argslist[2] : null;
             string oldname = Environment.GetEnvironmentVariable("computername");
-            if(oldname == null){ 
+            if(oldname == null)
+            { 
                 Error("could not get current computer name");
                 return;
             }
-            if(!isAdmin()){ 
+            if(!isAdmin())
+            { 
                 ErrorAdmin();
                 return;
             }
+            //quote names to be safe
             if(!processDo("wmic.exe", 
-                 "ComputerSystem where Name=" + oldname + " call Rename Name=" + newname)){
+                 "ComputerSystem where Name=\"" + oldname + "\" call Rename Name=\"" + newname + "\""))
+            {
                 Error("failed to rename pc");
+                return;
+            }
+            if(desc != null && !processDo("wmic.exe", $@"os set description=""{desc}"""))
+            {
+                Error("could not set pc description");
+                return;
             }
         }
 
@@ -1444,7 +1578,10 @@ namespace ConsoleApp
             p.StartInfo.CreateNoWindow = true;
             p.StartInfo.Arguments = args;
             p.Start();
-            if(p == null) return false;
+            if(p == null)
+            {
+                return false;
+            }
             output = p.StandardOutput.ReadToEnd();            
             p.WaitForExit();
             return p.ExitCode == 0;
@@ -1459,23 +1596,30 @@ namespace ConsoleApp
         { 
             //script only
             //-runexe exename [ arguments ]
-            if(argslist.Count() < 2){ 
+            if(argslist.Count() < 2)
+            { 
                 Help(ref argslist);
                 return;
             }
-            Process p = new Process();
-            p.StartInfo.FileName = argslist[1];
-            if(argslist.Count() > 2){
-                p.StartInfo.Arguments = string.Join(" ", argslist.Skip(2));
+            string fil = argslist[1];
+            string args = null;
+            if(argslist.Count() > 2)
+            {
+                args = string.Join(" ", argslist.Skip(2));
             }
-            p.StartInfo.UseShellExecute = false;
-
             try
             {
+                Process p = new Process();
+                p.StartInfo.FileName = fil;
+                if(args != null) p.StartInfo.Arguments = args;
+                p.StartInfo.UseShellExecute = false;
                 p.Start();
                 p.WaitForExit();
-            } catch(Exception){ 
+            } 
+            catch(Exception)
+            { 
                 Error("cannot run process");
+                return;
             }
         }
     }
@@ -1499,6 +1643,76 @@ static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
 public static bool WindowsLogOff() {
   return ExitWindowsEx(0, 0); // (4,0) force logout
 }
+
+
+
+        static void fromBase64(ref List<string> argslist)
+        { 
+            if(argslist.Count() < 2){ 
+                Help(ref argslist);
+                return;
+            }
+            var fil = argslist[1];
+            if(!File.Exists(fil)){ 
+                Error(fil, "file not found");
+                return;
+            }
+            FileInfo filsiz = new FileInfo(fil);
+            if (filsiz.Length > 0xFFFF)
+            {
+                Error("file too large, 64K limit");
+                return;
+            };
+            var f = compress(File.ReadAllBytes(fil));
+            string s = Convert.ToBase64String(f);
+            for(var i = 0; i < s.Length; i+= 64){
+                Console.WriteLine(s.Substring(i,i<(s.Length-64)? 64:s.Length - i));
+            }    
+        }
+        static void ToBase64(ref List<string> argslist)
+        { 
+            if(argslist.Count() < 2){ 
+                Help(ref argslist);
+                return;
+            }
+            var fil = argslist[1];
+            if(!File.Exists(fil)){ 
+                Error(fil, "file not found");
+                return;
+            }
+            FileInfo filsiz = new FileInfo(fil);
+            if (filsiz.Length > 0xFFFF)
+            {
+                Error("file too large, 64K limit");
+                return;
+            };
+            var f = compress(File.ReadAllBytes(fil));
+            string s = Convert.ToBase64String(f);
+            for(var i = 0; i < s.Length; i+= 64){
+                Console.WriteLine(s.Substring(i,i<(s.Length-64)? 64:s.Length - i));
+            }    
+        }
+
+        static byte[] compress(byte[] data)
+        {
+            MemoryStream output = new MemoryStream();
+            using (DeflateStream dstream = new DeflateStream(output, CompressionLevel.Optimal))
+            {
+                dstream.Write(data, 0, data.Length);
+            }
+            return output.ToArray();
+        }
+
+        static byte[] decompress(byte[] data)
+        {
+            MemoryStream input = new MemoryStream(data);
+            MemoryStream output = new MemoryStream();
+            using (DeflateStream dstream = new DeflateStream(input, CompressionMode.Decompress))
+            {
+                dstream.CopyTo(output);
+            }
+            return output.ToArray();
+        }
 
      
      */

@@ -2,4 +2,4 @@
     pin apps to the start menu from a -listapps saved file or specify 
     app(s) with one or more space separated app name(s) 
     app names with spaces need to be quoted 
-    (can use '-unpinstart all' to first clear pinned apps) 
+    (can use '-unpinstart -all' to first clear pinned apps) 

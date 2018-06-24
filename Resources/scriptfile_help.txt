@@ -11,8 +11,8 @@
     -regimport <tmp>\hkcu.reg
     
     a few lines from a sample file named myscript.txt- 
-     -unpinstart all 
-     -pinstart calculator "Microsoft Edge" weather 
+     -unpinstart -all 
+     -pinstart Calculator "Microsoft Edge" weather 
      -wallpaper bing 
     would be run as follows- {exe_name} -scriptfile myscript.txt 
     
@@ -30,7 +30,11 @@
     write the following lines in the script to a file, the start is marked 
     by the -writefile filename option, the end is marked with just the 
     -writefile option
-    the main purpose is to allow embedding of reg files in a script
+    the main purpose is to allow embedding of reg files in a script, but
+    can also be used to embed other scripts
+    
+    to embed the -writefile command in a file currently being written, 
+    use --writefile
     
     example script which will write the embedded reg file to the current
     user's temp folder, then import it with the -regimport option
