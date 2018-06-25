@@ -1,0 +1,111 @@
+    customize_script.txt 
+    script file for AppZero.exe
+    run as a temp user to setup pc
+    after Windows setup, OOBE wizard (with internet disconnected)-
+        create a temp user with a simple password (like 'temp' and '1')
+        (the password is just to prevent autologin at the next boot)
+        run this script (AppZero.exe -scriptfile customize_script.txt)
+        (create shortcut or go command line, whateever you want)
+        after reboot, if a new user is created, log into the new user, 
+        connect to internet, and make any other needed changes that cannot
+        be scripted easily such as-
+            default apps
+            Edge homepage
+            show most used apps/recently added apps
+            check date/time
+            force time sync if needed (toggle auto time off/on)
+===========================================================================
+//console window to max size
+-maximize
+
+//if was not run as admin, no need to go any further
+//(error show for 10 seconds before console window closes)
+-needadmin
+
+//set timezone
+-timezone "Central Standard Time"
+
+//import HKLM settings
+-writefile <tmp>\hklm.reg
+Windows Registry Editor Version 5.00
+
+;advertising
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\AdvertisingInfo]
+"Enabled"=dword:00000000
+
+;suggested apps
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\CloudContent]
+"DisableWindowsConsumerFeatures"=dword:00000001
+
+;disable first logon animation, use  preparing Windows... instead
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System]
+"EnableFirstLogonAnimation"=dword:00000000
+
+;disable windows defender scan report notification
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender Security Center\Virus and threat protection]
+"SummaryNotificationDisabled"=dword:00000001
+-writefile
+-regimport <tmp>\hklm.reg
+
+//import default user HKCU settings (for all new users)
+-writefile <tmp>\hkcu_du.reg
+Windows Registry Editor Version 5.00
+
+;prevent OneDrive from installing for new users
+[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run] 
+"OneDriveSetup"=-
+
+;prevent welcome page shown in edge
+[HKEY_LOCAL_MACHINE\1\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
+"SubscribedContent-310093Enabled"=dword:00000000
+
+;default console font size to something more readable
+[HKEY_LOCAL_MACHINE\1\Console]
+"FontSize"=dword:00180000
+-writefile
+-regimport -defaultuser <tmp>\hkcu_du.reg
+
+//copy wallpapers from wallpapers folder (relative to current folder)
+-runexe cmd.exe /c copy /y wallpapers\*.jpg c:\users\public\pictures
+
+//for default minimal start menu tiles
+-hidelayoutxml
+
+//not sure if need to check onedrive.lnk in
+//-runexe cmd.exe /c del "c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk"
+
+//copy any need files to default user startup folder (and tmp)
+
+
+//any needed shortcuts
+//-shortcut "c:\users\default\desktop\All Apps" "shell:AppsFolder"
+
+//current profile (balanced), set to not timeout if on ac
+-runexe powercfg /change monitor-timeout-ac 0
+-runexe powercfg /change standby-timeout-ac 0
+
+//install apps (still a batch file for now)
+-run.exe cmd /c Win32Apps\install.cmd
+
+//create first 'real' user with admin priveleges
+-createuser -admin User1
+
+//rename pc
+-renamepc PC-<s#>
+
+//show message
+-message
+
+    if using a temp user to run this script, remember to remove the temp
+    user after logging into the new user
+
+    reboot? type Y <ENTER> to reboot the PC
+    or type <ENTER> to close this window
+
+-message
+
+//if Y, continue, else exit
+-continue?
+
+//was Y, so reboot
+-runexe shutdown.exe /r /t 5

@@ -23,6 +23,7 @@ namespace ConsoleApp
 
     public class Options
     {
+        //option name and function
         public Options(string nam, optdo h)
         {
             Name = nam;
@@ -135,19 +136,96 @@ namespace ConsoleApp
 
     class Program
     {
-        public const string version = "1803.00";
+        //global vars
+        public const string version = "1803.00"; //tested with win10 1803
         public const string NL = "\n";
-        public static string exe_name; //name of this script without path, set in main
-        public static string sysdrive; //normally C:
-        public static string bingfolder; //where to store bing wallpaper
+        public static string exe_name;      //name of this script without path, set in main
+        public static string sysdrive;      //normally C:
+        public static string bingfolder;    //where to store bing wallpaper
         public static List<Options> optionslist; //each option, handler function 
         public static bool script_is_running = false; //if script running, no exits
-        public static int error_count = 0; //for scripts
-        public static string userprofile; //userprofile env variable
+        public static int error_count = 0;  //for scripts
+        public static string userprofile;   //userprofile env variable
 
         //set wallpaper dll
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+
+
+        static void Main(string[] args)
+        {
+            //script (exe) name
+            exe_name = Environment.GetCommandLineArgs()[0].Split('\\').Last();
+            //in case os installed on something other than C: (slim chance)
+            sysdrive = Environment.GetEnvironmentVariable("systemdrive");
+            if (sysdrive == null) sysdrive = "C:"; //just in case
+            //bing picture folder -> public pictures \Bing
+            bingfolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures);
+            if (bingfolder == null)
+            {
+                bingfolder = $@"{sysdrive}\users\public\pictures\Bing";
+            }
+            else
+            {
+                bingfolder = $@"{bingfolder}\Bing";
+            }
+            //current user's profile folder
+            //I assume it will always get something, functions that use can
+            //check if null
+            userprofile = Environment.GetEnvironmentVariable("userprofile");
+
+            //args list (cmd line as-is)
+            var argslist = new List<string>(args);
+
+            if (argslist.Count() == 0)
+            {
+                Help(ref argslist);
+            }
+
+            //options list- name, function name
+            optionslist = new List<Options>();
+            optionslist.Add(new Options("-unpinstart", UnpinStart));
+            optionslist.Add(new Options("-listapps", ListApps));
+            optionslist.Add(new Options("-unpintaskbar", UnpinTaskbar));
+            optionslist.Add(new Options("-pinstart", PinStart));
+            optionslist.Add(new Options("-removeappx", RemoveAppx));
+            optionslist.Add(new Options("-wallpaper", Wallpaper));
+            optionslist.Add(new Options("-timezone", Timezone));
+            optionslist.Add(new Options("-regimport", RegImport));
+            optionslist.Add(new Options("-weather", Weather));
+            optionslist.Add(new Options("-shortcut", Shortcut));
+            optionslist.Add(new Options("-hidelayoutxml", HideLayoutXml));
+            optionslist.Add(new Options("-scriptfile", ScriptFile));
+            optionslist.Add(new Options("-createuser", CreateUser));
+            optionslist.Add(new Options("-renamepc", RenamePC));
+
+            //check cmdline option against our optionslist
+            var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
+
+            //if cannot find any, show help
+            if (opt == null)
+            {
+                argslist.Clear();
+                Help(ref argslist);
+            }
+
+            //check if specific help, like ->  -listapps -help
+            if (argslist.Count() > 1 && argslist[1].ToLower() == "-help")
+            {
+                Help(ref argslist); //argslist[0] contains specific help option
+            }
+
+            //now call function
+            opt.Handler(ref argslist);
+
+            //exit with error count (function may have already exit)
+            script_is_running = false;
+            Exit(error_count);
+
+        }
+
+
+        //help, error, exit functions
 
         //Exit will exit with exitcode, unless currently running a script
         //  then will inc error_count and return
@@ -352,91 +430,8 @@ namespace ConsoleApp
             Error("need to run this command as Administrator");
         }
 
-        //maximize/minimize window
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
-        static void Maximize()
-        {
-            Process p = Process.GetCurrentProcess();
-            ShowWindow(p.MainWindowHandle, 3); //SW_MAXIMIZE = 3
-        }
-        static void Minimize()
-        {
-            Process p = Process.GetCurrentProcess();
-            ShowWindow(p.MainWindowHandle, 6); //SW_MINIMIZE = 6
-        }
 
-        static void Main(string[] args)
-        {
-            //script (exe) name
-            exe_name = Environment.GetCommandLineArgs()[0].Split('\\').Last();
-            //in case os installed on something other than C: (slim chance)
-            sysdrive = Environment.GetEnvironmentVariable("systemdrive");
-            if (sysdrive == null) sysdrive = "C:"; //just in case
-            //bing picture folder -> public pictures \Bing
-            bingfolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures);
-            if (bingfolder == null)
-            {
-                bingfolder = $@"{sysdrive}\users\public\pictures\Bing";
-            }
-            else
-            {
-                bingfolder = $@"{bingfolder}\Bing";
-            }
-            //current user's profile folder
-            //I assume it will always get something, functions that use can
-            //check if null
-            userprofile = Environment.GetEnvironmentVariable("userprofile");
-
-            //args list (cmd line as-is)
-            var argslist = new List<string>(args);
-
-            if (argslist.Count() == 0)
-            {
-                Help(ref argslist);
-            }
-
-            //options list- name, function name
-            optionslist = new List<Options>();
-            optionslist.Add(new Options("-unpinstart", UnpinStart));
-            optionslist.Add(new Options("-listapps", ListApps));
-            optionslist.Add(new Options("-unpintaskbar", UnpinTaskbar));
-            optionslist.Add(new Options("-pinstart", PinStart));
-            optionslist.Add(new Options("-removeappx", RemoveAppx));
-            optionslist.Add(new Options("-wallpaper", Wallpaper));
-            optionslist.Add(new Options("-timezone", Timezone));
-            optionslist.Add(new Options("-regimport", RegImport));
-            optionslist.Add(new Options("-weather", Weather));
-            optionslist.Add(new Options("-shortcut", Shortcut));
-            optionslist.Add(new Options("-hidelayoutxml", HideLayoutXml));
-            optionslist.Add(new Options("-scriptfile", ScriptFile));
-            optionslist.Add(new Options("-createuser", CreateUser));
-            optionslist.Add(new Options("-renamepc", RenamePC));
-
-            //check cmdline option against our optionslist
-            var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
-
-            //if cannot find any, show help
-            if (opt == null)
-            {
-                argslist.Clear();
-                Help(ref argslist);
-            }
-
-            //check if specific help, like ->  -listapps -help
-            if (argslist.Count() > 1 && argslist[1].ToLower() == "-help")
-            {
-                Help(ref argslist); //argslist[0] contains specific help option
-            }
-
-            //now call function
-            opt.Handler(ref argslist);
-
-            //exit with error count (function may have already exit)
-            script_is_running = false;
-            Exit(error_count);
-
-        } //Main
+        //option functions
 
         static void ListApps(ref List<string> argslist)
         {
@@ -472,122 +467,6 @@ namespace ConsoleApp
             }
             Console.WriteLine();
             Exit(0);
-        }
-
-        static dynamic fileExplorerVerbs()
-        {
-            //File Explorer needs alternate location for verbs()
-            Type t = Type.GetTypeFromProgID("Shell.Application");
-            dynamic shell = Activator.CreateInstance(t);
-            //use another namespace where File Explorer is located- start menu places
-            var feobj = shell.NameSpace(
-                    Environment.GetEnvironmentVariable("ProgramData") +
-                    @"\Microsoft\Windows\Start Menu Places"
-                    );
-            //find file explorer, return its Verbs()
-            foreach (var v in feobj.Items())
-            {
-                if (v.path.ToLower().Contains("file explorer"))
-                {
-                    return v.Verbs();
-                }
-            }
-            return null;
-        }
-
-        static bool isAdmin()
-        {
-            return new WindowsPrincipal(WindowsIdentity.GetCurrent())
-                .IsInRole(WindowsBuiltInRole.Administrator);
-        }
-
-        static bool isInternetUp()
-        {
-            try
-            {
-                Ping p = new Ping();
-                String host = "8.8.8.8";
-                int timeout = 2000;
-                PingReply reply = p.Send(host, timeout);
-                return (reply.Status == IPStatus.Success);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        static void getAppsList(ref List<Apps> myapps, bool getappx)
-        {
-            //if appx not needed- like unpinstart,pinstart,unpintaskbar
-            //no need to get appx list
-
-            //get Appx list first
-            var appxlist = new List<string>();
-            if (getappx) { getAppxList(ref appxlist); }
-
-            //get apps in appsfolder namespace
-            Type t = Type.GetTypeFromProgID("Shell.Application");
-            dynamic shell = Activator.CreateInstance(t);
-            var appobj = shell.NameSpace("shell:AppsFolder");
-
-            //cannot remove these from appxlist until finished
-            //as some (1?) apps like calendar/mail refer to the same
-            //appx- so keep a list instead
-            var alreadydone = new List<string>();
-            foreach (var item in appobj.Items())
-            {
-                var a = new Apps();
-                a.Name = item.Name;
-                a.Path = item.Path;
-                a.Verbs = item.Verbs();
-                //file explorer, need alternate location for verbs
-                if (item.Name.ToLower() == "file explorer")
-                {
-                    var v = fileExplorerVerbs();
-                    if (v != null)
-                    {
-                        a.Verbs = v;
-                    }
-                }
-                //check if win app (for -listapps and removeappx)
-                if (getappx && item.Path.Contains("_") && item.Path.Contains("!"))
-                {
-                    var tmp = item.Path.Split('_')[0];
-                    foreach (var n in appxlist)
-                    {
-                        if (n.StartsWith(tmp))
-                        {
-                            a.FullName = n;
-                            alreadydone.Add(n);
-                            break;
-                        }
-                    }
-                }
-                myapps.Add(a);
-            }
-            if (!getappx) return;
-
-            //now add remaining appxlist
-            foreach (var nam in appxlist)
-            {
-                if (alreadydone.Contains(nam)) continue;
-                var a = new Apps();
-                a.FullName = nam;
-                myapps.Add(a);
-            }
-        }
-
-        static void getAppxList(ref List<string> appxlist)
-        {
-            PackageManager packageManager = new Windows.Management.Deployment.PackageManager();
-            IEnumerable<Package> packages =
-                packageManager.FindPackagesForUser(WindowsIdentity.GetCurrent().User.Value);
-
-            foreach (Package package in packages)
-            {
-                appxlist.Add(package.Id.FullName);
-            }
         }
 
         static void UnpinStart(ref List<string> argslist)
@@ -727,53 +606,13 @@ namespace ConsoleApp
             {
                 if (app.appx_name_match(ref argslist))
                 {
-                    if (remove_package(app.FullName))
+                    if (removePackage(app.FullName))
                     {
                         ret--;
                     }
                 }
             }
             Exit(ret); //record number of failures if script
-        }
-
-        static bool remove_package(string fullname)
-        {
-            Console.Write(fullname.Split('_')[0] + "...");
-            PackageManager packageManager = new Windows.Management.Deployment.PackageManager();
-
-            IAsyncOperationWithProgress<DeploymentResult, DeploymentProgress> deploymentOperation =
-                packageManager.RemovePackageAsync(fullname);
-            // This event is signaled when the operation completes
-            ManualResetEvent opCompletedEvent = new ManualResetEvent(false);
-
-            // Define the delegate using a statement lambda
-            deploymentOperation.Completed = (depProgress, status) => { opCompletedEvent.Set(); };
-
-            // Wait until the operation completes
-            opCompletedEvent.WaitOne();
-
-            // Check the status of the operation
-            if (deploymentOperation.Status == AsyncStatus.Error)
-            {
-                DeploymentResult deploymentResult = deploymentOperation.GetResults();
-                Console.WriteLine("error {0}", deploymentOperation.ErrorCode);
-                //Console.WriteLine("Error text: {0}", deploymentResult.ErrorText);
-            }
-            else if (deploymentOperation.Status == AsyncStatus.Canceled)
-            {
-                Console.WriteLine("canceled");
-            }
-            else if (deploymentOperation.Status == AsyncStatus.Completed)
-            {
-                Console.WriteLine("removed");
-                return true;
-            }
-            else
-            {
-                Console.WriteLine("unknown status");
-            }
-
-            return false;
         }
 
         static void Timezone(ref List<string> argslist)
@@ -830,58 +669,6 @@ namespace ConsoleApp
             Exit(0 == SystemParametersInfo(20, 0, Path.GetFullPath(fil), 2) ? 1 : 0);
         }
 
-        static void bingpaper(ref string fil)
-        {
-            fil = null; //caller can now test
-            //no need to try if no internet
-            if (!isInternetUp())
-            {
-                Error("no internet connection to bing.com");
-                return;
-            }
-            //get todays bing picture store in public pictures folder
-            if (!Directory.Exists(bingfolder))
-            {
-                try 
-                { 
-                    Directory.CreateDirectory(bingfolder);
-                }
-                catch (Exception) 
-                { 
-                    Error(bingfolder, "cannot create directory"); 
-                    return;
-                }
-            }
-
-            System.Net.WebClient wc = new System.Net.WebClient();
-            string bingurl = "http://www.bing.com";
-            string binghttp = wc.DownloadString(bingurl);
-            string[] lines = binghttp.Replace("\"", "\n").Replace("'", "\n").Replace("\\", "").Split('\n');
-            string jpgurl = "";
-            foreach (var line in lines)
-            {
-                if (line.StartsWith("/") && line.EndsWith(".jpg"))
-                {
-                    jpgurl = bingurl + line;
-                    break;
-                }
-            }
-            if (jpgurl == "")
-            {
-                return;
-            }
-            string jpgname = $@"{bingfolder}\{jpgurl.Split('/').Last()}";
-            //may have already downloaded, check
-            if (!File.Exists(jpgname))
-            {
-                wc.DownloadFile(jpgurl, jpgname);
-            }
-            if (File.Exists(jpgname))
-            {
-                fil = jpgname;
-            }
-        }
-
         static void RegImport(ref List<string> argslist)
         {
             //-regimport [ -defaultuser ] filename
@@ -905,7 +692,7 @@ namespace ConsoleApp
                     ErrorAdmin();
                     return; //if script
                 }
-                regimport_du(fil);
+                regimportDefaultuser(fil);
                 return;
             }
             else
@@ -922,81 +709,6 @@ namespace ConsoleApp
                     }
                 }
             }
-        }
-
-        static void regimport_du(string fil)
-        {
-            //get reg key where reg file was previously loaded
-            //[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run]
-            //would be HKEY_LOCAL_MACHINE\1 -> HKLM\1
-            string loadkey = null;
-            foreach (string line in System.IO.File.ReadAllLines(fil))
-            {
-                //only get first one, assume all are the same
-                if (line.StartsWith(@"[HKEY_LOCAL_MACHINE\"))
-                {
-                    loadkey = @"HKLM\";
-                }
-                else if (line.StartsWith(@"[HKEY_CURRENT_USER\"))
-                {
-                    loadkey = @"HKU\";
-                }
-                if (loadkey == null) 
-                {
-                    continue;
-                }
-                string[] ss = line.Split('\\');
-                if (ss.Count() > 2) 
-                {
-                    loadkey = $@"{loadkey}{ss[1]}";
-                }
-                else 
-                { 
-                    loadkey = null;    
-                }
-                break;
-            }
-            if(loadkey == null) { 
-                Error("cannot decode reg file import location");
-                return;    
-            }
-            string ntuserdat = $@"{sysdrive}\users\default\ntuser.dat";
-            string ntuserbak = $@"{ntuserdat}.original";
-            //backup ntuser.dat -> ntuser.dat.original if not done already
-            if (!File.Exists(ntuserbak))
-            {
-                try
-                {
-                    File.Copy(ntuserdat, ntuserbak);
-                }
-                catch (Exception)
-                {
-                    Error("could not backup default user ntuser.dat");
-                    return;
-                }
-            }
-            //check if key already exists (cannot load into existing key)
-            if (processDo("reg.exe", $@"query {loadkey}"))
-            {
-                Error("reg file import location cannot be used");
-                return;
-            }
-            //load ntuser.dat file to same location
-            if (!processDo("reg.exe", $@"load {loadkey} {ntuserdat}"))
-            {
-                Error("unable to load default user registry hive");
-                return;
-            }
-            //import reg file
-            bool ret = processDo("reg.exe", $@"import {fil}");
-            //unload ntuser.dat (if previous succeeded or not)
-            ret &= processDo("reg.exe", $@"unload {loadkey}");
-            //ret == true if both succeeded
-            if(!ret)
-            {
-                Error("failed to import registry file");
-                return;
-            }            
         }
 
         static void Weather(ref List<string> argslist)
@@ -1234,7 +946,7 @@ namespace ConsoleApp
                 scriptargs.Clear();
 
                 //split line into args
-                string[] args = cmdlineArray(lines[i]);
+                string[] args = cmdlineToArray(lines[i]);
                 //check if somehow no results on non-empty line
                 if (args.Length == 0) continue;
                 //string[] -> scriptargs list
@@ -1251,7 +963,7 @@ namespace ConsoleApp
                         continue; //if error the embedd lines will be skipped
                         //along with the -writefile end marker
                     }
-                    writeFile(ref lines, scriptargs[1], ref i);
+                    WriteFile(ref lines, scriptargs[1], ref i);
                     //i = second -writefile line, now will ++ in for loop
                     //and back to normal
                     continue;                    
@@ -1338,149 +1050,6 @@ namespace ConsoleApp
             script_is_running = false;
         }
 
-        static string[] cmdlineArray(string cmdline)
-        {
-            //simple version - double quotes only
-            //no nested quotes
-            var lc = new List<char>();
-            bool inquote = false;
-            foreach (var ch in cmdline)
-            {
-                if (ch == '"')
-                {
-                    inquote = !inquote; //toggle
-                    continue; //quotes not kept
-                }
-                //save non-quoted spaces as \n
-                if (!inquote && ch == ' ') 
-                {
-                    lc.Add('\n');
-                }
-                else
-                {
-                    lc.Add(ch); //add to our list of chars
-                }
-            }
-            //list of chars to string, then split by \n, discard empties
-            return string.Concat(lc)
-                .Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        static void DelStartupLnk(ref List<string> argslist)
-        {
-            //-delstartuplnk
-            //option is exclusive to scriptfile
-            int ret = 0;
-            //delete any links to this exe in this userprofile's startup folder
-            if (userprofile == null) 
-            {
-                Error("could not get userprofile");
-                return;
-            }
-            //"C:\\Users\\User1"
-            string sdir = $@"{userprofile}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
-            foreach (var f in Directory.EnumerateFiles(sdir)
-                .Where(n => n.ToLower().EndsWith("lnk"))) 
-            {
-                if (File.ReadAllText(f).Contains(exe_name))
-                {
-                    try 
-                    { 
-                        File.Delete(f); 
-                    } 
-                    catch(Exception)
-                    { 
-                        ret++;
-                    }
-                }
-            }
-            Exit(ret); //record the exit code
-        }
-
-        static void writeFile(ref string[] lines, string fil, ref int idx)
-        {
-            //scripts only
-            //lines[idx] is line with -writefile filename
-            //so advance 1
-            idx++;
-            var idx_start = idx;
-            for( ; idx < lines.Length; idx++)
-            { 
-                if(lines[idx].ToLower().StartsWith("-writefile"))
-                {
-                    if(idx - idx_start > 0)
-                    { 
-                        var w = new List<string>(lines).GetRange(idx_start, idx).ToArray();
-                        try 
-                        { 
-                            File.WriteAllLines(fil, w); 
-                        } 
-                        catch(Exception) 
-                        { 
-                            Error(fil, "could not write to file");
-                        }
-                    } 
-                    else 
-                    { 
-                        Error("no data to write");
-                    }
-                    return;
-                } 
-                //check for embedded -writefile (after above code)
-                if(lines[idx].ToLower().StartsWith("--writefile"))
-                { 
-                    //make normal -writefile
-                    lines[idx] = lines[idx].Substring(1); 
-                }
-            }
-        }
-
-        static int Message(ref string[] lines, ref int idx)
-        {
-            //-message
-            //scripts only
-            //lines[idx] is line with -message
-            //so advance 1
-            idx++;
-            var idx_start = idx;
-            for( ; idx < lines.Length; idx++)
-            { 
-                if(lines[idx].ToLower().StartsWith("-message"))
-                {
-                    return idx;
-                }
-                Console.WriteLine(lines[idx]);
-            }
-            return idx;
-        }
-
-        static bool getEnvVar(ref List<string> scriptargs)
-        {
-            if(scriptargs.Count() < 2)
-            {
-                return true; //no args, nothing to do
-            }
-            for(var i = 1; i < scriptargs.Count(); i++)
-            {
-                Match m = Regex.Match(scriptargs[i],"<.*>");
-                while(m.Success)
-                {
-                    var str = m.ToString();
-                    var e = Environment.GetEnvironmentVariable(
-                        str.Replace("<","").Replace(">","")
-                        );
-                    m = m.NextMatch();
-                    if(e == null)
-                    {
-                        Error("bad environment variable substitution");
-                        return false; //any failure bad
-                    }
-                    scriptargs[i] = scriptargs[i].Replace(str,e);
-                }
-            }
-            return true;
-        }
-
         static void CreateUser(ref List<string> argslist)
         {
             //-createuser [ -admin ] username [ password ]
@@ -1517,23 +1086,7 @@ namespace ConsoleApp
                 Error("add to administrators group failed");
                 return;
             }
-        }
-
-        static string getSerialNumber()
-        { 
-            string output = null;
-            processDo("wmic.exe", "bios get SerialNumber", ref output);
-            if(output != null && output.StartsWith("SerialNumber"))
-            { 
-                var arr = output.Split(new char[]{'\r','\n',' '}, 
-                    System.StringSplitOptions.RemoveEmptyEntries);
-                if(arr.Length == 2)
-                {
-                    return arr[1];
-                }
-            }
-            return null;
-        }
+        }        
 
         static void RenamePC(ref List<string> argslist)
         { 
@@ -1584,51 +1137,110 @@ namespace ConsoleApp
                 return;
             }
         }
+        
 
-        static bool processDo(string cmd, string args, ref string output)
+        //script only options
+
+        static void DelStartupLnk(ref List<string> argslist)
         {
-            output = null;
-            ProcessStartInfo startInfo = new ProcessStartInfo();
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = false;
-            startInfo.FileName = cmd;
-            startInfo.Arguments = args;
-            startInfo.RedirectStandardOutput = true;
-
-            try
+            //-delstartuplnk
+            //option is exclusive to scriptfile
+            int ret = 0;
+            //delete any links to this exe in this userprofile's startup folder
+            if (userprofile == null)
             {
-                // Start the process with the info we specified.
-                // Call WaitForExit and then the using-statement will close.
-                using (Process exeProcess = Process.Start(startInfo))
+                Error("could not get userprofile");
+                return;
+            }
+            //"C:\\Users\\User1"
+            string sdir = $@"{userprofile}\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup";
+            foreach (var f in Directory.EnumerateFiles(sdir)
+                .Where(n => n.ToLower().EndsWith("lnk")))
+            {
+                if (File.ReadAllText(f).Contains(exe_name))
                 {
-                    output = exeProcess.StandardOutput.ReadToEnd();
-                    exeProcess.WaitForExit();
-                    return exeProcess.ExitCode == 0;
+                    try
+                    {
+                        File.Delete(f);
+                    }
+                    catch (Exception)
+                    {
+                        ret++;
+                    }
                 }
             }
-            catch
+            Exit(ret); //record the exit code
+        }
+
+        static int Message(ref string[] lines, ref int idx)
+        {
+            //-message
+            //scripts only
+            //lines[idx] is line with -message
+            //so advance 1
+            idx++;
+            var idx_start = idx;
+            for (; idx < lines.Length; idx++)
             {
-               return false;
+                if (lines[idx].ToLower().StartsWith("-message"))
+                {
+                    return idx;
+                }
+                Console.WriteLine(lines[idx]);
+            }
+            return idx;
+        }
+
+        static void WriteFile(ref string[] lines, string fil, ref int idx)
+        {
+            //scripts only
+            //lines[idx] is line with -writefile filename
+            //so advance 1
+            idx++;
+            var idx_start = idx;
+            for (; idx < lines.Length; idx++)
+            {
+                if (lines[idx].ToLower().StartsWith("-writefile"))
+                {
+                    if (idx - idx_start > 0)
+                    {
+                        var w = new List<string>(lines).GetRange(idx_start, idx).ToArray();
+                        try
+                        {
+                            File.WriteAllLines(fil, w);
+                        }
+                        catch (Exception)
+                        {
+                            Error(fil, "could not write to file");
+                        }
+                    }
+                    else
+                    {
+                        Error("no data to write");
+                    }
+                    return;
+                }
+                //check for embedded -writefile (after above code)
+                if (lines[idx].ToLower().StartsWith("--writefile"))
+                {
+                    //make normal -writefile
+                    lines[idx] = lines[idx].Substring(1);
+                }
             }
         }
-        static bool processDo(string cmd, string args)
-        { 
-            string dummy = null;
-            return processDo(cmd, args, ref dummy);
-        }
-        
+
         static void RunExe(ref List<string> argslist)
-        { 
+        {
             //script only
             //-runexe exename [ arguments ]
-            if(argslist.Count() < 2)
-            { 
+            if (argslist.Count() < 2)
+            {
                 Help(ref argslist);
                 return;
             }
             string fil = argslist[1];
             string args = null;
-            if(argslist.Count() > 2)
+            if (argslist.Count() > 2)
             {
                 args = string.Join(" ", argslist.Skip(2));
             }
@@ -1653,6 +1265,416 @@ namespace ConsoleApp
                 return;
             }
         }
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
+        static void Maximize()
+        {
+            Process p = Process.GetCurrentProcess();
+            ShowWindow(p.MainWindowHandle, 3); //SW_MAXIMIZE = 3
+        }
+        static void Minimize()
+        {
+            Process p = Process.GetCurrentProcess();
+            ShowWindow(p.MainWindowHandle, 6); //SW_MINIMIZE = 6
+        }
+
+
+        //helper functions
+
+        static bool processDo(string cmd, string args, ref string output)
+        {
+            output = null;
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = cmd;
+            startInfo.Arguments = args;
+            startInfo.RedirectStandardOutput = true;
+
+            try
+            {
+                // Start the process with the info we specified.
+                // Call WaitForExit and then the using-statement will close.
+                using (Process exeProcess = Process.Start(startInfo))
+                {
+                    output = exeProcess.StandardOutput.ReadToEnd();
+                    exeProcess.WaitForExit();
+                    return exeProcess.ExitCode == 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        static bool processDo(string cmd, string args)
+        {
+            //processDo without needing output
+            string dummy = null;
+            return processDo(cmd, args, ref dummy);
+        }
+
+        static string getSerialNumber()
+        {
+            string output = null;
+            processDo("wmic.exe", "bios get SerialNumber", ref output);
+            if (output != null && output.StartsWith("SerialNumber"))
+            {
+                var arr = output.Split(new char[] { '\r', '\n', ' ' },
+                    System.StringSplitOptions.RemoveEmptyEntries);
+                if (arr.Length == 2)
+                {
+                    return arr[1];
+                }
+            }
+            return null;
+        }
+
+        static bool getEnvVar(ref List<string> scriptargs)
+        {
+            //substitute environement variables into striptargs
+            //like- <userprofile>
+            if (scriptargs.Count() < 2)
+            {
+                return true; //no args, nothing to do
+            }
+            for (var i = 1; i < scriptargs.Count(); i++)
+            {
+                Match m = Regex.Match(scriptargs[i], "<.*>");
+                while (m.Success)
+                {
+                    var str = m.ToString();
+                    var e = Environment.GetEnvironmentVariable(
+                        str.Replace("<", "").Replace(">", "")
+                        );
+                    m = m.NextMatch();
+                    if (e == null)
+                    {
+                        Error("bad environment variable substitution");
+                        return false; //any failure bad
+                    }
+                    scriptargs[i] = scriptargs[i].Replace(str, e);
+                }
+            }
+            return true;
+        }
+
+        static string[] cmdlineToArray(string cmdline)
+        {
+            //parse script line into args
+            //simple version - double quotes only
+            //no nested quotes
+            var lc = new List<char>();
+            bool inquote = false;
+            foreach (var ch in cmdline)
+            {
+                if (ch == '"')
+                {
+                    inquote = !inquote; //toggle
+                    continue; //quotes not kept
+                }
+                //save non-quoted spaces as \n
+                if (!inquote && ch == ' ')
+                {
+                    lc.Add('\n');
+                }
+                else
+                {
+                    lc.Add(ch); //add to our list of chars
+                }
+            }
+            //list of chars to string, then split by \n, discard empties
+            return string.Concat(lc)
+                .Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        static void regimportDefaultuser(string fil)
+        {
+            //import into default user hive
+            //get reg key where reg file was previously loaded
+            //[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run]
+            //would be HKEY_LOCAL_MACHINE\1 -> HKLM\1
+            string loadkey = null;
+            foreach (string line in System.IO.File.ReadAllLines(fil))
+            {
+                //only get first one, assume all are the same
+                if (line.StartsWith(@"[HKEY_LOCAL_MACHINE\"))
+                {
+                    loadkey = @"HKLM\";
+                }
+                else if (line.StartsWith(@"[HKEY_CURRENT_USER\"))
+                {
+                    loadkey = @"HKU\";
+                }
+                if (loadkey == null)
+                {
+                    continue;
+                }
+                string[] ss = line.Split('\\');
+                if (ss.Count() > 2)
+                {
+                    loadkey = $@"{loadkey}{ss[1]}";
+                }
+                else
+                {
+                    loadkey = null;
+                }
+                break;
+            }
+            if (loadkey == null)
+            {
+                Error("cannot decode reg file import location");
+                return;
+            }
+            string ntuserdat = $@"{sysdrive}\users\default\ntuser.dat";
+            string ntuserbak = $@"{ntuserdat}.original";
+            //backup ntuser.dat -> ntuser.dat.original if not done already
+            if (!File.Exists(ntuserbak))
+            {
+                try
+                {
+                    File.Copy(ntuserdat, ntuserbak);
+                }
+                catch (Exception)
+                {
+                    Error("could not backup default user ntuser.dat");
+                    return;
+                }
+            }
+            //check if key already exists (cannot load into existing key)
+            if (processDo("reg.exe", $@"query {loadkey}"))
+            {
+                Error("reg file import location cannot be used");
+                return;
+            }
+            //load ntuser.dat file to same location
+            if (!processDo("reg.exe", $@"load {loadkey} {ntuserdat}"))
+            {
+                Error("unable to load default user registry hive");
+                return;
+            }
+            //import reg file
+            bool ret = processDo("reg.exe", $@"import {fil}");
+            //unload ntuser.dat (if previous succeeded or not)
+            ret &= processDo("reg.exe", $@"unload {loadkey}");
+            //ret == true if both succeeded
+            if (!ret)
+            {
+                Error("failed to import registry file");
+                return;
+            }
+        }
+
+        static void bingpaper(ref string fil)
+        {
+            fil = null; //caller can now test
+            //no need to try if no internet
+            if (!isInternetUp())
+            {
+                Error("no internet connection to bing.com");
+                return;
+            }
+            //get todays bing picture store in public pictures folder
+            if (!Directory.Exists(bingfolder))
+            {
+                try
+                {
+                    Directory.CreateDirectory(bingfolder);
+                }
+                catch (Exception)
+                {
+                    Error(bingfolder, "cannot create directory");
+                    return;
+                }
+            }
+
+            System.Net.WebClient wc = new System.Net.WebClient();
+            string bingurl = "http://www.bing.com";
+            string binghttp = wc.DownloadString(bingurl);
+            string[] lines = binghttp.Replace("\"", "\n").Replace("'", "\n").Replace("\\", "").Split('\n');
+            string jpgurl = "";
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("/") && line.EndsWith(".jpg"))
+                {
+                    jpgurl = bingurl + line;
+                    break;
+                }
+            }
+            if (jpgurl == "")
+            {
+                return;
+            }
+            string jpgname = $@"{bingfolder}\{jpgurl.Split('/').Last()}";
+            //may have already downloaded, check
+            if (!File.Exists(jpgname))
+            {
+                wc.DownloadFile(jpgurl, jpgname);
+            }
+            if (File.Exists(jpgname))
+            {
+                fil = jpgname;
+            }
+        }
+
+        static bool removePackage(string fullname)
+        {
+            Console.Write(fullname.Split('_')[0] + "...");
+            PackageManager packageManager = new Windows.Management.Deployment.PackageManager();
+
+            IAsyncOperationWithProgress<DeploymentResult, DeploymentProgress> deploymentOperation =
+                packageManager.RemovePackageAsync(fullname);
+            // This event is signaled when the operation completes
+            ManualResetEvent opCompletedEvent = new ManualResetEvent(false);
+
+            // Define the delegate using a statement lambda
+            deploymentOperation.Completed = (depProgress, status) => { opCompletedEvent.Set(); };
+
+            // Wait until the operation completes
+            opCompletedEvent.WaitOne();
+
+            // Check the status of the operation
+            if (deploymentOperation.Status == AsyncStatus.Error)
+            {
+                DeploymentResult deploymentResult = deploymentOperation.GetResults();
+                Console.WriteLine("error {0}", deploymentOperation.ErrorCode);
+                //Console.WriteLine("Error text: {0}", deploymentResult.ErrorText);
+            }
+            else if (deploymentOperation.Status == AsyncStatus.Canceled)
+            {
+                Console.WriteLine("canceled");
+            }
+            else if (deploymentOperation.Status == AsyncStatus.Completed)
+            {
+                Console.WriteLine("removed");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("unknown status");
+            }
+
+            return false;
+        }
+
+        static bool isAdmin()
+        {
+            return new WindowsPrincipal(WindowsIdentity.GetCurrent())
+                .IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        static bool isInternetUp()
+        {
+            try
+            {
+                Ping p = new Ping();
+                String host = "8.8.8.8";
+                int timeout = 2000;
+                PingReply reply = p.Send(host, timeout);
+                return (reply.Status == IPStatus.Success);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        static void getAppsList(ref List<Apps> myapps, bool getappx)
+        {
+            //if appx not needed- like unpinstart,pinstart,unpintaskbar
+            //no need to get appx list
+
+            //get Appx list first
+            var appxlist = new List<string>();
+            if (getappx) { getAppxList(ref appxlist); }
+
+            //get apps in appsfolder namespace
+            Type t = Type.GetTypeFromProgID("Shell.Application");
+            dynamic shell = Activator.CreateInstance(t);
+            var appobj = shell.NameSpace("shell:AppsFolder");
+
+            //cannot remove these from appxlist until finished
+            //as some (1?) apps like calendar/mail refer to the same
+            //appx- so keep a list instead
+            var alreadydone = new List<string>();
+            foreach (var item in appobj.Items())
+            {
+                var a = new Apps();
+                a.Name = item.Name;
+                a.Path = item.Path;
+                a.Verbs = item.Verbs();
+                //file explorer, need alternate location for verbs
+                if (item.Name.ToLower() == "file explorer")
+                {
+                    var v = fileExplorerVerbs();
+                    if (v != null)
+                    {
+                        a.Verbs = v;
+                    }
+                }
+                //check if win app (for -listapps and removeappx)
+                if (getappx && item.Path.Contains("_") && item.Path.Contains("!"))
+                {
+                    var tmp = item.Path.Split('_')[0];
+                    foreach (var n in appxlist)
+                    {
+                        if (n.StartsWith(tmp))
+                        {
+                            a.FullName = n;
+                            alreadydone.Add(n);
+                            break;
+                        }
+                    }
+                }
+                myapps.Add(a);
+            }
+            if (!getappx) return;
+
+            //now add remaining appxlist
+            foreach (var nam in appxlist)
+            {
+                if (alreadydone.Contains(nam)) continue;
+                var a = new Apps();
+                a.FullName = nam;
+                myapps.Add(a);
+            }
+        }
+
+        static void getAppxList(ref List<string> appxlist)
+        {
+            PackageManager packageManager = new Windows.Management.Deployment.PackageManager();
+            IEnumerable<Package> packages =
+                packageManager.FindPackagesForUser(WindowsIdentity.GetCurrent().User.Value);
+
+            foreach (Package package in packages)
+            {
+                appxlist.Add(package.Id.FullName);
+            }
+        }
+
+        static dynamic fileExplorerVerbs()
+        {
+            //File Explorer needs alternate location for verbs()
+            Type t = Type.GetTypeFromProgID("Shell.Application");
+            dynamic shell = Activator.CreateInstance(t);
+            //use another namespace where File Explorer is located- start menu places
+            var feobj = shell.NameSpace(
+                    Environment.GetEnvironmentVariable("ProgramData") +
+                    @"\Microsoft\Windows\Start Menu Places"
+                    );
+            //find file explorer, return its Verbs()
+            foreach (var v in feobj.Items())
+            {
+                if (v.path.ToLower().Contains("file explorer"))
+                {
+                    return v.Verbs();
+                }
+            }
+            return null;
+        }
+
+
     }
 }
 
