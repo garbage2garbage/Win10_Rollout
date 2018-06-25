@@ -140,9 +140,9 @@ namespace ConsoleApp
         public static string exe_name; //name of this script without path, set in main
         public static string sysdrive; //normally C:
         public static string bingfolder; //where to store bing wallpaper
-        public static List<Options> optionslist;
+        public static List<Options> optionslist; //each option, handler function 
         public static bool script_is_running = false; //if script running, no exits
-        public static int error_count = 0;
+        public static int error_count = 0; //for scripts
         public static string userprofile; //userprofile env variable
 
         //set wallpaper dll
@@ -1013,10 +1013,16 @@ namespace ConsoleApp
                 Error("cannot get current user's profile folder");
                 return;
             }
+            //kill weather app to let us delete the folder/files
+            Process[] processes = Process.GetProcesses();
+            foreach (var p in processes.Where(x => x.MainWindowTitle == "Weather"))
+            {
+                p.Kill();
+            }
             //weather app folder
             string wxdir = $@"{userprofile}\AppData\Local\Packages\microsoft.Bingweather_8wekyb3d8bbwe";
-            //delete everything (try a few times- AC dir can be stubborn)
-            for(var i = 0; i < 2; i++)
+            //delete everything (try up to 3 times)
+            for(var i = 0; i < 3; i++)
             { 
                 try 
                 { 
@@ -1024,13 +1030,15 @@ namespace ConsoleApp
                 }
                 catch (Exception)
                 { 
-                    continue;
-                } //try again
+                    continue; //try again
+                } 
+                break; //it worked
             }
             //continue with whatever we have
 
             //folders to create
-            string[] fol = { "AC", "AppData", "LocalCache", "LocalState", "RoamingState", "Settings", "SystemAppData", "TempState" };
+            string[] fol = { "AC", "AppData", "LocalCache", "LocalState", 
+                "RoamingState", "Settings", "SystemAppData", "TempState" };
 
             //create all folders
             foreach (string d in fol)
@@ -1041,29 +1049,39 @@ namespace ConsoleApp
                 } 
                 catch(Exception)
                 {
+                    //we are too far in, just keep going
                 }
             }
+            //local function
+            void write_internal_dat(){
+                try
+                {
+                    System.IO.File.WriteAllBytes(
+                        $@"{wxdir}\Settings\settings.dat",
+                        AppZero.Properties.Resources.settings_dat
+                        );
+                }
+                catch
+                {
+                }
+            }
+
             //if filename not provided, use resource data instead
             if (fil == null)
             {
-                System.IO.File.WriteAllBytes(
-                    $@"{wxdir}\Settings\settings.dat", 
-                    AppZero.Properties.Resources.settings_dat
-                    );
+                write_internal_dat();
             }
             else
             {
                 try
                 { 
-                    File.Copy(fil, wxdir + @"\Settings\settings.dat"); 
+                    File.Copy(fil, $@"{wxdir}\Settings\settings.dat"); 
                 }
                 catch(Exception)
-                { 
-                    //use resource data
-                    System.IO.File.WriteAllBytes(
-                        $@"{wxdir}\Settings\settings.dat", 
-                        AppZero.Properties.Resources.settings_dat
-                        );
+                {
+                    //use resource data instead
+                    write_internal_dat();
+                    //but still give error
                     Error(fil, "failed to copy file");
                     return;
                 }
