@@ -1588,21 +1588,28 @@ namespace ConsoleApp
         static bool processDo(string cmd, string args, ref string output)
         {
             output = null;
-            Process p = new Process();
-            // Redirect the output stream of the child process.
-            p.StartInfo.UseShellExecute = false;
-            p.StartInfo.RedirectStandardOutput = true;
-            p.StartInfo.FileName = cmd;
-            p.StartInfo.CreateNoWindow = true;
-            p.StartInfo.Arguments = args;
-            p.Start();
-            if(p == null)
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.CreateNoWindow = true;
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = cmd;
+            startInfo.Arguments = args;
+            startInfo.RedirectStandardOutput = true;
+
+            try
             {
-                return false;
+                // Start the process with the info we specified.
+                // Call WaitForExit and then the using-statement will close.
+                using (Process exeProcess = Process.Start(startInfo))
+                {
+                    output = exeProcess.StandardOutput.ReadToEnd();
+                    exeProcess.WaitForExit();
+                    return exeProcess.ExitCode == 0;
+                }
             }
-            output = p.StandardOutput.ReadToEnd();            
-            p.WaitForExit();
-            return p.ExitCode == 0;
+            catch
+            {
+               return false;
+            }
         }
         static bool processDo(string cmd, string args)
         { 
@@ -1625,17 +1632,23 @@ namespace ConsoleApp
             {
                 args = string.Join(" ", argslist.Skip(2));
             }
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.UseShellExecute = false;
+            startInfo.FileName = fil;
+            if (args != null) startInfo.Arguments = args;
+
             try
             {
-                Process p = new Process();
-                p.StartInfo.FileName = fil;
-                if(args != null) p.StartInfo.Arguments = args;
-                p.StartInfo.UseShellExecute = false;
-                p.Start();
-                p.WaitForExit();
-            } 
-            catch(Exception)
-            { 
+                // Start the process with the info we specified.
+                // Call WaitForExit and then the using-statement will close.
+                using (Process exeProcess = Process.Start(startInfo))
+                {
+                    exeProcess.WaitForExit();
+                    return;
+                }
+            }
+            catch
+            {
                 Error("cannot run process");
                 return;
             }
