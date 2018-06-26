@@ -25,7 +25,7 @@
 -wallpaper c:\users\public\pictures
 
 //import user registry settings
--writefile <tmp>\hkcu.reg
+-writefile ~tmp~\hkcu.reg
 Windows Registry Editor Version 5.00
 
 ;disable suggested apps
@@ -134,7 +134,7 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Foxit Software\Foxit Reader 9.0\Preferences\Others]
 "bCheckRegister"="0"
 -writefile
--regimport <tmp>\hkcu.reg
+-regimport ~tmp~\hkcu.reg
 
 //clear all pinned apps
 -unpinstart -all
@@ -152,7 +152,7 @@ Windows Registry Editor Version 5.00
 [S  ] Weather
 [S  ] Windows Defender Security Center
 -writefile
--pinstart <tmp>\pinapps.txt
+-pinstart ~tmp~\pinapps.txt
 
 //remove apps
 //using self created -listapps format file where we use the name for
@@ -197,7 +197,7 @@ Windows Registry Editor Version 5.00
 [  X] Microsoft.ZuneMusic_
 [  X] Microsoft.ZuneVideo_
 -writefile
--removeappx <tmp>\removeapps.txt
+-removeappx ~tmp~\removeapps.txt
 
 //weather location to 51247
 -weather

@@ -1035,13 +1035,15 @@ namespace ConsoleApp
                 { 
                     //runexe will use [2] as arguments
                     scriptargs[2] = lines[i].Replace("-runexe ","");
+                    scriptargs[2] = scriptargs[2].Replace(scriptargs[1] + " ", "");
                 }
                 //inc cmd count
                 cmd_count++;
                 //replace any <stuff> with environment variables
                 if(!getEnvVar(ref scriptargs))
-                { 
+                {
                     continue; //do not run if failed
+
                 }
                 //now call function
                 opt.Handler(ref scriptargs);
@@ -1095,27 +1097,27 @@ namespace ConsoleApp
         }        
 
         static void RenamePC(ref List<string> argslist)
-        { 
+        {
             //-renamepc newname [ description ] (<s#> <date> <rand>)
             if(argslist.Count() < 2)
             { 
                 Help(ref argslist);
                 return;
             }
-            //replace <s#> <date> <rand>
+            //replace ~s#~ ~date~ ~rand~
             string sernum = getSerialNumber();
             string date = DateTime.Now.ToLocalTime().ToString("MMddyyyy");
             string rand = ((UInt64)DateTime.Now.ToBinary()).ToString();
             rand = rand.Substring(rand.Length - 8); //last 8 digits
             for(var i = 1; i < argslist.Count(); i++)
             {
-                if(argslist[i].Contains("<s#>") && sernum == null)
+                if(argslist[i].Contains("~s#~") && sernum == null)
                 {
                     Error("could not get pc serial number");
                     return;
                 }
-                argslist[i] = argslist[i].Replace("<s#>", sernum)
-                    .Replace("<date>", date).Replace("<rand>", rand);
+                argslist[i] = argslist[i].Replace("~s#~", sernum)
+                    .Replace("~date~", date).Replace("~rand~", rand);
             }
             string newname = argslist[1]; 
             string desc = argslist.Count() > 2 ? argslist[2] : null;
@@ -1203,14 +1205,14 @@ namespace ConsoleApp
             //lines[idx] is line with -writefile filename
             //so advance 1
             idx++;
-            var idx_start = idx;
+            int idx_start = idx;
             for (; idx < lines.Length; idx++)
             {
                 if (lines[idx].ToLower().StartsWith("-writefile"))
                 {
                     if (idx - idx_start > 0)
                     {
-                        var w = new List<string>(lines).GetRange(idx_start, idx).ToArray();
+                        var w = new List<string>(lines).GetRange(idx_start, idx-idx_start).ToArray();
                         try
                         {
                             File.WriteAllLines(fil, w);
@@ -1247,7 +1249,10 @@ namespace ConsoleApp
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.UseShellExecute = false;
             startInfo.FileName = argslist[1];
-            if (argslist.Count() > 2) startInfo.Arguments = argslist[2];
+            if (argslist.Count() > 2)
+            {
+                startInfo.Arguments = argslist[2];
+            }
             try
             {
                 // start the process with the info specified
@@ -1291,6 +1296,7 @@ namespace ConsoleApp
             startInfo.Arguments = args;
             startInfo.RedirectStandardOutput = true;
 
+            //Console.WriteLine(cmd + " " + args);
             try
             {
                 // Start the process with the info we specified.
@@ -1340,13 +1346,12 @@ namespace ConsoleApp
             }
             for (var i = 1; i < scriptargs.Count(); i++)
             {
-                Match m = Regex.Match(scriptargs[i], "<.*>");
+                Match m = Regex.Match(scriptargs[i], "~.*~");
                 while (m.Success)
                 {
                     var str = m.ToString();
-                    var e = Environment.GetEnvironmentVariable(
-                        str.Replace("<", "").Replace(">", "")
-                        );
+                    if (str == "~s#~" || str == "~date~" || str == "~rand~") break;
+                    var e = Environment.GetEnvironmentVariable(str.Replace("~", ""));
                     m = m.NextMatch();
                     if (e == null)
                     {
