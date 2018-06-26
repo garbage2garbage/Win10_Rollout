@@ -1020,7 +1020,7 @@ namespace ConsoleApp
                 {
                     continue;
                 }
-                //ignore -scriptfile
+                //ignore -scriptfile (for now)
                 if (opt.Name == "-scriptfile")
                 {
                     continue;
@@ -1029,6 +1029,12 @@ namespace ConsoleApp
                 if (scriptargs.Count() > 1 && scriptargs[1].ToLower() == "-help")
                 {
                     continue;
+                }
+                //runexe, leave arguments as-is
+                if(opt.Name == "-runexe" && scriptargs.Count() > 2)
+                { 
+                    //runexe will use [2] as arguments
+                    scriptargs[2] = lines[i].Replace("-runexe ","");
                 }
                 //inc cmd count
                 cmd_count++;
@@ -1238,21 +1244,14 @@ namespace ConsoleApp
                 Help(ref argslist);
                 return;
             }
-            string fil = argslist[1];
-            string args = null;
-            if (argslist.Count() > 2)
-            {
-                args = string.Join(" ", argslist.Skip(2));
-            }
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.UseShellExecute = false;
-            startInfo.FileName = fil;
-            if (args != null) startInfo.Arguments = args;
-
+            startInfo.FileName = argslist[1];
+            if (argslist.Count() > 2) startInfo.Arguments = argslist[2];
             try
             {
-                // Start the process with the info we specified.
-                // Call WaitForExit and then the using-statement will close.
+                // start the process with the info specified
+                // the using-statement will close when done
                 using (Process exeProcess = Process.Start(startInfo))
                 {
                     exeProcess.WaitForExit();

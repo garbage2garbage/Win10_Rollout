@@ -82,7 +82,7 @@
     
     run an executable program with optional arguments, if exename has 
     spaces it will need to be quoted
-    arguments can be quoted, but is not necessary
+    arguments will be passed to the executable as-is
     examples-
     -runexe cmd.exe /c mybatchfile.cmd
     -runexe powercfg /change monitor-timeout-ac 0
