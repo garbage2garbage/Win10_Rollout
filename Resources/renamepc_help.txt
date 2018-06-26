@@ -2,14 +2,13 @@
     rename pc to newname and optionally set the computer description
     (no spaces allowed in newname, description should be quoted)
     available substitution variables are serial#, todays date, and a random
-    8 digit number (based on time)
-    if the serial number option is specified and it cannot be found, the pc
-    will not be renamed
+    8 digit number, if the serial number option is specified and it cannot 
+    be found, the pc will not be renamed
     
     examples, if the pc serial# is 123ABC, and today's date is 6/23/2018-
-    -renamepc PC-<s#>    -> PC-123ABC
-    -renamepc PC-<date>  -> PC-06232018
-    -renamepc PC-<rand>  -> PC-26226328
+    -renamepc PC-[s#]    -> PC-123ABC
+    -renamepc PC-[date]  -> PC-06232018
+    -renamepc PC-[rand]  -> PC-26226328
     
     example with description
-    -renamepc MYPC<date> "this is my pc"
+    -renamepc MYPC[date] "this is my pc"

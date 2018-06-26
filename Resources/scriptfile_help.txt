@@ -1,14 +1,14 @@
 
     run one or more commands provided by a file where each line in the file 
     will be processed the same as if it were entered on the command line, 
-    one complete command per line (do not include the exe name)
+    one complete command per line (starting with the -optionname)
     lines without a valid command will be ignored, the script will attempt
     to run all commands, with the exe returning the number of errors
     
     for script files only, environment variables can be embedded when 
     specifying filenames by enclosing the environment variable in 
-    <brackets>, example-
-    -regimport <tmp>\hkcu.reg
+    square [brackets], example-
+    -regimport [tmp]\hkcu.reg
     
     a few lines from a sample file named myscript.txt- 
      -unpinstart -all 
@@ -34,19 +34,20 @@
     can also be used to embed other scripts
     
     to embed the -writefile command in a file currently being written, 
-    use --writefile
+    use --writefile (which will be written as -writefile, but prevent the
+    termination of the current -writefile operation)
     
     example script which will write the embedded reg file to the current
     user's temp folder, then import it with the -regimport option
     
-    -writefile <tmp>\hkcu.reg
+    -writefile [tmp]\hkcu.reg
     Windows Registry Editor Version 5.00
 
     [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
     "SystemPaneSuggestionsEnabled"=dword:00000000
     "SubscribedContent-338388Enabled"=dword:00000000
     -writefile
-    -regimport <tmp>\hkcu.reg
+    -regimport [tmp]\hkcu.reg
 
     
     -message
@@ -71,11 +72,9 @@
     
     -needadmin
     
-    checks if the user running the script is a member of the administrators
-    group, and exits if not
-    place at the start of the script if any commands require administrator
-    priveleges to prevent partial script completion because the script was
-    not run as adminstrator
+    exits if the user running the script does not have administrator 
+    privileges- place at the start of the script to prevent partial script
+    completion because the script was not run as adminstrator
 
     
     -runexe exename [ arguments ]
@@ -85,4 +84,4 @@
     arguments will be passed to the executable as-is
     examples-
     -runexe cmd.exe /c mybatchfile.cmd
-    -runexe powercfg /change monitor-timeout-ac 0
+    -runexe powercfg.exe /change monitor-timeout-ac 0

@@ -26,7 +26,7 @@
 -timezone "Central Standard Time"
 
 //import HKLM settings
--writefile ~tmp~\hklm.reg
+-writefile [tmp]\hklm.reg
 Windows Registry Editor Version 5.00
 
 ;advertising
@@ -45,10 +45,10 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender Security Center\Virus and threat protection]
 "SummaryNotificationDisabled"=dword:00000001
 -writefile
--regimport ~tmp~\hklm.reg
+-regimport [tmp]\hklm.reg
 
 //import default user HKCU settings (for all new users)
--writefile ~tmp~\hkcu_du.reg
+-writefile [tmp]\hkcu_du.reg
 Windows Registry Editor Version 5.00
 
 ;prevent OneDrive from installing for new users
@@ -63,7 +63,7 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\1\Console]
 "FontSize"=dword:00180000
 -writefile
--regimport -defaultuser ~tmp~\hkcu_du.reg
+-regimport -defaultuser [tmp]\hkcu_du.reg
 
 //copy wallpapers from wallpapers folder (relative to current folder)
 -runexe cmd.exe /c if exist wallpapers copy /y wallpapers\*.jpg c:\users\public\pictures
@@ -88,10 +88,10 @@ Windows Registry Editor Version 5.00
 -runexe cmd.exe /c if exist Win32Apps Win32Apps\install.cmd
 
 //create first 'real' user with admin priveleges
--createuser -admin TestUser2
+-createuser -admin User1
 
 //rename pc
--renamepc PC-~s#~
+-renamepc PC-[s#]
 
 //show message
 -message

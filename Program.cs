@@ -321,7 +321,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-wallpaper")
             {
-                Console.WriteLine(AppZero.Properties.Resources.wallpaper_help.Replace("{bingfolder}",bingfolder));
+                Console.WriteLine(AppZero.Properties.Resources.wallpaper_help.Replace("{bingfolder}", bingfolder));
             }
             if (!specific || specific_str == "-regimport")
             {
@@ -329,7 +329,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-regimport")
             {
-                Console.WriteLine(AppZero.Properties.Resources.regimport_help.Replace("{exe_name}",exe_name));
+                Console.WriteLine(AppZero.Properties.Resources.regimport_help.Replace("{exe_name}", exe_name));
             }
             if (!specific || specific_str == "-weather")
             {
@@ -359,7 +359,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-shortcut")
             {
-                Console.WriteLine(AppZero.Properties.Resources.shortcut_help.Replace("{exe_name}",exe_name));
+                Console.WriteLine(AppZero.Properties.Resources.shortcut_help.Replace("{exe_name}", exe_name));
             }
             if (!specific || specific_str == "-hidelayoutxml")
             {
@@ -376,7 +376,7 @@ namespace ConsoleApp
             if (specific_str == "-createuser")
             {
                 Console.WriteLine(AppZero.Properties.Resources.createuser_help);
-            } 
+            }
             if (!specific || specific_str == "-renamepc")
             {
                 Console.WriteLine($@"   -renamepc newname [ description ] (<s#> <date> <rand>)");
@@ -384,15 +384,15 @@ namespace ConsoleApp
             if (specific_str == "-renamepc")
             {
                 Console.WriteLine(AppZero.Properties.Resources.renamepc_help);
-            } 
+            }
             if (!specific || specific_str == "-scriptfile")
             {
                 Console.WriteLine($@"   -scriptfile filename");
             }
             if (specific_str == "-scriptfile")
             {
-                Console.WriteLine(AppZero.Properties.Resources.scriptfile_help.Replace("{exe_name}",exe_name));
-            }            
+                Console.WriteLine(AppZero.Properties.Resources.scriptfile_help.Replace("{exe_name}", exe_name));
+            }
             if (!specific)
             {
                 Console.WriteLine();
@@ -426,7 +426,8 @@ namespace ConsoleApp
             Exit(1);
         }
 
-        static void ErrorAdmin(){
+        static void ErrorAdmin()
+        {
             Error("need to run this command as Administrator");
         }
 
@@ -622,7 +623,8 @@ namespace ConsoleApp
                 Help(ref argslist);
                 return; //if script
             }
-            if(!processDo("tzutil.exe", $@"/s ""{argslist[1]}""")){ 
+            if (!processDo("tzutil.exe", $@"/s ""{argslist[1]}"""))
+            {
                 Error("unable to set timezone");
                 return;
             }
@@ -643,7 +645,7 @@ namespace ConsoleApp
             {
                 bingpaper(ref fil);
             }
-            if(fil == null)
+            if (fil == null)
             {
                 Error("unable to get bing picture");
                 return;
@@ -678,7 +680,7 @@ namespace ConsoleApp
             {
                 Help(ref argslist);
                 return; //if script
-            }            
+            }
             string fil = argslist[1];
             if (!File.Exists(fil))
             {
@@ -699,11 +701,11 @@ namespace ConsoleApp
             { //normal import
                 if (!processDo("reg.exe", $@"import {fil}"))
                 {
-                    if(!isAdmin())
+                    if (!isAdmin())
                     {
                         ErrorAdmin();
                     }
-                    else 
+                    else
                     {
                         Error("failed to import registry file");
                     }
@@ -734,38 +736,39 @@ namespace ConsoleApp
             //weather app folder
             string wxdir = $@"{userprofile}\AppData\Local\Packages\microsoft.Bingweather_8wekyb3d8bbwe";
             //delete everything (try up to 3 times)
-            for(var i = 0; i < 3; i++)
-            { 
-                try 
-                { 
+            for (var i = 0; i < 3; i++)
+            {
+                try
+                {
                     Directory.Delete(wxdir, recursive: true);
                 }
                 catch (Exception)
-                { 
+                {
                     continue; //try again
-                } 
+                }
                 break; //it worked
             }
             //continue with whatever we have
 
             //folders to create
-            string[] fol = { "AC", "AppData", "LocalCache", "LocalState", 
+            string[] fol = { "AC", "AppData", "LocalCache", "LocalState",
                 "RoamingState", "Settings", "SystemAppData", "TempState" };
 
             //create all folders
             foreach (string d in fol)
             {
-                try 
+                try
                 {
-                    Directory.CreateDirectory($@"{wxdir}\{d}"); 
-                } 
-                catch(Exception)
+                    Directory.CreateDirectory($@"{wxdir}\{d}");
+                }
+                catch (Exception)
                 {
                     //we are too far in, just keep going
                 }
             }
             //local function
-            void write_internal_dat(){
+            void write_internal_dat()
+            {
                 try
                 {
                     System.IO.File.WriteAllBytes(
@@ -786,10 +789,10 @@ namespace ConsoleApp
             else
             {
                 try
-                { 
-                    File.Copy(fil, $@"{wxdir}\Settings\settings.dat"); 
+                {
+                    File.Copy(fil, $@"{wxdir}\Settings\settings.dat");
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     //use resource data instead
                     write_internal_dat();
@@ -807,22 +810,22 @@ namespace ConsoleApp
             string arg = null;
             string wd = null;
             int ai = argslist.IndexOf("-arg");
-            if(ai > 0)
+            if (ai > 0)
             {
                 arg = argslist.ElementAtOrDefault(ai + 1);
-                if(arg == null)
-                { 
+                if (arg == null)
+                {
                     Help(ref argslist);
                     return;
                 }
                 argslist.RemoveRange(ai, 2);
             }
             int wi = argslist.IndexOf("-wd");
-            if(wi > 0)
-            { 
+            if (wi > 0)
+            {
                 wd = argslist.ElementAtOrDefault(wi + 1);
-                if(wd == null)
-                { 
+                if (wd == null)
+                {
                     Help(ref argslist);
                     return;
                 }
@@ -833,7 +836,7 @@ namespace ConsoleApp
             {
                 Help(ref argslist);
                 return;
-            }            
+            }
             try
             {
                 //using iwr as 'File' name collision with IWshRuntimeLibrary
@@ -842,8 +845,8 @@ namespace ConsoleApp
                 string link = argslist[1] + ".lnk";
                 var shortcut = shell.CreateShortcut(link) as iwr.IWshShortcut;
                 shortcut.TargetPath = argslist[2];
-                if(arg != null) shortcut.Arguments = arg;
-                if(wd != null) shortcut.WorkingDirectory = wd;
+                if (arg != null) shortcut.Arguments = arg;
+                if (wd != null) shortcut.WorkingDirectory = wd;
                 shortcut.Save();
             }
             catch
@@ -865,9 +868,9 @@ namespace ConsoleApp
             string xmlbak = $@"{xml}.bak";
             if (File.Exists(xml))
             {
-                try 
-                { 
-                    File.Move(xml, xmlbak); 
+                try
+                {
+                    File.Move(xml, xmlbak);
                 }
                 catch
                 {
@@ -886,8 +889,8 @@ namespace ConsoleApp
                 return;
             }
             string fil = argslist[1];
-            if (!File.Exists(fil)) 
-            { 
+            if (!File.Exists(fil))
+            {
                 Error(fil, "script file not found");
                 return;
             }
@@ -924,21 +927,21 @@ namespace ConsoleApp
             try
             {
                 lines = File.ReadAllLines(fil);
-            } 
-            catch(Exception)
-            { 
+            }
+            catch (Exception)
+            {
                 Error(fil, "cannot read file");
                 return;
             }
-            if(lines.Length == 0)
-            { 
+            if (lines.Length == 0)
+            {
                 Error(fil, "file is empty");
                 return; //not needed, script not started so Error exits
             }
 
-            for(int i = 0; i < lines.Length; i++)
+            for (int i = 0; i < lines.Length; i++)
             {
-                if (lines[i].Length == 0) 
+                if (lines[i].Length == 0)
                 {
                     continue;
                 }
@@ -955,35 +958,35 @@ namespace ConsoleApp
                 //check -writefile filename
                 //do first as other commands may be embedded
                 //to embed a -writefile command, use --writefile (handled in writeFile)
-                if(scriptargs[0].ToLower() == "-writefile" && scriptargs.Count() == 2)
+                if (scriptargs[0].ToLower() == "-writefile" && scriptargs.Count() == 2)
                 {
                     //replace any <stuff> with environment variables
-                    if(!getEnvVar(ref scriptargs))
-                    { 
+                    if (!getEnvVar(ref scriptargs))
+                    {
                         continue; //if error the embedd lines will be skipped
                         //along with the -writefile end marker
                     }
                     WriteFile(ref lines, scriptargs[1], ref i);
                     //i = second -writefile line, now will ++ in for loop
                     //and back to normal
-                    continue;                    
+                    continue;
                 }
                 //maximize/minimize window
-                if(scriptargs[0].ToLower() == "-maximize")
+                if (scriptargs[0].ToLower() == "-maximize")
                 {
                     Maximize();
                     continue;
                 }
-                if(scriptargs[0].ToLower() == "-minimize")
+                if (scriptargs[0].ToLower() == "-minimize")
                 {
                     Minimize();
                     continue;
                 }
                 //exit if not admin
-                if(scriptargs[0].ToLower() == "-needadmin")
-                { 
-                    if(!isAdmin())
-                    { 
+                if (scriptargs[0].ToLower() == "-needadmin")
+                {
+                    if (!isAdmin())
+                    {
                         Error("need to run this script as Administrator");
                         Console.WriteLine();
                         Console.WriteLine("   closing in 10 seconds...");
@@ -992,19 +995,19 @@ namespace ConsoleApp
                     }
                 }
                 //check -message
-                if(scriptargs[0].ToLower() == "-message")
-                { 
+                if (scriptargs[0].ToLower() == "-message")
+                {
                     Message(ref lines, ref i);
                     //i = second -message line, now will ++ in for loop
                     //and back to normal
-                    continue;                    
+                    continue;
                 }
                 //check -continue?
-                if(scriptargs[0].ToLower() == "-continue?")
+                if (scriptargs[0].ToLower() == "-continue?")
                 {
                     Console.Write("   ");
                     string ans = Console.ReadLine();
-                    if(ans.ToLower().StartsWith("y"))
+                    if (ans.ToLower().StartsWith("y"))
                     {
                         continue;
                     }
@@ -1031,16 +1034,16 @@ namespace ConsoleApp
                     continue;
                 }
                 //runexe, leave arguments as-is
-                if(opt.Name == "-runexe" && scriptargs.Count() > 2)
-                { 
+                if (opt.Name == "-runexe" && scriptargs.Count() > 2)
+                {
                     //runexe will use [2] as arguments
-                    scriptargs[2] = lines[i].Replace("-runexe ","");
+                    scriptargs[2] = lines[i].Replace("-runexe ", "");
                     scriptargs[2] = scriptargs[2].Replace(scriptargs[1] + " ", "");
                 }
                 //inc cmd count
                 cmd_count++;
                 //replace any <stuff> with environment variables
-                if(!getEnvVar(ref scriptargs))
+                if (!getEnvVar(ref scriptargs))
                 {
                     continue; //do not run if failed
 
@@ -1063,12 +1066,12 @@ namespace ConsoleApp
             //-createuser [ -admin ] username [ password ]
             bool admin = argslist.RemoveAll(x => x.ToLower() == "-admin") > 0;
             //-createuser username [ password ]
-            if(argslist.Count() < 2) 
-            { 
+            if (argslist.Count() < 2)
+            {
                 Help(ref argslist);
                 return;
-            }             
-            if(!isAdmin())
+            }
+            if (!isAdmin())
             {
                 ErrorAdmin();
                 return;
@@ -1076,76 +1079,78 @@ namespace ConsoleApp
             //now has 2 or more args
             string username = argslist[1];
             string password = null;
-            if(argslist.Count() > 2)
+            if (argslist.Count() > 2)
             {
                 password = argslist[2];
             }
             string args = $@"user /add {username} {password}";
             //(if password null, will get harmless space after username)
 
-            if(!processDo("net.exe", args))
+            if (!processDo("net.exe", args))
             {
                 Error("add user failed");
-                return; 
+                return;
             }
-            if(admin && !processDo("net.exe", 
+            if (admin && !processDo("net.exe",
                 $@"localgroup administrators /add {username}"))
             {
                 Error("add to administrators group failed");
                 return;
             }
-        }        
+        }
 
         static void RenamePC(ref List<string> argslist)
         {
             //-renamepc newname [ description ] (<s#> <date> <rand>)
-            if(argslist.Count() < 2)
-            { 
+            if (argslist.Count() < 2)
+            {
                 Help(ref argslist);
                 return;
             }
-            //replace ~s#~ ~date~ ~rand~
+            //replace [s#] [date] [rand]
             string sernum = getSerialNumber();
             string date = DateTime.Now.ToLocalTime().ToString("MMddyyyy");
             string rand = ((UInt64)DateTime.Now.ToBinary()).ToString();
             rand = rand.Substring(rand.Length - 8); //last 8 digits
-            for(var i = 1; i < argslist.Count(); i++)
+            for (var i = 1; i < argslist.Count(); i++)
             {
-                if(argslist[i].Contains("~s#~") && sernum == null)
+                if (argslist[i].Contains("[s#]") && sernum == null)
                 {
                     Error("could not get pc serial number");
                     return;
                 }
-                argslist[i] = argslist[i].Replace("~s#~", sernum)
-                    .Replace("~date~", date).Replace("~rand~", rand);
+                argslist[i] = argslist[i]
+                    .Replace("[s#]", sernum)
+                    .Replace("[date]", date)
+                    .Replace("[rand]", rand);
             }
-            string newname = argslist[1]; 
+            string newname = argslist[1];
             string desc = argslist.Count() > 2 ? argslist[2] : null;
             string oldname = Environment.GetEnvironmentVariable("computername");
-            if(oldname == null)
-            { 
+            if (oldname == null)
+            {
                 Error("could not get current computer name");
                 return;
             }
-            if(!isAdmin())
-            { 
+            if (!isAdmin())
+            {
                 ErrorAdmin();
                 return;
             }
             //quote names to be safe
-            if(!processDo("wmic.exe", 
+            if (!processDo("wmic.exe",
                  "ComputerSystem where Name=\"" + oldname + "\" call Rename Name=\"" + newname + "\""))
             {
                 Error("failed to rename pc");
                 return;
             }
-            if(desc != null && !processDo("wmic.exe", $@"os set description=""{desc}"""))
+            if (desc != null && !processDo("wmic.exe", $@"os set description=""{desc}"""))
             {
                 Error("could not set pc description");
                 return;
             }
         }
-        
+
 
         //script only options
 
@@ -1212,7 +1217,7 @@ namespace ConsoleApp
                 {
                     if (idx - idx_start > 0)
                     {
-                        var w = new List<string>(lines).GetRange(idx_start, idx-idx_start).ToArray();
+                        var w = new List<string>(lines).GetRange(idx_start, idx - idx_start).ToArray();
                         try
                         {
                             File.WriteAllLines(fil, w);
@@ -1340,18 +1345,18 @@ namespace ConsoleApp
         {
             //substitute environement variables into striptargs
             //like- <userprofile>
-            if (scriptargs.Count() < 2)
+            //let -renamepc handle its special args
+            if (scriptargs.Count() < 2 || scriptargs[0].ToLower() == "-renamepc")
             {
                 return true; //no args, nothing to do
             }
             for (var i = 1; i < scriptargs.Count(); i++)
             {
-                Match m = Regex.Match(scriptargs[i], "~.*~");
+                Match m = Regex.Match(scriptargs[i], @"\[.*]");
                 while (m.Success)
                 {
                     var str = m.ToString();
-                    if (str == "~s#~" || str == "~date~" || str == "~rand~") break;
-                    var e = Environment.GetEnvironmentVariable(str.Replace("~", ""));
+                    var e = Environment.GetEnvironmentVariable(str.Replace("[", "").Replace("]", ""));
                     m = m.NextMatch();
                     if (e == null)
                     {
