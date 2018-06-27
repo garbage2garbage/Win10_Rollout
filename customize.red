@@ -93,7 +93,8 @@ apps-to-pin: [
 ;===========================================================================
 ;    required vars - functions will assume these vars are set
 ;===========================================================================
-reg-file: %customize.reg
+reg-file-hklm: %HKLM.reg
+reg-file-defaultuser: %HKCU_defaultuser.reg
 sys-drive: first get-env "systemdrive" ;normally C
 default-hiv: rejoin [ %/ sys-drive %/users/default/ntuser.dat ]
 layout-xml: rejoin [ %/ sys-drive %/users/default/AppData/local/Microsoft/Windows/shell/DefaultLayouts.xml ]
@@ -469,21 +470,38 @@ set-timezone: does [
 ]
 
 ;===========================================================================
-;   registry changes HKLM\SOFTWARE and default user
-;   default user changes here have to be done before firstrun.cmd runs
+;   registry changes HKLM\SOFTWARE 
+;===========================================================================
+reg-hklm: has [ wreg ][
+    call-wait rejoin [ "reg import " to-local-file reg-file-hklm ]
+]
+
+;===========================================================================
+;   registry changes default user
+;   default user changes here have to be done before new user logs in
 ;   backup default user hiv if not already done
 ;===========================================================================
-reg-update: has [ bak wbak whiv wreg ][
+reg-defaultuser: has [ bak wbak whiv wreg lkey ][
     bak: rejoin [ default-hiv ".original" ]
     wbak: to-local-file bak
     whiv: to-local-file default-hiv
-    wreg: to-local-file reg-file
+    wreg: to-local-file reg-file-defaultuser
     any [ exists? bak  call-wait rejoin [ "copy /y " whiv " " wbak ] ]
-    any [ call-wait rejoin [ "reg load HKLM\1 " whiv ]  return false ]
+    lkey: none
+    foreach lin read/lines reg-file-defaultuser [
+        lkey: all [ find lin "[HKEY_LOCAL_MACHINE" "HKLM" ]
+        lkey: all [ not lkey find lin "[HKEY_CURRENT_USER" "HKCU" ]
+        all [ 
+            lkey
+            lin: split skip lin 1 "\"
+            lkey: rejoin [ lkey "\" lin/2 ]
+            break
+        ]
+    ]
+    any [ call-wait rejoin [ "reg load " lkey " " whiv ]  return false ]
     and~ call-wait rejoin [ "reg import " wreg ]
-         call-wait "reg unload HKLM\1" ;both run regardless of first return value
+         call-wait rejoin [ "reg unload " lkey ] ;both run regardless of first return value
 ]
-
 
 ;===========================================================================
 ;    wallpapers, copy any jpg in this drive/folder
