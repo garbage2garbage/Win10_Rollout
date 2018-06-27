@@ -119,6 +119,18 @@ last-out: ""
 last-err: ""
 log: ""
 err-count: 0
+app: context [
+    s-pinned?: t-pinned?: false
+    winapp?: does [ 
+        any [ 
+            all [ path  not name ] 
+            all [ path  find path {_}  find path {!} ] 
+        ]
+    ]
+    winapp-name: does [ all [ winapp?  first split path {_} ] ]
+    name: path: none    
+]
+apps: []
 
 ;===========================================================================
 ;   theme colors
@@ -148,11 +160,11 @@ call-wait: func [ cmd [string!] /local ret ][
     last-out: copy ""
     last-err: copy ""
     ret: call/wait/output/error cmd last-out last-err
-    append log rejoin [ "[" now "][" cmd "][exit code " ret "]" newline ]
+    append log rejoin [ "[ " now/date "  " now/time  " ][ " cmd " ][ exit code " ret " ]" newline ]
     trim/tail last-out
     trim/tail last-err
-    any [ empty? last-out  append log rejoin [ "[OUTPUT]^/" last-out "^/^/" ] ]
-    any [ empty? last-err  append log rejoin [ "[ERROR!]^/" last-err "^/^/" ] ] 
+    any [ empty? last-out  append log rejoin [ last-out "^/^/" ] ]
+    any [ empty? last-err  append log rejoin [ "==ERROR==^/" last-err "^/^/" ] ] 
     any [ zero? ret  err-count: err-count + 1 ]
     zero? ret
 ]
@@ -185,77 +197,181 @@ create-link: func [ pathname [string!] target [string!] /local cmd ][
 ]
 
 ;===========================================================================
-;   unpin all apps from start menu and taskbar, pin our list if defined
-;   can also call with /list to list all pinable apps
-;   (those already pinned start with >)
+;   for potential scripting use, to parse a script line for args
+;   using the built-in cmdline arg parsing Red uses for its own use
+;===========================================================================
+extract-cmdline-args: func [ str [ string!] /local bak tmp2 ][
+    bak: all [ system/script/args  copy system/script/args ]
+    ;use original boot arg quoted (first arg),
+    ;will end up back where it belongs
+    system/script/args: rejoin [ {"} system/options/boot {" } str ]
+    extract-boot-args
+    tmp2: copy system/script/args
+    system/script/args: all [ bak  copy bak ]
+    tmp2
+]
+
+;===========================================================================
+;   list all apps with status
+;   [STW] S=Start menu pinned, T=Taskbar pinned, W=Windows App
+;   pin/unpin apps from start menu, unpin apps from taskbar
 ;   #menu strings- '&Pin to Start' 'Un&pin from Start' 'Unpin from tas&kbar'
 ;   explorer (File Explorer) requires a link in another location to get it
 ;   unpinned from the taskbar  
 ;===========================================================================
-pintostart-ps1: {
-$apps_topin=@()
+app-list-ps1: {
+$sh=new-object -com Shell.Application
+$S='Un&pin from Start'; $T='Unpin from Tas&kbar'
+foreach($app in $sh.NameSpace('shell:AppsFolder').Items()|Sort-Object -propert Name){
+  $nam=$app.Name; $pinned='';
+  $pinned+=if($app.Verbs()|?{$_.Name -eq $S}){'S,'}else{','}
+  $pinned+=if($app.Verbs()|?{$_.Name -eq $T}){'T,'}else{','}
+  ($pinned+$nam+','+$app.Path)|write-output 
+}
+}
+get-appxlist: has [ tmp ][
+    all [
+        call-powershell-cmd "get-appxpackage | %{$_.Name}"
+        not empty? tmp: split copy last-out newline
+        return tmp
+    ]
+    return []
+]
+get-applist: func [ /local tmp0 tmp1 tmp2 tmpnames ][
+    apps: copy []
+    any [ call-powershell-cmd app-list-ps1  return apps ]
+    any [ not empty? last-out  return apps ]
+    tmp1: split copy last-out newline 
+    tmpnames: copy []
+    foreach lin tmp1 [
+        tmp2: split lin {,}
+        append apps tmp0: make app [ 
+            s-pinned?: not empty? tmp2/1
+            t-pinned?: not empty? tmp2/2
+            name: copy tmp2/3
+            path: copy tmp2/4
+        ]
+        all [ tmp0/winapp? append tmpnames first split tmp0/path {_} ]
+    ]
+    foreach a get-appxlist [
+        all [ find tmpnames a  continue ]
+        append apps make app [
+            path: copy a
+        ]
+    ]
+    apps
+]
+print-applist: does [
+    all [ empty? apps  get-applist ]
+    foreach a apps [
+        all [ 
+        a/name
+        print rejoin [
+            {[} 
+            either a/s-pinned?[{S}][{ }]
+            either a/t-pinned?[{T}][{ }]
+            either a/winapp?[{W}][{ }]
+            {] } 
+            a/name
+        ]
+        ]
+    ]
+    print {^/    other Windows Apps not visible^/}
+    foreach a apps [
+        all [ 
+        not a/name 
+        print rejoin [
+            {[  W] } a/path
+        ]
+        ]
+    ] 
+]
+
+unpinstart-all-ps1: {
 $sh=new-object -com Shell.Application
 $allappobj = $sh.NameSpace('shell:AppsFolder').Items()
-if(!$apps_topin){
-  foreach($app in $allappobj){
-    $nam=$app.Name; $pinned=''
-    if($app.Verbs()|?{$_.Name -eq 'Un&pin from Start'}){$pinned='>'} 
-    ($pinned+$nam)|write-output 
-  }
-  exit 0
+$S='Un&pin from Start'
+$allappobj|%{$_.Verbs()}|?{$_.Name -eq $S}|%{$_.DoIt()}
 }
-#unpin everything from start menu and taskbar
-$allappobj|%{$_.Verbs()}|?{$_.Name -like 'Un*pin from *ta*'}|%{$_.DoIt()}
+unpinstart-all: func [ ][
+    call-powershell-cmd unpinstart-all-ps1
+]
+
+unpinstart-ps1: {
+$appname=''
+$sh=new-object -com Shell.Application
+$allappobj = $sh.NameSpace('shell:AppsFolder').Items()
+$S='Un&pin from Start'
+$allappobj|?{$_.Name.ToLower() -eq $appname.ToLower()}|
+    %{$_.Verbs()}|?{$_.Name -eq $S}|%{$_.DoIt()}
+}
+unpinstart: func [ nam [string!] /local cmd ][
+    cmd: copy unpinstart-ps1
+    replace cmd {$appname=''} rejoin [ {$appname='} nam {'} ] 
+    call-powershell-cmd cmd
+]
+
+
+unpintaskbar-all-ps1: {
+$sh=new-object -com Shell.Application
+$T='Unpin from tas&kbar'
+$sh.NameSpace('shell:AppsFolder').Items()|
+  %{$_.Verbs()}|?{$_.Name -eq $T}|%{$_.DoIt()}
 #file explorer - needs plan B
 $sh.Namespace($env:ProgramData+'\Microsoft\Windows\Start Menu Places').Items()|
   ?{$_.Path -like '*File Explorer*'}|%{$_.Verbs()}|
-  ?{$_.Name -eq 'Unpin from tas&kbar'}|%{$_.DoIt()}
-#pin from list
-$allappobj|?{$apps_topin.contains($_.Name)}|%{$_.Verbs()}|
-  ?{$_.Name -eq '&Pin to Start'}|%{$_.DoIt()} 
+  ?{$_.Name -eq $T}|%{$_.DoIt()}
 }
+unpintaskbar-all: func [ ][
+    call-powershell-cmd unpintaskbar-all-ps1
+]
 
-pintostart: func [ /list /local tmp ret cmd ][
+unpintaskbar-ps1: {
+$appname=''
+$sh=new-object -com Shell.Application
+$T='Unpin from tas&kbar'
+#file explorer - needs plan B
+if($appname.ToLower() -eq 'file explorer'){
+  $sh.Namespace($env:ProgramData+'\Microsoft\Windows\Start Menu Places').Items()|
+    ?{$_.Path -like '*File Explorer*'}|%{$_.Verbs()}|
+    ?{$_.Name -eq $T}|%{$_.DoIt()}
+} else {
+  $sh.NameSpace('shell:AppsFolder').Items()|
+    ?{$_.Name.ToLower() -eq $appname.ToLower()}|
+    %{$_.Verbs()}|?{$_.Name -eq $T}|%{$_.DoIt()}
+}
+}
+unpintaskbar: func [ nam [string!] /local cmd ][
+    cmd: copy unpintaskbar-ps1
+    replace cmd {$appname=''} rejoin [ {$appname='} nam {'} ] 
+    call-powershell-cmd cmd
+]
+
+
+pintostart-ps1: {
+$appname=''
+$sh=new-object -com Shell.Application 
+$S='&Pin to Start'
+$sh.NameSpace('shell:AppsFolder').Items()|
+    ?{$_.Name.ToLower() -eq $appname}|%{$_.Verbs()}|
+    ?{$_.Name -eq $S}|%{$_.DoIt()} 
+}
+pintostart: func [ nam [string!] /local cmd ][
     cmd: copy pintostart-ps1
-    all [ not list  not 'value apps-to-pin  return false ] 
-    all [
-        not list
-        tmp: copy "$apps_topin = @(^/"
-        foreach app apps-to-pin [ append tmp rejoin [ "'" app "'^/" ] ]
-        append tmp ")"
-        replace cmd "$apps_topin = @()" tmp
-    ]
-    any [ ret: call-powershell-cmd cmd  return false ]
-    any [ list  return ret ]
-    all [ empty? last-out  return false ]
-    split copy last-out newline
+    replace cmd {$appname=''} rejoin [ {$appname='} nam {'} ]    
+    call-powershell-cmd cmd
 ]
 
 ;===========================================================================
 ;    remove-apps
 ;===========================================================================
-list-apps: has [ ret ][
-    all [ 
-        ret: call-powershell-cmd "get-appxpackage | %{$_.Name}"
-        ret: split copy last-out newline
-        empty? ret
-        ret: false
+
+remove-appx: func [ nam [string!] /local ret ][
+    call-powershell-cmd rejoin [ 
+        {$ProgressPreference='SilentlyContinue'; get-appxpackage }
+        nam 
+        { | remove-appxpackage}
     ]
-    ret ;false, or block of 1 or more apps
-]
-remove-apps: func [ /local ret ][
-    any [ ret: value? win10apps-remove  return false ]
-    foreach w win10apps-remove [
-        w: to-string w
-        all [ 
-            equal? first w #">"
-            w: skip w 1
-            ret: ret and call-powershell-cmd rejoin [ 
-                {$ProgressPreference='SilentlyContinue'; get-appxpackage } w { | remove-appxpackage} 
-            ]
-        ]
-    ]
-    ret ;false=any failed, true=all succeeded
 ]
 
 ;===========================================================================
@@ -493,4 +609,20 @@ set-users: has [ tmp ][
         return create-user/admin newuser
     ]
     false
+]
+
+;wallpaper.exe filename (do not use any quotes in filename- cmdline used as-is)
+wallpaper-exe: debase/base replace/all replace/all replace/all replace/all {
+TVpsAAE-C-//8_R-Q_ABXaW4zMiBQcm9ncmFtIQ0KJLQJugABzSG0TM0hY-EdvTGluaywgR29Bc20gd3
+d3LkdvRGV2VG9vbC5jb20AUEUAAEwBAgCt6DJb_AADgAAMBCwEB=C-Ag_AQ-E_=Q=E-AI=Q_AB_=M-AI
+AAHEr=D-=Q-AQ=B=B_AQ_-=oI=P______________C=BQ____=Bjb2Rl-AD-AAE-AI-C__=gAABgLmlk
+YXRhAADK-AC-AC-B__=I=Y______________-ADoDx=ECAOCB1+kCAOCB0+moCUGoAahTo/Q8AAGoA6P
+wP______________________________________________________________________________
+_-AIYgAACYI_LIg_/yUAIEAA/yUMIEAA/yUEIE-BkI_-AB4I-C=HAg_-AKYg=MI___-ACGI=mC_CyI_E
+tFUk5FTDMyLmRsb=1AFHZXRDb21tYW5kTGluZUEAXAFFeGl0UHJvY2VzcwBVU0VSMzIuZGxsAACGA1N5
+c3RlbVBhcmFtZXRlcnNJbmZvQQ___________________________________________________-AA
+} {^/} {} {=} {AAA} {-} {AAAA} {_} {AAAAAAAA} 64
+set-wallpaper: func [ fil [string!]  /local tmp ][
+    write/binary to-file tmp: rejoin [ get-env "tmp" "\set-wallpaper.exe" ] wallpaper-exe
+    call-wait rejoin [ tmp " " fil ]
 ]
