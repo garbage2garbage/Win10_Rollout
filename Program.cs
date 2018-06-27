@@ -263,7 +263,9 @@ namespace ConsoleApp
             Console.WriteLine();
             if (!specific)
             {
-                Console.WriteLine($@"   options:     for specific help, use -optionname -help");
+                Console.WriteLine($@"   for specific help, use -optionname -help");
+                Console.WriteLine();
+                Console.WriteLine($@"   options:");
                 Console.WriteLine();
             }
             if (!specific || specific_str == "-listapps")
@@ -284,7 +286,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-pinstart")
             {
-                Console.WriteLine(AppZero.Properties.Resources.pinstart_help);
+                Console.WriteLine(AppOne.Properties.Resources.pinstart_help);
             }
             if (!specific || specific_str == "-unpinstart")
             {
@@ -313,15 +315,15 @@ namespace ConsoleApp
             }
             if (specific_str == "-removeappx")
             {
-                Console.WriteLine(AppZero.Properties.Resources.removeappx_help);
+                Console.WriteLine(AppOne.Properties.Resources.removeappx_help);
             }
             if (!specific || specific_str == "-wallpaper")
             {
-                Console.WriteLine($@"   -wallpaper filename | foldername | Bing");
+                Console.WriteLine($@"   -wallpaper filename | foldername | Bing.com");
             }
             if (specific_str == "-wallpaper")
             {
-                Console.WriteLine(AppZero.Properties.Resources.wallpaper_help.Replace("{bingfolder}", bingfolder));
+                Console.WriteLine(AppOne.Properties.Resources.wallpaper_help.Replace("{bingfolder}", bingfolder));
             }
             if (!specific || specific_str == "-regimport")
             {
@@ -329,7 +331,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-regimport")
             {
-                Console.WriteLine(AppZero.Properties.Resources.regimport_help.Replace("{exe_name}", exe_name));
+                Console.WriteLine(AppOne.Properties.Resources.regimport_help.Replace("{exe_name}", exe_name));
             }
             if (!specific || specific_str == "-weather")
             {
@@ -359,7 +361,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-shortcut")
             {
-                Console.WriteLine(AppZero.Properties.Resources.shortcut_help.Replace("{exe_name}", exe_name));
+                Console.WriteLine(AppOne.Properties.Resources.shortcut_help.Replace("{exe_name}", exe_name));
             }
             if (!specific || specific_str == "-hidelayoutxml")
             {
@@ -367,7 +369,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-hidelayoutxml")
             {
-                Console.WriteLine(AppZero.Properties.Resources.hidelayoutxml_help);
+                Console.WriteLine(AppOne.Properties.Resources.hidelayoutxml_help);
             }
             if (!specific || specific_str == "-createuser")
             {
@@ -375,7 +377,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-createuser")
             {
-                Console.WriteLine(AppZero.Properties.Resources.createuser_help);
+                Console.WriteLine(AppOne.Properties.Resources.createuser_help);
             }
             if (!specific || specific_str == "-renamepc")
             {
@@ -383,7 +385,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-renamepc")
             {
-                Console.WriteLine(AppZero.Properties.Resources.renamepc_help);
+                Console.WriteLine(AppOne.Properties.Resources.renamepc_help);
             }
             if (!specific || specific_str == "-scriptfile")
             {
@@ -391,7 +393,7 @@ namespace ConsoleApp
             }
             if (specific_str == "-scriptfile")
             {
-                Console.WriteLine(AppZero.Properties.Resources.scriptfile_help.Replace("{exe_name}", exe_name));
+                Console.WriteLine(AppOne.Properties.Resources.scriptfile_help.Replace("{exe_name}", exe_name));
             }
             if (!specific)
             {
@@ -641,14 +643,11 @@ namespace ConsoleApp
             }
             string fil = argslist[1];
             bool is_dir = false;
-            if (fil.ToLower() == "bing")
+            if (fil.ToLower() == "bing.com")
             {
                 bingpaper(ref fil);
-            }
-            if (fil == null)
-            {
-                Error("unable to get bing picture");
-                return;
+                //fallback to bingfolder to get a picture
+                if(fil == null) fil =  bingfolder;
             }
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
             {
@@ -773,7 +772,7 @@ namespace ConsoleApp
                 {
                     System.IO.File.WriteAllBytes(
                         $@"{wxdir}\Settings\settings.dat",
-                        AppZero.Properties.Resources.settings_dat
+                        AppOne.Properties.Resources.settings_dat
                         );
                 }
                 catch
@@ -1400,42 +1399,29 @@ namespace ConsoleApp
 
         static void regimportDefaultuser(string fil)
         {
-            //import into default user hive
-            //get reg key where reg file was previously loaded
-            //[HKEY_LOCAL_MACHINE\1\Software\Microsoft\Windows\CurrentVersion\Run]
+            //import a HKCU reg file into default user hive
+            //need to change keys to a temp load key location in HKLM
+            //[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run]
             //would be HKEY_LOCAL_MACHINE\1 -> HKLM\1
-            string loadkey = null;
-            foreach (string line in System.IO.File.ReadAllLines(fil))
+            //[HKEY_LOCAL_MACHINE\tmp\Software\Microsoft\Windows\CurrentVersion\Run]
+            string loadkey = @"HKLM\1";
+            string[] reglines = File.ReadAllLines(fil);
+            for(var i = 0; i < reglines.Length; i++)
             {
-                //only get first one, assume all are the same
-                if (line.StartsWith(@"[HKEY_LOCAL_MACHINE\"))
+                if (!reglines[i].StartsWith(@"[HKEY")) continue;
+                if (reglines[i].StartsWith(@"[HKEY_CURRENT_USER\"))
                 {
-                    loadkey = @"HKLM\";
-                }
-                else if (line.StartsWith(@"[HKEY_CURRENT_USER\"))
-                {
-                    loadkey = @"HKU\";
-                }
-                if (loadkey == null)
-                {
-                    continue;
-                }
-                string[] ss = line.Split('\\');
-                if (ss.Count() > 2)
-                {
-                    loadkey = $@"{loadkey}{ss[1]}";
+                    reglines[i] = reglines[i].Replace(@"[HKEY_CURRENT_USER\", @"HKEY_LOCAL_MACHINE\1\");
                 }
                 else
                 {
-                    loadkey = null;
+                    Error("all registry keys must start with HKEY_CURRENT_USER");
+                    return;
                 }
-                break;
             }
-            if (loadkey == null)
-            {
-                Error("cannot decode reg file import location");
-                return;
-            }
+            fil = Environment.GetEnvironmentVariable("tmp") + @"\tmp.reg";
+            File.WriteAllLines(fil, reglines);
+
             string ntuserdat = $@"{sysdrive}\users\default\ntuser.dat";
             string ntuserbak = $@"{ntuserdat}.original";
             //backup ntuser.dat -> ntuser.dat.original if not done already
@@ -1454,7 +1440,7 @@ namespace ConsoleApp
             //check if key already exists (cannot load into existing key)
             if (processDo("reg.exe", $@"query {loadkey}"))
             {
-                Error("reg file import location cannot be used");
+                Error("reg file import location " + loadkey + " cannot be used");
                 return;
             }
             //load ntuser.dat file to same location

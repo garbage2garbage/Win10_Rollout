@@ -16,6 +16,7 @@
      -wallpaper bing 
     would be run as follows- {exe_name} -scriptfile myscript.txt 
     
+    
     == additional options available only for scripts ==
 
     -delstartuplnk 
@@ -43,9 +44,8 @@
     -writefile [tmp]\hkcu.reg
     Windows Registry Editor Version 5.00
 
-    [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager]
-    "SystemPaneSuggestionsEnabled"=dword:00000000
-    "SubscribedContent-338388Enabled"=dword:00000000
+    [HKEY_CURRENT_USER\Console]
+    "FontSize"=dword:00180000
     -writefile
     -regimport [tmp]\hkcu.reg
 
