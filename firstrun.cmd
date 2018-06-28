@@ -23,6 +23,8 @@ set usertemp=%userprofile%\appdata\local\temp
 set regfile=%usertemp%\firstrun.reg
 set wallpaperfolder=c:\users\public\pictures
 set appone=%usertemp%\appone.exe
+set appxlist=%usertemp%\appxlist.txt
+set pinstartlist=%usertemp%\pinstartlist.txt
 set bingwxhiv=%usertemp%\weather.hiv
 set bingwxfolder=%userprofile%\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe
 if "%~dp0" == "%startfolder%\" set firstrun=1
@@ -58,28 +60,7 @@ echo.
 rem ===========================================================================
 rem     remove windows apps
 rem ===========================================================================
-%appone% -removeappx Microsoft.Messaging
-%appone% -removeappx Microsoft.Microsoft3DViewer
-%appone% -removeappx Microsoft.MicrosoftOfficeHub
-%appone% -removeappx Microsoft.MSPaint
-%appone% -removeappx Microsoft.Office.OneNote
-%appone% -removeappx Microsoft.OneConnect
-%appone% -removeappx Microsoft.People
-%appone% -removeappx Microsoft.Print3D
-%appone% -removeappx Microsoft.SkypeApp
-%appone% -removeappx Microsoft.StorePurchaseApp
-%appone% -removeappx Microsoft.Wallet
-%appone% -removeappx microsoft.windowscommunicationsapps
-%appone% -removeappx Microsoft.WindowsFeedbackHub
-%appone% -removeappx Microsoft.WindowsSoundRecorder
-%appone% -removeappx Microsoft.Xbox.TCUI
-%appone% -removeappx Microsoft.XboxApp
-%appone% -removeappx Microsoft.XboxGameOverlay
-%appone% -removeappx Microsoft.XboxGamingOverlay
-%appone% -removeappx Microsoft.XboxIdentityProvider
-%appone% -removeappx Microsoft.XboxSpeechToTextOverlay
-%appone% -removeappx Microsoft.ZuneMusic
-%appone% -removeappx Microsoft.ZuneVideo
+%appone% -removeappx %appxlist%
 echo.
 
 
@@ -123,7 +104,7 @@ rem ===========================================================================
 <nul set /p nothing=setting start menu pinned apps...
 %appone% -unpstart -all
 %appone% -unpintaskbar -all
-%appone% -pinstart "Microsoft Edge" "Calculator" "Settings" "File Explorer" "Task Manager" "Google Chrome" "Weather" "Control Panel" "Windows Defender Security Center"
+%appone% -pinstart %pinstartlist%
 if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 echo.
 
