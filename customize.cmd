@@ -199,7 +199,8 @@ rem     create new user if defined
 rem ===========================================================================
 if defined newuser (
     <nul set /p nothing=adding new user %newuser%
-    net user /add %newuser% %silent% && net localgroup administrators /add %newuser% %silent%
+    rem net user /add %newuser% %silent% && net localgroup administrators /add %newuser% %silent%
+    appone.exe -createuser -admin %newuser%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
@@ -227,7 +228,8 @@ if defined newpcname (
 )
 set /p newpcname="  new computer name: "
 if defined newpcname (
-    WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%" >NUL
+    rem WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%" >NUL
+    appone.exe -renamepc %newpcname%
 )
 echo.
 
