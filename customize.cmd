@@ -17,7 +17,7 @@ set newuser=
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe weather.hiv firstrun.reg
+set helperfiles=appone.exe weather.hiv firstrun.reg appxlist.txt
 set regfileHKLM=HKLM.reg
 set regfileHKCUdefault=HKCU_defaultuser.reg
 rem --our folders--
