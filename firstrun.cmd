@@ -22,8 +22,7 @@ set startfolder=%userprofile%\AppData\Roaming\Microsoft\Windows\Start Menu\Progr
 set usertemp=%userprofile%\appdata\local\temp
 set regfile=%usertemp%\firstrun.reg
 set wallpaperfolder=c:\users\public\pictures
-set removeappsfile=%usertemp%\remove-apps.ps1
-set pinstartfile=%usertemp%\pintostart.ps1
+set appone=%usertemp%\appone.exe
 set bingwxhiv=%usertemp%\weather.hiv
 set bingwxfolder=%userprofile%\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe
 if "%~dp0" == "%startfolder%\" set firstrun=1
@@ -59,10 +58,30 @@ echo.
 rem ===========================================================================
 rem     remove windows apps
 rem ===========================================================================
-if exist "%removeappsfile%" (
-    powershell -executionpolicy bypass -file "%removeappsfile%"
-    echo.
-)
+%appone% -removeappx Microsoft.Messaging
+%appone% -removeappx Microsoft.Microsoft3DViewer
+%appone% -removeappx Microsoft.MicrosoftOfficeHub
+%appone% -removeappx Microsoft.MSPaint
+%appone% -removeappx Microsoft.Office.OneNote
+%appone% -removeappx Microsoft.OneConnect
+%appone% -removeappx Microsoft.People
+%appone% -removeappx Microsoft.Print3D
+%appone% -removeappx Microsoft.SkypeApp
+%appone% -removeappx Microsoft.StorePurchaseApp
+%appone% -removeappx Microsoft.Wallet
+%appone% -removeappx microsoft.windowscommunicationsapps
+%appone% -removeappx Microsoft.WindowsFeedbackHub
+%appone% -removeappx Microsoft.WindowsSoundRecorder
+%appone% -removeappx Microsoft.Xbox.TCUI
+%appone% -removeappx Microsoft.XboxApp
+%appone% -removeappx Microsoft.XboxGameOverlay
+%appone% -removeappx Microsoft.XboxGamingOverlay
+%appone% -removeappx Microsoft.XboxIdentityProvider
+%appone% -removeappx Microsoft.XboxSpeechToTextOverlay
+%appone% -removeappx Microsoft.ZuneMusic
+%appone% -removeappx Microsoft.ZuneVideo
+echo.
+
 
 rem ===========================================================================
 rem     registry changes
@@ -79,32 +98,35 @@ rem     set wallpaper
 rem ===========================================================================
 <nul set /p nothing=setting wallpaper...
 rem get number of jpgs
-set n=0
-for %%f in (%wallpaperfolder%\*.jpg) do set /A n+=1
+rem set n=0
+rem for %%f in (%wallpaperfolder%\*.jpg) do set /A n+=1
 rem pick a random jpg
-if %n% == 0 ( echo pictures not found ) else (
-    set /a "rand=%random% * %n% / 32768 + 1"
-    set n=1
-    for /f "delims=*" %%1 in ('dir /a-d /b %wallpaperfolder%\*.jpg') do (
-        set jpg=%%1
-        set /a n+=1
-        if !n! gtr !rand! goto getout
-    )
-    :getout
-    reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f %silent%
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-)
+rem if %n% == 0 ( echo pictures not found ) else (
+    rem set /a "rand=%random% * %n% / 32768 + 1"
+    rem set n=1
+    rem for /f "delims=*" %%1 in ('dir /a-d /b %wallpaperfolder%\*.jpg') do (
+        rem set jpg=%%1
+       rem  set /a n+=1
+        rem if !n! gtr !rand! goto getout
+   rem  )
+   rem  :getout
+    rem reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f %silent%
+   rem  if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
+rem )
+%appone% -wallpaper %wallpaperfolder%
+if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 echo.
 
 rem ===========================================================================
 rem     set start menu pinned apps
 rem ===========================================================================
-if exist "%pinstartfile%" (
-    <nul set /p nothing=setting start menu pinned apps...
-    powershell -executionpolicy bypass -file "%pinstartfile%"
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-    echo.
-)
+<nul set /p nothing=setting start menu pinned apps...
+%appone% -unpstart -all
+%appone% -unpintaskbar -all
+%appone% -pinstart "Microsoft Edge" "Calculator" "Settings" "File Explorer" "Task Manager" "Google Chrome" "Weather" "Control Panel" "Windows Defender Security Center"
+if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+echo.
+
 
 rem ===========================================================================
 rem     weather app location
