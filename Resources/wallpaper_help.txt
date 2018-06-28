@@ -1,5 +1,0 @@
-
-    set wallpaper to filename
-    set wallpaper to random jpg picture from foldername
-    set wallpaper to daily image from Bing.com
-    (picture saved in {bingfolder})
