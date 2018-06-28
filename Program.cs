@@ -462,7 +462,7 @@ namespace ConsoleApp
             if (argslist.Count() == 1 && File.Exists(fil))
             {
                 argslist.Clear();
-                foreach (string line in System.IO.File.ReadAllLines(fil))
+                foreach (string line in File.ReadAllLines(fil))
                 {
                     if (line.Length > 0)
                     {
