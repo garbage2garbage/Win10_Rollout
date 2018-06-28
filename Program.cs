@@ -259,7 +259,7 @@ namespace ConsoleApp
             }
             if (!specific || specific_str == "-pinstart")
             {
-                Console.WriteLine($@"   -pinstart appname1 [ appname2 ""app name 3"" ... ]");
+                Console.WriteLine($@"   -pinstart filename | appname1 [ appname2 ""app name 3"" ... ]");
             }
             if (specific_str == "-pinstart")
             {
@@ -288,7 +288,7 @@ namespace ConsoleApp
             }
             if (!specific || specific_str == "-removeappx")
             {
-                Console.WriteLine($@"   -removeappx appname1 [ appname2 ""app name 3"" ... ]");
+                Console.WriteLine($@"   -removeappx filename | appname1 [ appname2 ""app name 3"" ... ]");
             }
             if (specific_str == "-removeappx")
             {
@@ -451,13 +451,26 @@ namespace ConsoleApp
 
         static void PinStart(ref List<string> argslist)
         {
-            //-pinstart list ...
+            //-pinstart filename | list ...
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
             }
             argslist.RemoveAt(0);
+            string fil = argslist[0];
+            if (argslist.Count() == 1 && File.Exists(fil))
+            {
+                argslist.Clear();
+                foreach (string line in System.IO.File.ReadAllLines(fil))
+                {
+                    if (line.Length > 0)
+                    {
+                        argslist.Add(line.Trim());
+                    };
+                }
+            }
+            //all to lowercase
             argslist = argslist.Select(x => x.ToLower()).ToList();
 
             var myapps = new List<Apps>();
@@ -474,15 +487,27 @@ namespace ConsoleApp
 
         static void RemoveAppx(ref List<string> argslist)
         {
-            //-removeappx list...
+            //-removeappx filename | list...
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return; //if script
             }
             argslist.RemoveAt(0);
-            //all to lowercase, long name to Name if needed
-            //(if long name provided, will convert to short name)
+            string fil = argslist[0];
+            if (argslist.Count() == 1 && File.Exists(fil))
+            {
+                argslist.Clear();
+                foreach (string line in System.IO.File.ReadAllLines(fil))
+                {
+                    if (line.Length > 0)
+                    {
+                        argslist.Add(line.Trim());
+                    };
+                }
+            }
+            //all to lowercase, fullname to Name if needed
+            //(if fullname provided, will convert to short name)
             argslist = argslist.Select(x => x.Split('_')[0].ToLower()).ToList();
 
             var myappx = new List<Appx>();

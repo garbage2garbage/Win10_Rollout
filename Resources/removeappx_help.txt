@@ -1,8 +1,8 @@
 
-    remove Windows store apps for the current user by providing one or more
+    remove Windows store apps for the current user by providing either a
+    file with an app name on each line (no quotes), or provide one or more
     space separated app names (names with spaces need to be quoted) 
-    use app names from the -listapps output starting with the name up to
-    the first underscore character-
-    Microsoft.XboxApp_41.41.18005.0_x64__8wekyb3d8bbwe
-    becomes-
-    Microsoft.XboxApp
+    use app names from the -listapps output, where either the fullname or
+    the truncated name can be used (fullnames will be truncated)-
+    Microsoft.XboxApp_41.41.18005.0_x64__8wekyb3d8bbwe (fullname)
+    Microsoft.XboxApp (truncated name)
