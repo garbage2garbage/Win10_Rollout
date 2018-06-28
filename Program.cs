@@ -421,10 +421,10 @@ namespace ConsoleApp
             {
                 if (doall || argslist.Contains(app.Name.ToLower()))
                 {
-                    //just do it- Apps class will check if valid to do
-                    app.unpin();
+                    if(app.unpin()) argslist.Remove(app.Name.ToLower());
                 }
             }
+            Exit(argslist.Count());
         }
 
         static void UnpinTaskbar(ref List<string> argslist)
@@ -443,10 +443,10 @@ namespace ConsoleApp
             {
                 if (doall || argslist.Contains(app.Name.ToLower()))
                 {
-                    //just do it- Apps class will check if valid
-                    app.unpintb();
+                    if(app.unpintb()) argslist.Remove(app.Name.ToLower());
                 }
             }
+            Exit(argslist.Count());
         }
 
         static void PinStart(ref List<string> argslist)
@@ -466,10 +466,10 @@ namespace ConsoleApp
             {
                 if (argslist.Contains(app.Name.ToLower()))
                 {
-                    //just do it- Apps class will check if valid
-                    app.pin();
+                    if(app.pin()) argslist.Remove(app.Name.ToLower());
                 }
             }
+            Exit(argslist.Count());
         }
 
         static void RemoveAppx(ref List<string> argslist)
@@ -513,8 +513,6 @@ namespace ConsoleApp
             if (fil.ToLower() == "bing.com")
             {
                 bingpaper(ref fil);
-                //fallback to bingfolder to get a picture
-                if(fil == null) fil =  bingfolder;
             }
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
             {
@@ -607,13 +605,8 @@ namespace ConsoleApp
             }
             //now has 2 or more args
             string username = argslist[1];
-            string password = null;
-            if (argslist.Count() > 2)
-            {
-                password = argslist[2];
-            }
-            string args = $@"user /add {username} {password}";
-            //(if password null, will get harmless space after username)
+            string password = argslist.Count() > 2 ? " " + argslist[2] : null;
+            string args = $@"user /add {username}{password}";
 
             if (!processDo("net.exe", args))
             {
@@ -634,6 +627,11 @@ namespace ConsoleApp
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
+                return;
+            }
+            if (!isAdmin())
+            {
+                ErrorAdmin();
                 return;
             }
             //replace [s#] [date] [rand]
@@ -661,14 +659,9 @@ namespace ConsoleApp
                 Error("could not get current computer name");
                 return;
             }
-            if (!isAdmin())
-            {
-                ErrorAdmin();
-                return;
-            }
             //quote names to be safe
             if (!processDo("wmic.exe",
-                 "ComputerSystem where Name=\"" + oldname + "\" call Rename Name=\"" + newname + "\""))
+                 $@"ComputerSystem where Name=""{oldname}"" call Rename Name=""{newname}"""))
             {
                 Error("failed to rename pc");
                 return;
@@ -696,13 +689,11 @@ namespace ConsoleApp
             //Console.WriteLine(cmd + " " + args);
             try
             {
-                // Start the process with the info we specified.
-                // Call WaitForExit and then the using-statement will close.
-                using (Process exeProcess = Process.Start(startInfo))
+                using (Process p = Process.Start(startInfo))
                 {
-                    output = exeProcess.StandardOutput.ReadToEnd();
-                    exeProcess.WaitForExit();
-                    return exeProcess.ExitCode == 0;
+                    output = p.StandardOutput.ReadToEnd();
+                    p.WaitForExit();
+                    return p.ExitCode == 0;
                 }
             }
             catch
@@ -866,10 +857,7 @@ namespace ConsoleApp
                 if (item.Name.ToLower() == "file explorer")
                 {
                     var v = fileExplorerVerbs();
-                    if (v != null)
-                    {
-                        a.Verbs = v;
-                    }
+                    if (v != null) a.Verbs = v;
                 }
                 //check if appx
                 if (item.Path.Contains("_") && item.Path.Contains("!"))
@@ -909,10 +897,7 @@ namespace ConsoleApp
             //find file explorer, return its Verbs()
             foreach (var v in feobj.Items())
             {
-                if (v.path.ToLower().Contains("file explorer"))
-                {
-                    return v.Verbs();
-                }
+                if (v.path.ToLower().Contains("file explorer")) return v.Verbs();
             }
             return null;
         }
