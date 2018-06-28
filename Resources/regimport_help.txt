@@ -1,4 +1,0 @@
-
-    import a .reg type registry file into the current registry 
-    -defaultuser option will import a reg file exported under the
-    HKEY_CURRENT_USER root key into the default user hive (ntuser.dat)
