@@ -17,8 +17,7 @@ set newuser=
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=remove-apps.ps1 weather.hiv pintostart.ps1 firstrun.reg
-set createlink=create-link.ps1
+set helperfiles=appone.exe weather.hiv firstrun.reg
 set regfileHKLM=HKLM.reg
 set regfileHKCUdefault=HKCU_defaultuser.reg
 rem --our folders--
@@ -142,16 +141,6 @@ if exist "%firstrunscript%" (
         copy /y %%f "%defaulttemp%" %silent% || set fail=1
     )
     if !fail! == 0 ( echo OK ) else ( echo FAILED )
-    echo.
-)
-
-rem ===========================================================================
-rem     create any needed dekstop links to default user desktop
-rem ===========================================================================
-if exist "%createlink%" (
-    <nul set /p nothing=creating desktop links...
-    powershell -executionpolicy bypass -file "%createlink%" "%defaultdesktop%\All Apps" shell:AppsFolder
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
 
