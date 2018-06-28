@@ -1,0 +1,4 @@
+
+    create a new user with username and optional password provided
+    if -admin option is used, the user will be added to the 
+    administrators group

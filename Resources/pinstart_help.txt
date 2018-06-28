@@ -1,0 +1,4 @@
+
+    pin apps to the start menu, provide one or more space separated app
+    name (app names with spaces need to be quoted)
+    (can use '-unpinstart -all' to first clear pinned apps) 

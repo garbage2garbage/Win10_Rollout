@@ -11,4 +11,4 @@
     -renamepc PC-[rand]  -> PC-26226328
     
     example with description
-    -renamepc MYPC[date] "this is my pc"
+    -renamepc MYPC[date] "this is my pc [s#]"
