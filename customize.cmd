@@ -11,7 +11,7 @@ rem ===========================================================================
 rem     vars
 rem ===========================================================================
 rem --options--
-set timezone=Central Standard Time
+set timezone="Central Standard Time"
 set newpcname=
 set newuser=
 set powerprofile_ac=0
@@ -57,7 +57,7 @@ rem     set timezone
 rem ===========================================================================
 if defined timezone (
     <nul set /p nothing=setting time zone to %timezone%...
-    tzutil /s "%timezone%" %silent%
+    tzutil /s %timezone% %silent%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
@@ -199,7 +199,6 @@ rem     create new user if defined
 rem ===========================================================================
 if defined newuser (
     <nul set /p nothing=adding new user %newuser%
-    rem net user /add %newuser% %silent% && net localgroup administrators /add %newuser% %silent%
     appone.exe -createuser -admin %newuser%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
@@ -228,7 +227,6 @@ if defined newpcname (
 )
 set /p newpcname="  new computer name: "
 if defined newpcname (
-    rem WMIC ComputerSystem where Name="%computername%" call Rename Name="%newpcname%" >NUL
     appone.exe -renamepc %newpcname%
 )
 echo.
