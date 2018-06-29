@@ -45,7 +45,7 @@ namespace ConsoleApp
         const string pin_str = "&Pin to Start";
         public void ListPrint()
         {
-            Console.WriteLine( String.Format("  [{0}{1}{2}] {3}{4}",
+            Console.WriteLine(String.Format("  [{0}{1}{2}] {3}{4}",
                     is_pinned() ? "S" : " ",
                     is_tbpinned() ? "T" : " ",
                     is_appx() ? "W" : " ",
@@ -123,7 +123,7 @@ namespace ConsoleApp
         public string Name { get; set; }
         public string InstalledLocation { get; set; }
         public bool is_system()
-        { 
+        {
             return InstalledLocation.ToLower().StartsWith(Program.windir.ToLower());
         }
         public void ListPrint()
@@ -158,7 +158,7 @@ namespace ConsoleApp
             if (sysdrive == null) sysdrive = "C:"; //just in case
             //in case os installed on something other than C: (slim chance)
             windir = Environment.GetEnvironmentVariable("windir");
-            if(windir == null) windir = @"C:\Windows";
+            if (windir == null) windir = @"C:\Windows";
             //bing picture folder -> public pictures \Bing
             bingfolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures);
             if (bingfolder == null)
@@ -335,17 +335,13 @@ namespace ConsoleApp
 
         static void Error(string filnam, string msg)
         {
-            Console.WriteLine();
             Console.WriteLine("   {0} : {1}", filnam, msg);
-            Console.WriteLine();
             Exit(1);
         }
 
         static void Error(string msg)
         {
-            Console.WriteLine();
             Console.WriteLine("   " + msg);
-            Console.WriteLine();
             Exit(1);
         }
 
@@ -388,7 +384,7 @@ namespace ConsoleApp
             getAppxList(ref myappx);
             foreach (var app in myappx.OrderBy(m => m.PackageFullName))
             {
-                if(!app.is_system()) app.ListPrint();
+                if (!app.is_system()) app.ListPrint();
             }
             Console.WriteLine();
 
@@ -408,45 +404,94 @@ namespace ConsoleApp
         static void UnpinStart(ref List<string> argslist)
         {
             //-unpinstart -all | list ...
-            bool doall = argslist.RemoveAll(x => x.ToLower() == "-all") > 0;
-            if (!doall && argslist.Count() < 2)
+            if(argslist.RemoveAll(x => x.ToLower() == "-all") > 0)
+            {
+                var ma = new List<Apps>();
+                getAppsList(ref ma);
+                Console.Write("Unpin all start tiles");
+                foreach (var app in ma)
+                {
+                    if(app.unpin()) Console.Write(".");
+                }
+                Console.Write("DONE");
+                Exit(0);
+            }
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
                 return;
             }
-            argslist = argslist.Select(x => x.ToLower()).ToList();
+            argslist.RemoveAt(0);
+            int maxlen = 0;
+            foreach (var a in argslist)
+            {
+                if (a.Length > maxlen) maxlen = a.Length;
+            }
             var myapps = new List<Apps>();
             getAppsList(ref myapps);
-            foreach (var app in myapps)
+            int failed = 0;
+            foreach (var app in argslist)
             {
-                if (doall || argslist.Contains(app.Name.ToLower()))
+                var idx = myapps.FindIndex(x => x.Name.ToLower() == app.ToLower());
+                if (idx == -1)
                 {
-                    if(app.unpin()) argslist.Remove(app.Name.ToLower());
+                    Console.WriteLine(@"{0}...not found", app.PadRight(maxlen, '.'));
+                    failed++;
+                }
+                else
+                {
+                    if (myapps[idx].unpin()) Console.WriteLine(@"{0}...UNPINNED", app.PadRight(maxlen, '.'));
+                    else Console.WriteLine(@"{0}...unchanged", app.PadRight(maxlen, '.'));
                 }
             }
-            Exit(argslist.Count());
+            Exit(failed);
         }
 
         static void UnpinTaskbar(ref List<string> argslist)
         {
             //-unpintaskbar -all | list ...
-            bool doall = argslist.RemoveAll(x => x.ToLower() == "-all") > 0;
-            if (!doall && argslist.Count() < 2)
+            if(argslist.RemoveAll(x => x.ToLower() == "-all") > 0)
+            {
+                var ma = new List<Apps>();
+                getAppsList(ref ma);
+                Console.Write("Unpin all apps on taskbar");
+                foreach (var app in ma)
+                {
+                    if(app.unpintb()) Console.Write(".");
+                }
+                Console.WriteLine("DONE");
+                Exit(0);
+            }
+
+            if (argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; //if script
+                return;
             }
-            argslist = argslist.Select(x => x.ToLower()).ToList();
+            argslist.RemoveAt(0);
+            int maxlen = 0;
+            foreach (var a in argslist)
+            {
+                if (a.Length > maxlen) maxlen = a.Length;
+            }
             var myapps = new List<Apps>();
             getAppsList(ref myapps);
-            foreach (var app in myapps)
+            int failed = 0;
+            foreach (var app in argslist)
             {
-                if (doall || argslist.Contains(app.Name.ToLower()))
+                var idx = myapps.FindIndex(x => x.Name.ToLower() == app.ToLower());
+                if (idx == -1)
                 {
-                    if(app.unpintb()) argslist.Remove(app.Name.ToLower());
+                    Console.WriteLine(@"{0}...not found", app.PadRight(maxlen, '.'));
+                    failed++;
+                }
+                else
+                {
+                    if (myapps[idx].unpintb()) Console.WriteLine(@"{0}...TBUNPINNED", app.PadRight(maxlen, '.'));
+                    else Console.WriteLine(@"{0}...unchanged", app.PadRight(maxlen, '.'));
                 }
             }
-            Exit(argslist.Count());
+            Exit(failed);
         }
 
         static void PinStart(ref List<string> argslist)
@@ -470,19 +515,29 @@ namespace ConsoleApp
                     };
                 }
             }
-            //all to lowercase
-            argslist = argslist.Select(x => x.ToLower()).ToList();
-
+            int maxlen = 0;
+            foreach (var a in argslist)
+            {
+                if (a.Length > maxlen) maxlen = a.Length;
+            }
             var myapps = new List<Apps>();
             getAppsList(ref myapps);
-            foreach (var app in myapps)
+            int failed = 0;
+            foreach (var app in argslist)
             {
-                if (argslist.Contains(app.Name.ToLower()))
+                var idx = myapps.FindIndex(x => x.Name.ToLower() == app.ToLower());
+                if (idx == -1)
                 {
-                    if(app.pin()) argslist.Remove(app.Name.ToLower());
+                    Console.WriteLine(@"{0}...not found", app.PadRight(maxlen,'.'));
+                    failed++;
+                }
+                else
+                {
+                    if (myapps[idx].pin()) Console.WriteLine(@"{0}...PINNED", app.PadRight(maxlen, '.'));
+                    else Console.WriteLine(@"{0}...unchanged", app.PadRight(maxlen, '.'));
                 }
             }
-            Exit(argslist.Count());
+            Exit(failed);
         }
 
         static void RemoveAppx(ref List<string> argslist)
@@ -500,29 +555,41 @@ namespace ConsoleApp
                 argslist.Clear();
                 foreach (string line in System.IO.File.ReadAllLines(fil))
                 {
-                    if (line.Length > 0)
+                    //no empty lines, no names with spaces
+                    if (line.Length > 0 && !line.Trim().Contains(" "))
                     {
                         argslist.Add(line.Trim());
                     };
                 }
             }
-            //all to lowercase, fullname to Name if needed
-            //(if fullname provided, will convert to short name)
-            argslist = argslist.Select(x => x.Split('_')[0].ToLower()).ToList();
-
+            int maxlen = 0;
+            foreach(var a in argslist)
+            {
+                if(a.Length > maxlen) maxlen = a.Length;
+            }
             var myappx = new List<Appx>();
             getAppxList(ref myappx);
-            foreach (var app in myappx)
+            int failed = 0;
+            foreach (var app in argslist)
             {
-                if (argslist.Contains(app.Name.ToLower()))
+                //long name (if provided) to short name (compares are to short names)
+                string ap = app.Split('_')[0];
+                var idx = myappx.FindIndex(x => x.Name.ToLower() == ap.ToLower());
+                //if (argslist.Contains(app.Name.ToLower()))
+                if ( idx == -1 )
                 {
-                    if (removePackage(app.Name, app.PackageFullName))
+                    Console.WriteLine(@"{0}...not found",ap.PadRight(maxlen,'.'));
+                    failed++;
+                }
+                else
+                {
+                    if (!removePackage(myappx[idx].Name, myappx[idx].PackageFullName))
                     {
-                        argslist.Remove(app.Name.ToLower());
+                        failed++;
                     }
                 }
             }
-            Exit(argslist.Count()); //number of apps in list not uninstalled
+            Exit(failed); //number of apps in list not uninstalled
         }
 
         static void Wallpaper(ref List<string> argslist)
@@ -748,7 +815,6 @@ namespace ConsoleApp
             }
             return null;
         }
-
 
         static void bingpaper(ref string fil)
         {
