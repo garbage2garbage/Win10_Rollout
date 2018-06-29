@@ -58,11 +58,12 @@ echo  you will be logged out shortly, so just log back in at logon screen
 echo.
 
 rem ===========================================================================
-rem     remove windows apps
+rem     set wallpaper
 rem ===========================================================================
-%appone% -removeappx %appxlist%
+<nul set /p nothing=setting wallpaper...
+%appone% -wallpaper %wallpaperfolder%
+if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 echo.
-
 
 rem ===========================================================================
 rem     registry changes
@@ -75,39 +76,21 @@ if exist "%regfile%" (
 )
 
 rem ===========================================================================
-rem     set wallpaper
-rem ===========================================================================
-<nul set /p nothing=setting wallpaper...
-rem get number of jpgs
-rem set n=0
-rem for %%f in (%wallpaperfolder%\*.jpg) do set /A n+=1
-rem pick a random jpg
-rem if %n% == 0 ( echo pictures not found ) else (
-    rem set /a "rand=%random% * %n% / 32768 + 1"
-    rem set n=1
-    rem for /f "delims=*" %%1 in ('dir /a-d /b %wallpaperfolder%\*.jpg') do (
-        rem set jpg=%%1
-       rem  set /a n+=1
-        rem if !n! gtr !rand! goto getout
-   rem  )
-   rem  :getout
-    rem reg add "HKCU\Control Panel\Desktop" /v "Wallpaper" /t REG_SZ /d "%wallpaperfolder%\%jpg%" /f %silent%
-   rem  if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-rem )
-%appone% -wallpaper %wallpaperfolder%
-if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
-echo.
-
-rem ===========================================================================
 rem     set start menu pinned apps
 rem ===========================================================================
 <nul set /p nothing=setting start menu pinned apps...
-%appone% -unpstart -all
+%appone% -unpinstart -all
 %appone% -unpintaskbar -all
-%appone% -pinstart %pinstartlist%
+for /f %%a in ('type %pinstartlist%') do %appone% -pinstart %%a
 if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 echo.
 
+rem ===========================================================================
+rem     remove windows apps
+rem ===========================================================================
+<nul set /p nothing=removing apps...
+for /f %%a in ('type %appxlist%') do %appone% -removeappx %%a
+echo.
 
 rem ===========================================================================
 rem     weather app location

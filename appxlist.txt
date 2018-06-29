@@ -20,3 +20,4 @@ Microsoft.XboxIdentityProvider
 Microsoft.XboxSpeechToTextOverlay
 Microsoft.ZuneMusic
 Microsoft.ZuneVideo
+
