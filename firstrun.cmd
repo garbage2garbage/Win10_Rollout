@@ -78,18 +78,19 @@ if exist "%regfile%" (
 rem ===========================================================================
 rem     set start menu pinned apps
 rem ===========================================================================
-<nul set /p nothing=setting start menu pinned apps...
+echo start menu tiles...
+echo.
 %appone% -unpinstart -all
 %appone% -unpintaskbar -all
-for /f %%a in ('type %pinstartlist%') do %appone% -pinstart %%a
-if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
+%appone% -pinstart %pinstartlist%
 echo.
 
 rem ===========================================================================
 rem     remove windows apps
 rem ===========================================================================
-<nul set /p nothing=removing apps...
-for /f %%a in ('type %appxlist%') do %appone% -removeappx %%a
+echo removing apps...
+echo.
+%appone% -removeappx %appxlist%
 echo.
 
 rem ===========================================================================
