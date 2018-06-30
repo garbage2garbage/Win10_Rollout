@@ -73,6 +73,11 @@ if exist %regfileHKCUdefault% (
         copy /y "%defaulthiv%" "%defaulthiv%.original" %silent%
         if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
         echo.
+    ) else (
+        <nul set /p nothing=restoring original user ntuser.dat...
+        copy /y "%defaulthiv%.original" "%defaulthiv%"  %silent%
+        if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
+        echo.    
     )
     <nul set /p nothing=HKCU default user registry changes...
     set fail=0
@@ -243,27 +248,3 @@ echo  remember to delete this temp user when logged into the new user
 echo.
 )
 timeout /t 30
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
