@@ -404,16 +404,16 @@ namespace ConsoleApp
         static void UnpinStart(ref List<string> argslist)
         {
             //-unpinstart -all | list ...
-            if(argslist.RemoveAll(x => x.ToLower() == "-all") > 0)
+            if (argslist.RemoveAll(x => x.ToLower() == "-all") > 0)
             {
                 var ma = new List<Apps>();
                 getAppsList(ref ma);
                 Console.Write("Unpin all start tiles");
                 foreach (var app in ma)
                 {
-                    if(app.unpin()) Console.Write(".");
+                    if (app.unpin()) Console.Write(".");
                 }
-                Console.Write("DONE");
+                Console.WriteLine("DONE");
                 Exit(0);
             }
             if (argslist.Count() < 2)
@@ -450,14 +450,14 @@ namespace ConsoleApp
         static void UnpinTaskbar(ref List<string> argslist)
         {
             //-unpintaskbar -all | list ...
-            if(argslist.RemoveAll(x => x.ToLower() == "-all") > 0)
+            if (argslist.RemoveAll(x => x.ToLower() == "-all") > 0)
             {
                 var ma = new List<Apps>();
                 getAppsList(ref ma);
                 Console.Write("Unpin all apps on taskbar");
                 foreach (var app in ma)
                 {
-                    if(app.unpintb()) Console.Write(".");
+                    if (app.unpintb()) Console.Write(".");
                 }
                 Console.WriteLine("DONE");
                 Exit(0);
@@ -500,7 +500,7 @@ namespace ConsoleApp
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; 
+                return;
             }
             argslist.RemoveAt(0);
             string fil = argslist[0];
@@ -528,7 +528,7 @@ namespace ConsoleApp
                 var idx = myapps.FindIndex(x => x.Name.ToLower() == app.ToLower());
                 if (idx == -1)
                 {
-                    Console.WriteLine(@"{0}...not found", app.PadRight(maxlen,'.'));
+                    Console.WriteLine(@"{0}...not found", app.PadRight(maxlen, '.'));
                     failed++;
                 }
                 else
@@ -546,7 +546,7 @@ namespace ConsoleApp
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; 
+                return;
             }
             argslist.RemoveAt(0);
             string fil = argslist[0];
@@ -563,9 +563,9 @@ namespace ConsoleApp
                 }
             }
             int maxlen = 0;
-            foreach(var a in argslist)
+            foreach (var a in argslist)
             {
-                if(a.Length > maxlen) maxlen = a.Length;
+                if (a.Length > maxlen) maxlen = a.Length;
             }
             var myappx = new List<Appx>();
             getAppxList(ref myappx);
@@ -576,13 +576,14 @@ namespace ConsoleApp
                 string ap = app.Split('_')[0];
                 var idx = myappx.FindIndex(x => x.Name.ToLower() == ap.ToLower());
                 //if (argslist.Contains(app.Name.ToLower()))
-                if ( idx == -1 )
+                if (idx == -1)
                 {
-                    Console.WriteLine(@"{0}...not found",ap.PadRight(maxlen,'.'));
+                    Console.WriteLine(@"{0}...not found", ap.PadRight(maxlen, '.'));
                     failed++;
                 }
                 else
                 {
+                    Console.Write(@"{0}...", myappx[idx].Name.PadRight(maxlen, '.'));
                     if (!removePackage(myappx[idx].Name, myappx[idx].PackageFullName))
                     {
                         failed++;
@@ -609,7 +610,7 @@ namespace ConsoleApp
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
             {
                 Error(fil, "file or directory does not exist");
-                return; 
+                return;
             }
             //if dir, get random jpg in provided dir
             if (is_dir)
@@ -869,8 +870,7 @@ namespace ConsoleApp
         }
 
         static bool removePackage(string nam, string fullnam)
-        {
-            Console.Write(nam + "...");
+        {            
             PackageManager packageManager = new Windows.Management.Deployment.PackageManager();
 
             IAsyncOperationWithProgress<DeploymentResult, DeploymentProgress> deploymentOperation =
@@ -903,7 +903,7 @@ namespace ConsoleApp
             }
             else
             {
-                Console.WriteLine("unknown status");
+                Console.WriteLine("failed");
             }
 
             return false;
