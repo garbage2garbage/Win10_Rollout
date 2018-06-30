@@ -500,7 +500,7 @@ namespace ConsoleApp
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; //if script
+                return; 
             }
             argslist.RemoveAt(0);
             string fil = argslist[0];
@@ -546,7 +546,7 @@ namespace ConsoleApp
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
-                return; //if script
+                return; 
             }
             argslist.RemoveAt(0);
             string fil = argslist[0];
@@ -609,7 +609,7 @@ namespace ConsoleApp
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
             {
                 Error(fil, "file or directory does not exist");
-                return; //if script
+                return; 
             }
             //if dir, get random jpg in provided dir
             if (is_dir)
