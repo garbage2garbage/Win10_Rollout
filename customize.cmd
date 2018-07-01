@@ -11,7 +11,7 @@ rem ===========================================================================
 rem     vars
 rem ===========================================================================
 rem --options--
-set timezone="Central Standard Time"
+set timezone=Central Standard Time
 set newpcname=PC-[s#]
 set newpcdescription=
 set newuser=User1
@@ -25,14 +25,12 @@ rem --our folders--
 set wallpaperfrom=Wallpaper
 set win32appsfrom=Win32Apps
 rem --files--
-set defaultlayoutfile=c:\users\default\appdata\local\microsoft\windows\shell\DefaultLayouts.xml
-set onedrivelnk=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk
-set defaulthiv=c:\users\default\ntuser.dat
+set onedrivelnk=%systemdrive%\users\default\appdata\roaming\microsoft\windows\start menu\programs\OneDrive.lnk
 rem --folders--
-set wallpaperto=c:\users\public\pictures
-set defaultstartfolder=c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup
-set defaulttemp=c:\users\default\appdata\local\temp
-set defaultdesktop=c:\users\default\Desktop
+set wallpaperto=%systemdrive%\users\public\pictures
+set defaultstartfolder=%systemdrive%\users\default\appdata\roaming\microsoft\windows\start menu\programs\Startup
+set defaulttemp=%systemdrive%\users\default\appdata\local\temp
+set defaultdesktop=%systemdrive%\users\default\Desktop
 rem --misc--
 set silent=^>NUL 2^>^&1
 
@@ -58,7 +56,7 @@ rem     set timezone
 rem ===========================================================================
 if defined timezone (
     <nul set /p nothing=setting time zone to %timezone%...
-    tzutil /s %timezone% %silent%
+    tzutil /s "%timezone%" %silent%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
 )
