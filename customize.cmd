@@ -62,12 +62,17 @@ if defined timezone (
 )
 
 rem ===========================================================================
-rem     registry changes HKLM\SOFTWARE and default user
+rem     registry changes HKLM\SOFTWARE and HKCU for default user
 rem     backup default user hiv if not already done
+rem     if already a backup, restore original before making changes
+rem     (any changes here will be done to original registry)
 rem ===========================================================================
 if exist %regfileHKCU% (
     echo HKCU default user registry changes...
     echo.
+    if exist %systemdrive%\users\default\ntuser.dat.bak (
+        copy /y %systemdrive%\users\default\ntuser.dat.bak ntuser.dat %silent%
+    )
     appone.exe -regimport "%regfileHKCU%" -defaultuser
     echo.
 )
