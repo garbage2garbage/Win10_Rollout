@@ -17,7 +17,7 @@ set newuser=
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe weather.hiv firstrun.reg appxlist.txt pinstartlist.txt
+set helperfiles=appone.exe firstrun.reg appxlist.txt pinstartlist.txt
 set regfileHKLM=HKLM.reg
 set regfileHKCUdefault=HKCU_defaultuser.reg
 rem --our folders--
@@ -112,12 +112,9 @@ rem ===========================================================================
 rem     rename default user DefaultLayouts.xml for minimal start menu tiles
 rem     will end up with settings, store and edge
 rem ===========================================================================
-if exist "%defaultlayoutfile%" (
-    <nul set /p nothing=renaming DefaultLayouts.xml...
-    ren "%defaultlayoutfile%" *.bak %silent%
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-    echo.
-)
+echo DefaultLayouts.xml...
+appone.exe -layoutxml -hide
+echo.
 
 rem ===========================================================================
 rem OneDrive setup in Run key already removed by customize.cmd, but link remains
