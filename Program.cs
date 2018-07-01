@@ -709,6 +709,8 @@ namespace ConsoleApp
                 Error("add to administrators group failed");
                 return;
             }
+            Console.WriteLine($@"created user {username}");
+            Exit(0);
         }
 
         static void RenamePC(ref List<string> argslist)
@@ -761,6 +763,9 @@ namespace ConsoleApp
                 Error("could not set pc description");
                 return;
             }
+            Console.WriteLine($@"renamed computer to {newname}");
+            if(desc != null) Console.WriteLine($@"set description to {desc}");
+            Exit(0);
         }
 
         static void Weather(ref List<string> argslist)
@@ -959,6 +964,8 @@ namespace ConsoleApp
                 Error("failed to import registry file" + a);
                 return;
             }
+            Console.WriteLine($@"imported reg file {fil}");
+            Exit(0);
         }
 
 
