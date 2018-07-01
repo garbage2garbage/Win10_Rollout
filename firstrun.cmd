@@ -61,6 +61,7 @@ echo.
 
 color 2f
 rem if run from startup folder, delete firstrun.cmd
+rem just leave appone.exe, pinstartlist.txt, appxlist.txt in users temp folder
 if "%~dp0" == "%startfolder%\" (
     echo DONE (console window will close in 10 seconds)
     timeout /t 10
