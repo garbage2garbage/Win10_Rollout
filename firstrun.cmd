@@ -15,7 +15,7 @@ rem     set some vars
 rem ===========================================================================
 set startfolder=%userprofile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 set usertemp=%userprofile%\appdata\local\temp
-set wallpaperfolder=c:\users\public\pictures
+set wallpaperfolder=%systemdrive%\users\public\pictures
 set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\appxlist.txt
 set pinstartlist=%usertemp%\pinstartlist.txt
@@ -65,6 +65,9 @@ if "%~dp0" == "%startfolder%\" (
     echo DONE (console window will close in 10 seconds)
     timeout /t 10
     (goto) 2>nul & del "%~f0"
+) else (
+    echo DONE
+    echo.
 )
 
 
