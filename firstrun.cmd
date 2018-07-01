@@ -20,7 +20,6 @@ set firstrun=0
 set logout=0
 set startfolder=%userprofile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
 set usertemp=%userprofile%\appdata\local\temp
-set regfile=%usertemp%\firstrun.reg
 set wallpaperfolder=c:\users\public\pictures
 set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\appxlist.txt
@@ -60,18 +59,8 @@ rem     set wallpaper
 rem ===========================================================================
 echo setting wallpaper...
 echo.
-%appone% -wallpaper %wallpaperfolder%
+%appone% -wallpaper "%wallpaperfolder%"
 echo.
-
-rem ===========================================================================
-rem     registry changes
-rem ===========================================================================
-if exist "%regfile%" (
-    <nul set /p nothing=registry changes...
-    reg import "%regfile%" %silent%
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-    echo.
-)
 
 rem ===========================================================================
 rem     set start menu pinned apps
@@ -80,7 +69,7 @@ echo start menu tiles...
 echo.
 %appone% -unpinstart -all
 %appone% -unpintaskbar -all
-%appone% -pinstart %pinstartlist%
+%appone% -pinstart "%pinstartlist%"
 echo.
 
 rem ===========================================================================
@@ -88,7 +77,7 @@ rem     remove windows apps
 rem ===========================================================================
 echo removing apps...
 echo.
-%appone% -removeappx %appxlist%
+%appone% -removeappx "%appxlist%"
 echo.
 
 rem ===========================================================================
