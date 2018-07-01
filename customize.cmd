@@ -17,9 +17,9 @@ set newuser=
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe firstrun.reg appxlist.txt pinstartlist.txt
+set helperfiles=appone.exe appxlist.txt pinstartlist.txt
 set regfileHKLM=HKLM.reg
-set regfileHKCUdefault=HKCU_defaultuser.reg
+set regfileHKCU=HKCU.reg
 rem --our folders--
 set wallpaperfrom=Wallpaper
 set win32appsfrom=Win32Apps
@@ -64,37 +64,17 @@ if defined timezone (
 
 rem ===========================================================================
 rem     registry changes HKLM\SOFTWARE and default user
-rem     default user changes here have to be done before firstrun.cmd runs
 rem     backup default user hiv if not already done
 rem ===========================================================================
-if exist %regfileHKCUdefault% (
-    if not exist "%defaulthiv%.original" (
-        <nul set /p nothing=backing up default user ntuser.dat...
-        copy /y "%defaulthiv%" "%defaulthiv%.original" %silent%
-        if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-        echo.
-    ) else (
-        <nul set /p nothing=restoring original user ntuser.dat...
-        copy /y "%defaulthiv%.original" "%defaulthiv%"  %silent%
-        if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-        echo.    
-    )
-    <nul set /p nothing=HKCU default user registry changes...
-    set fail=0
-    reg load HKLM\1 "%defaulthiv%" %silent%
-    if !errorlevel! == 0 ( 
-        reg import "%regfileHKCUdefault%" %silent%
-        if not !errorlevel! == 0 set fail=1
-        reg unload HKLM\1 %silent%
-        if not !errorlevel! == 0 set fail=1
-    ) else set fail=1
-    if !fail! == 0 ( echo OK ) else ( echo FAILED )
+if exist %regfileHKCU% (
+    echo HKCU default user registry changes...
+    echo.
+    appone.exe -regimport "%regfileHKCU%" -defaultuser
     echo.
 )
 if exist "%regfileHKLM%" (
-    <nul set /p nothing=HKLM registry changes...
-    reg import "%regfileHKLM%" %silent%
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
+    echo HKLM registry changes...
+    appone.exe -regimport "%regfileHKLM%"
     echo.
 )
 
