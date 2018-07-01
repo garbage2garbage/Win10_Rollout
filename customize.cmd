@@ -12,8 +12,9 @@ rem     vars
 rem ===========================================================================
 rem --options--
 set timezone="Central Standard Time"
-set newpcname=
-set newuser=
+set newpcname=PC-[s#]
+set newpcdescription=
+set newuser=User1
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
@@ -180,36 +181,22 @@ rem ===========================================================================
 rem     create new user if defined
 rem ===========================================================================
 if defined newuser (
-    <nul set /p nothing=adding new user %newuser%
-    appone.exe -createuser -admin %newuser%
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
+    echo adding new user %newuser%...
+    appone.exe -createuser -admin "%newuser%"
     echo.
 )
 
 rem ===========================================================================
-rem     get serial number (for a suggested new name)
+rem     new computer name
 rem ===========================================================================
-if not defined newpcname (
-    set sernum=" "
-    rem sernum will normally be set twice, last time set is serial number
-    for /f "skip=1 tokens=2 delims=," %%a in ('wmic bios get SerialNumber /format:csv') DO set sernum=%%a
-    rem (the above seems to end up with one space char if fails)
-    if not !sernum! == " " set newpcname=PC-!sernum!
-)
-
-rem ===========================================================================
-rem     check if want a new computer name
-rem ===========================================================================
-echo  current computer name: %computername%
 echo.
 if defined newpcname (
-    echo  [ press ENTER for new name of %newpcname% ]
-) else (
-    echo  [ press ENTER to keep %computername% ]
-)
-set /p newpcname="  new computer name: "
-if defined newpcname (
-    appone.exe -renamepc %newpcname%
+    echo  current computer name: %computername%
+    if defined newpcdescription (
+        appone.exe -renamepc %newpcname% %newpcdescription%
+    ) else (
+        appone.exe -renamepc %newpcname% 
+    )
 )
 echo.
 
