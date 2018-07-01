@@ -1,0 +1,13 @@
+    for specific help, use -optionname -help
+
+    options:        parameters: [ is-optional ]
+   
+   -listapps        [ -savepinned ]
+   -pinstart        appname [ appname2 "app name 3" ... ] OR filename
+   -unpinstart      appname [ appname2 "app name 3" ... ] OR -all
+   -unpintaskbar    appname [ appname2 "app name 3" ... ] OR -all
+   -removeappx      appname [ appname2 "app name 3" ... ] OR filename
+   -wallpaper       filename OR foldername OR -bing
+   -shortcut        name target [ -arg arguments ] [ -wd workingdir ]
+   -createuser      username [ password ] [ -admin ]
+   -renamepc        newname [ description ]

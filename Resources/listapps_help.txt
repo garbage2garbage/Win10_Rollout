@@ -1,0 +1,4 @@
+    list all available programs with status, also list installed Windows
+    store type apps
+    -savepinned will output apps currently pinned as start menu tiles
+    (to restore later using -pinstart filename option)

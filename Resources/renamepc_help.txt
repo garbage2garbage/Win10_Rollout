@@ -1,4 +1,3 @@
-
     rename pc to newname and optionally set the computer description
     (no spaces allowed in newname, description should be quoted)
     available substitution variables are serial#, todays date, and a random

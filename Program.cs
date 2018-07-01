@@ -229,45 +229,37 @@ namespace ConsoleApp
         static void Help(ref List<string> argslist)
         {
             //not pretty (:
-            string specific_str = "";
-            bool specific = false;
+            string specific_str = null;
+            //empty argslist = general help (short help for all options)
+            //else specific help wanted with -help 
+            // or error- correct option with incorrect suboptions- so give specifi help
             if (argslist.Count() > 0)
             {
-                specific = true;
                 specific_str = argslist[0];
             }
             Console.WriteLine();
-            Console.WriteLine($@"   {exe_name}   v{version}    2018@curtvm");
+            Console.WriteLine($@"    {exe_name}   v{version}    2018@curtvm");
             Console.WriteLine();
-            if (!specific)
+            if (specific_str == null)
             {
-                Console.WriteLine($@"   for specific help, use -optionname -help");
-                Console.WriteLine();
-                Console.WriteLine($@"   options:");
-                Console.WriteLine();
+                Console.WriteLine(AppOne.Properties.Resources.help);
+                Exit(1);
             }
-            if (!specific || specific_str == "-listapps")
+            foreach (var lin in AppOne.Properties.Resources.help.Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.None))
             {
-                Console.WriteLine($@"   -listapps");
-            }
+                if(lin.Trim().StartsWith(argslist[0])) {
+                    Console.WriteLine(lin);
+                    Console.WriteLine();
+                    break;
+                }
+            }           
             if (specific_str == "-listapps")
             {
-                Console.WriteLine();
-                Console.WriteLine($@"    list all available apps with status");
-                Console.WriteLine($@"    and list installed Windows store apps");
-                Console.WriteLine();
-            }
-            if (!specific || specific_str == "-pinstart")
-            {
-                Console.WriteLine($@"   -pinstart filename | appname1 [ appname2 ""app name 3"" ... ]");
+                Console.WriteLine(AppOne.Properties.Resources.listapps_help);
             }
             if (specific_str == "-pinstart")
             {
                 Console.WriteLine(AppOne.Properties.Resources.pinstart_help);
-            }
-            if (!specific || specific_str == "-unpinstart")
-            {
-                Console.WriteLine($@"   -unpinstart -all | appname1 [ appname2 ""app name 3"" ... ]");
             }
             if (specific_str == "-unpinstart")
             {
@@ -276,59 +268,31 @@ namespace ConsoleApp
                 Console.WriteLine($@"    (placeholders/suggested apps in start menu will not be removed)");
                 Console.WriteLine();
             }
-            if (!specific || specific_str == "-unpintaskbar")
-            {
-                Console.WriteLine($@"   -unpintaskbar -all | appname1 [ appname2 ""app name 3"" ... ]");
-            }
             if (specific_str == "-unpintaskbar")
             {
                 Console.WriteLine();
                 Console.WriteLine($@"    unpin all apps or specified apps from taskbar");
                 Console.WriteLine();
             }
-            if (!specific || specific_str == "-removeappx")
-            {
-                Console.WriteLine($@"   -removeappx filename | appname1 [ appname2 ""app name 3"" ... ]");
-            }
             if (specific_str == "-removeappx")
             {
                 Console.WriteLine(AppOne.Properties.Resources.removeappx_help);
-            }
-            if (!specific || specific_str == "-wallpaper")
-            {
-                Console.WriteLine($@"   -wallpaper filename | foldername | Bing.com");
             }
             if (specific_str == "-wallpaper")
             {
                 Console.WriteLine(AppOne.Properties.Resources.wallpaper_help.Replace("{bingfolder}", bingfolder));
             }
-            if (!specific || specific_str == "-shortcut")
-            {
-                Console.WriteLine($@"   -shortcut name target [ -arg arguments ][ -wd workingdir ]");
-            }
             if (specific_str == "-shortcut")
             {
                 Console.WriteLine(AppOne.Properties.Resources.shortcut_help.Replace("{exe_name}", exe_name));
-            }
-            if (!specific || specific_str == "-createuser")
-            {
-                Console.WriteLine($@"   -createuser [ -admin ] username [ password ]");
             }
             if (specific_str == "-createuser")
             {
                 Console.WriteLine(AppOne.Properties.Resources.createuser_help);
             }
-            if (!specific || specific_str == "-renamepc")
-            {
-                Console.WriteLine($@"   -renamepc newname [ description ] ([s#] [date] [rand])");
-            }
             if (specific_str == "-renamepc")
             {
                 Console.WriteLine(AppOne.Properties.Resources.renamepc_help);
-            }
-            if (!specific)
-            {
-                Console.WriteLine();
             }
             Exit(1);
         }
@@ -355,9 +319,18 @@ namespace ConsoleApp
 
         static void ListApps(ref List<string> argslist)
         {
-            //-listapps
+            //-listapps [ -savepinned ]
             var myapps = new List<Apps>();
-            getAppsList(ref myapps);
+            if (argslist.RemoveAll(x => x.ToLower() == "-savepinned") > 0) 
+            {
+                getAppsList(ref myapps);
+                foreach(var app in myapps)
+                { 
+                    if(app.is_pinned()) Console.WriteLine(app.Name);
+                }
+                Exit(0);
+            }
+
             Console.WriteLine();
             Console.WriteLine($@"    {exe_name} : apps list with status");
             Console.WriteLine($@"  ===============================================");
@@ -367,13 +340,13 @@ namespace ConsoleApp
             Console.WriteLine($@"    [  W] = Windows store app <appxname>");
             Console.WriteLine($@"  ===============================================");
             Console.WriteLine();
+            getAppsList(ref myapps);
 
             foreach (var app in myapps.OrderBy(m => m.Name))
             {
                 app.ListPrint();
             }
             Console.WriteLine();
-
 
             Console.WriteLine(@"  ===============================================");
             Console.WriteLine(@"    installed Windows store apps");
@@ -387,7 +360,6 @@ namespace ConsoleApp
                 if (!app.is_system()) app.ListPrint();
             }
             Console.WriteLine();
-
 
             Console.WriteLine(@"  ===============================================");
             Console.WriteLine(@"    installed Windows system apps");
@@ -408,12 +380,12 @@ namespace ConsoleApp
             {
                 var ma = new List<Apps>();
                 getAppsList(ref ma);
-                Console.Write("Unpin all start tiles");
+                Console.Write("Unpin all start tiles...");
                 foreach (var app in ma)
                 {
-                    if (app.unpin()) Console.Write(".");
+                    if (app.unpin()) Console.Write("x");
                 }
-                Console.WriteLine("DONE");
+                Console.WriteLine(".DONE");
                 Exit(0);
             }
             if (argslist.Count() < 2)
@@ -454,12 +426,12 @@ namespace ConsoleApp
             {
                 var ma = new List<Apps>();
                 getAppsList(ref ma);
-                Console.Write("Unpin all apps on taskbar");
+                Console.Write("Unpin all apps on taskbar...");
                 foreach (var app in ma)
                 {
-                    if (app.unpintb()) Console.Write(".");
+                    if (app.unpintb()) Console.Write("x");
                 }
-                Console.WriteLine("DONE");
+                Console.WriteLine(".DONE");
                 Exit(0);
             }
 
@@ -595,7 +567,7 @@ namespace ConsoleApp
 
         static void Wallpaper(ref List<string> argslist)
         {
-            //-wallpaper filename | foldername | bing
+            //-wallpaper filename | foldername | -bing
             if (argslist.Count() < 2)
             {
                 Help(ref argslist);
@@ -603,9 +575,14 @@ namespace ConsoleApp
             }
             string fil = argslist[1];
             bool is_dir = false;
-            if (fil.ToLower() == "bing.com")
+            if (fil.ToLower() == "-bing")
             {
-                bingpaper(ref fil);
+                string ret = bingpaper(ref fil);
+                if(ret != null)
+                {
+                    Error(ret);
+                    return;
+                }
             }
             if (!File.Exists(fil) && !(is_dir = Directory.Exists(fil)))
             {
@@ -624,8 +601,12 @@ namespace ConsoleApp
                 }
                 fil = files[rand.Next(files.Length)];
             }
+            fil = Path.GetFullPath(fil);
+            Console.Write($@"setting wallpaper to {fil.Split('\\').Last()}...");
             //0=fail, non-zero=success 
-            Exit(0 == SystemParametersInfo(20, 0, Path.GetFullPath(fil), 3) ? 1 : 0);
+            bool good = 0 != SystemParametersInfo(20, 0, fil, 3);
+            if(good) Console.WriteLine("OK"); else { Console.WriteLine("failed"); }
+            Exit(good ? 0 : 1);
         }
 
         static void Shortcut(ref List<string> argslist)
@@ -696,9 +677,10 @@ namespace ConsoleApp
                 ErrorAdmin();
                 return;
             }
-            //now has 2 or more args
-            string username = argslist[1];
-            string password = argslist.Count() > 2 ? " " + argslist[2] : null;
+            argslist.RemoveAt(0);
+            //now has 1 or more args
+            string username = argslist[0];
+            string password = argslist.Count() > 1 ? " " + argslist[1] : null;
             string args = $@"user /add {username}{password}";
 
             if (!processDo("net.exe", args))
@@ -817,29 +799,20 @@ namespace ConsoleApp
             return null;
         }
 
-        static void bingpaper(ref string fil)
+        static string bingpaper(ref string fil)
         {
             fil = null; //caller can now test
             //no need to try if no internet
             if (!isInternetUp())
             {
-                Error("no internet connection to bing.com");
-                return;
+                return "no internet connection to bing.com";
             }
             //get todays bing picture store in public pictures folder
             if (!Directory.Exists(bingfolder))
             {
-                try
-                {
-                    Directory.CreateDirectory(bingfolder);
-                }
-                catch (Exception)
-                {
-                    Error(bingfolder, "cannot create directory");
-                    return;
-                }
+                try { Directory.CreateDirectory(bingfolder); }
+                catch (Exception) { return "cannot create Bing directory: " + bingfolder ; }
             }
-
             System.Net.WebClient wc = new System.Net.WebClient();
             string bingurl = "http://www.bing.com";
             string binghttp = wc.DownloadString(bingurl);
@@ -855,22 +828,25 @@ namespace ConsoleApp
             }
             if (jpgurl == "")
             {
-                return;
+                return "unable to find jpg on Bing.com";
             }
-            string jpgname = $@"{bingfolder}\{jpgurl.Split('/').Last()}";
+            string filname = jpgurl.Split('/').Last().Replace("_1920x1080", "");
+            string jpgname = $@"{bingfolder}\{filname}";
             //may have already downloaded, check
             if (!File.Exists(jpgname))
             {
-                wc.DownloadFile(jpgurl, jpgname);
+                try { wc.DownloadFile(jpgurl, jpgname); } 
+                catch (Exception) { return "failed to download " + filname; }
             }
             if (File.Exists(jpgname))
             {
                 fil = jpgname;
             }
+            return null;
         }
 
         static bool removePackage(string nam, string fullnam)
-        {            
+        {
             PackageManager packageManager = new Windows.Management.Deployment.PackageManager();
 
             IAsyncOperationWithProgress<DeploymentResult, DeploymentProgress> deploymentOperation =

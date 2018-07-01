@@ -1,4 +1,3 @@
-
     pin apps to the start menu by providing either a file with an app name
     on each line (no quotes), or provide one or more space separated app
     names (app names with spaces need to be quoted)
