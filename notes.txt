@@ -55,17 +55,18 @@ USB drive-
     ...
 
     myfolder\
-        customize.cmd       <-main app, run as administrator
-        create-shortcut.ps1 <-main app helper script
-        firstrun.cmd        <-new users first run app
-        remove-apps.ps1     <-new users first run helper script
-        pintostart.ps1      <-new users first run helper script
-        weather.hiv         <-new users first run Weather settings
+        customize.cmd       <-main setup app, run as administrator
+        appone.exe          <-helper app (also put in users tmp)
+        HKLM.reg            <-HKLM registry file
+        HKCU.reg            <-HKCU registry file (imported into default user)
+        firstrun.cmd        <-new users first run app (put into users start folder)
+        pinstartlist.txt    <-new users start menu tile list (put in users tmp)
+        appxlist.txt        <-new users appx list to remove apps (put in users tmp)
         Wallpaper\
             any.jpg
             another.jpg
         Win32Apps\
-            install.cmd     <-apps install script
+            install.cmd     <-apps install script, modify as needed
             any.exe
             another.msi
             any\            <-app specific files needed for install.cmd
@@ -79,114 +80,10 @@ USB drive-
 check if running as administrator
 set timezone
 HKLM registry changes
-default user registry changes (any needed before user logs on first time)
+HKCU registry changes (to default user)
 wallpapers
 rename default user DefaultLayouts.xml (start menu tiles will be minimal)
 copy helper files for firstrun.cmd
 set computer name
 change power profile (current is balanced) so power stays on when on ac
 run Win32Apps\install.cmd if available
-
-
-===============================================================================
- create-shortcut.ps1 (called by customize.cmd)
-===============================================================================
-powershell script to create shortcuts (lnk)
-
-
-===============================================================================
- firstrun.cmd (will be copied to default user startup folder)
-              (runs when new user first logs in)
-===============================================================================
-HKCU registry changes
-set wallpaper (random from a few in public pictures)
-remove Windows apps for this user
-delete this file and helper files
-logout so changes take effect
-
-
-===============================================================================
- remove-apps.ps1 (will be copied to default user startup folder)
-                 (called by firstrun.cmd)
-===============================================================================
-powershell script to remove Windows apps
-
-
-===============================================================================
- pintostart.ps1 (will be copied to default user startup folder)
-                (called by firstrun.cmd)
-===============================================================================
-powershell script to pin/unpin apps from start menu, unpin apps from taskbar
-
-
-===============================================================================
- weather.hiv    (will be copied to default user startup folder)
-                (called by firstrun.cmd)
-
-the settings.dat file is just a registry hiv, to get a copy open Weather in
-any user/pc, then copy this file-
-"%userprofile%"\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe\Settings\settings.dat
-rename it weather.hiv for use here (renamed only for a better description)
-===============================================================================
-weather app settings (this one set to Rock Valley, IA for location)
-
-
-===============================================================================
- Wallpaper\*.jpg    (will be copied to public pictures)
-===============================================================================
-any jpg in Wallpaper folder
-
-
-===============================================================================
- Win32Apps\install.cmd  (called by customize.cmd)
-
- modify as needed, currently set to install 7Zip, VLC Media Player, Chrome,
- Libre Office, Foxit Reader
-===============================================================================
-runs setup for win32 apps like chrome, foxit, etc.
-
-
-
-
-===============================================================================
-Other randome notes
-===============================================================================
-windows install media could be modified to include many of these changes,
-but a new version of windows now comes out several times a year, and also
-any changes due to errors, etc. would require doing the whole process again-
-it requires extracting the images from the install.esd into a wim image as
-the esd cannot be changed- then both Home and Pro images need to be mounted,
-modified, saved- its not a fast process, so its better to just work with the
-normal install media as-is
-
-a setupcomplete.cmd script could also be added which would simply look for
-a specific script on any drive (like customize.cmd), where our script could
-be run automatically before the first user logs in- but would still need
-to do the install image manipulation as above, and
-you also have the problem where you will have no idea when the script has
-run, whether the script was found, whether it completed ok, etc.- you just
-have to hope it runs, and then check the script log file when logged in
-
-msft has various methods to 'automate' the rollout, but they are all a pain
-to use and debug, so its better to just do things without any special tools
-or methods, just relying on what can be done via registry, files, etc. with
-normal available scripting tools (batch file and powershell)
-
-the best way to make changes is to simply create a temporary user where we can
-run the customize.cmd- since its too late for some changes when that user logs
-in (mainly the start menu tile layout will have placeholders for suggested
-apps, and the pintostart.ps1 script cannot access/remove these), the temporary
-user will only be used to run customize.cmd, and deleted after- the advantage
-is we can see what is happening, and have full control with user interaction
-
-provisioned Windows apps can be removed at the system level, but is not
-necessary as the firstrun.cmd script will remove for each new user, and doing
-this way preserves all provisioned apps for any user that wants to skip the
-firstrun.cmd script
-
-new users that choose to not run the script will still have a minimal start menu
-tile layout as the DefaultLayouts.xml is renamed so will not be used to create
-the many default tiles a new user normally sees, otherwise it is pretty close
-to a normal new user
-
-
