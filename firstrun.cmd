@@ -25,8 +25,6 @@ set wallpaperfolder=c:\users\public\pictures
 set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\appxlist.txt
 set pinstartlist=%usertemp%\pinstartlist.txt
-set bingwxhiv=%usertemp%\weather.hiv
-set bingwxfolder=%userprofile%\AppData\Local\Packages\microsoft.bingweather_8wekyb3d8bbwe
 if "%~dp0" == "%startfolder%\" set firstrun=1
 set silent=^>NUL 2^>^&1
 
@@ -60,9 +58,9 @@ echo.
 rem ===========================================================================
 rem     set wallpaper
 rem ===========================================================================
-<nul set /p nothing=setting wallpaper...
+echo setting wallpaper...
+echo.
 %appone% -wallpaper %wallpaperfolder%
-if %errorlevel% == 0 ( echo OK ) else ( echo FAILED )
 echo.
 
 rem ===========================================================================
@@ -96,30 +94,26 @@ echo.
 rem ===========================================================================
 rem     weather app location
 rem ===========================================================================
-if exist "%bingwxhiv%" (
-    <nul set /p nothing=setting Weather app location...
-    if exist "%bingwxfolder%" del /s /q "%bingwxfolder%\*" %silent%
-    for %%d in (AC AppData LocalCache LocalState RoamingState Settings SystemAppData TempState) do (
-        mkdir "%bingwxfolder%\%%d" %silent%
-    )
-    copy /y "%bingwxhiv%" "%bingwxfolder%\Settings\settings.dat" %silent%
-    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
-    echo.
-)
+echo Weather app location...
+echo.
+%appone% -weather
+echo.
+
 
 echo.
 color 2f
 echo  will be logging out so some changes can take effect...
 timeout /t 30
 rem ===========================================================================
-rem delete this file, helper files, and logout IF was firstrun
+rem copy this file to temp IF was firstrun (keep temp files around if needed)
+rem delete this file from startup folder
 rem (goto) trick gets all following commands cached so
 rem logoff command can still run when deleted
 rem ===========================================================================
 :cleanup
-rem if run from startup folder, can delete files and logoout
+rem if run from startup folder
 if %firstrun% == 1 (
-    del /Q "%usertemp%\*.*" %silent%
+    copy /y "%~f0" "%usertemp%" %silent%
     if %logout% == 1 (
         (goto) 2>nul & del "%~f0" & shutdown /l
     ) else (
