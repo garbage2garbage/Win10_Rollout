@@ -193,6 +193,9 @@ namespace ConsoleApp
             optionslist.Add(new Options("-shortcut", Shortcut));
             optionslist.Add(new Options("-createuser", CreateUser));
             optionslist.Add(new Options("-renamepc", RenamePC));
+            optionslist.Add(new Options("-weather", Weather));
+            optionslist.Add(new Options("-layoutxml", LayoutXml));
+            optionslist.Add(new Options("-regimport", RegImport));
 
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
@@ -293,6 +296,18 @@ namespace ConsoleApp
             if (specific_str == "-renamepc")
             {
                 Console.WriteLine(AppOne.Properties.Resources.renamepc_help);
+            }
+            if (specific_str == "-weather")
+            {
+                Console.WriteLine(AppOne.Properties.Resources.weather_help);
+            }
+            if (specific_str == "-layoutxml")
+            {
+                Console.WriteLine(AppOne.Properties.Resources.layoutxml_help);
+            }
+            if (specific_str == "-regimport")
+            {
+                Console.WriteLine(AppOne.Properties.Resources.regimport_help);
             }
             Exit(1);
         }
@@ -748,6 +763,205 @@ namespace ConsoleApp
             }
         }
 
+        static void Weather(ref List<string> argslist)
+        {
+            //-weather [ settings.dat ]
+            string fil = argslist.Count() > 1 ? argslist[1] : null;
+            if (fil != null && !File.Exists(fil))
+            {
+                Error(fil, "file does not exist");
+                return;
+            }
+            if (userprofile == null)
+            {
+                Error("cannot get current user's profile folder");
+                return;
+            }
+            //kill weather app to let us delete the folder/files
+            Process[] p = Process.GetProcesses();                             
+            foreach (var pw in p.Where(x => x.MainWindowTitle == "Weather"))
+            {
+                pw.Kill(); //found, kill
+                Thread.Sleep(3000); //wait (seems to take a while)
+            }
+            //weather app folder
+            string wxdir = $@"{userprofile}\AppData\Local\Packages\microsoft.Bingweather_8wekyb3d8bbwe";
+            //delete everything (try up to 3 times)
+            for (var i = 0; i < 3; i++)
+            {
+                try
+                {
+                    Directory.Delete(wxdir, recursive: true);
+                }
+                catch (Exception)
+                {
+                    Thread.Sleep(1000);
+                    continue; //try again
+                }
+                break; //it worked
+            }
+            //continue with whatever we have
+
+            //folders to create
+            string[] fol = { "AC", "AppData", "LocalCache", "LocalState",
+                "RoamingState", "Settings", "SystemAppData", "TempState" };
+
+            //create all folders
+            foreach (string d in fol)
+            {
+                try
+                {
+                    Directory.CreateDirectory($@"{wxdir}\{d}");
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine($@"{d} - failed");
+                    //we are too far in, just keep going
+                }
+            }
+            //if filename provided, try to copy
+            if (fil != null)
+            {
+                try
+                {
+                    File.Copy(fil, $@"{wxdir}\Settings\settings.dat");
+                    Console.WriteLine("Weather app set to settings provided");
+                    Exit(0);
+                }
+                catch (Exception)
+                {
+                    Console.WriteLine(@"unable to copy settings file provided");
+                    //try default settings below
+                }
+
+            }
+            //either not fil, or fil failed, use defaults
+            try
+            {
+                System.IO.File.WriteAllBytes(
+                    $@"{wxdir}\Settings\settings.dat",
+                    AppOne.Properties.Resources.settings_dat
+                    );                
+                Console.WriteLine(@"Weather app set to default settings");
+                Exit(0);
+            }
+            catch
+            {
+                Console.WriteLine(@"unable to copy default settings");
+            }
+            Exit(1);
+        }
+
+        static void LayoutXml(ref List<string> argslist)
+        {
+            //-layoutxml -hide | -unhide
+            bool hide = argslist.RemoveAll(x => x.ToLower() == "-hide") > 0;
+            bool unhide = argslist.RemoveAll(x => x.ToLower() == "-unhide") > 0;
+            if (hide == unhide)
+            {
+                Help(ref argslist);
+                return;
+            }
+            if (!isAdmin())
+            {
+                ErrorAdmin();
+                return;
+            }
+            string xml = "DefaultLayouts.xml";
+            string xmlfull = $@"{sysdrive}\users\default\appdata\local\microsoft\windows\shell\{xml}";
+            string xmlfullbak = $@"{xml}.bak";
+            if (hide)
+            {
+                if (!File.Exists(xmlfull))
+                {
+                    if (File.Exists(xmlfullbak))
+                    {
+                        Console.WriteLine($@"{xml} is already renamed");
+                        Exit(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine($@"{xml} seems to be deleted");
+                        Exit(0);
+                    }
+                }
+                try
+                {
+                    File.Move(xmlfull, xmlfullbak);
+                    Console.WriteLine($@"{xml} renamed to {xml}.bak");
+                    Exit(0);
+                }
+                catch
+                {
+                    Error($@"unable to rename {xml}");
+                    return;
+                }
+            }
+            //unhide
+            if (File.Exists(xmlfull))
+            {
+                Console.WriteLine($@"{xml} already unhidden");
+                Exit(0);
+            }
+            //check if bak available
+            if (File.Exists(xmlfullbak))
+            {
+                try
+                {
+                    File.Move(xmlfullbak, xmlfull);
+                }
+                catch
+                {
+                    Error($@"unable to restore {xml}");
+                    return;
+                }
+            }
+            //neither available
+            Error($@"{xml} or {xml}.bak files not found, cannot unhide");
+        }
+
+        static void RegImport(ref List<string> argslist)
+        {
+            //-regimport [ -defaultuser ] filename
+            bool du = argslist.RemoveAll(x => x.ToLower() == "-defaultuser") > 0;
+            //-regimport filename
+            if (argslist.Count() < 2)
+            {
+                Help(ref argslist);
+                return;
+            }
+            string fil = argslist[1];
+            if (!File.Exists(fil))
+            {
+                Error(fil, "file does not exist");
+                return;
+            }
+            if (du)
+            {
+                if (!isAdmin())
+                {
+                    ErrorAdmin();
+                    return;
+                }
+                string retstr = regimportDefaultuser(fil);
+                if (retstr != null)
+                {
+                    Error(retstr);
+                    return;
+                }
+                Console.WriteLine($@"imported reg file {fil} to default user");
+                Exit(0);
+            }
+            //normal import
+            if (!processDo("reg.exe", $@"import {fil}"))
+            {
+                string a = isAdmin() ? null : " (may need admin priveleges)";
+                Error("failed to import registry file" + a);
+                return;
+            }
+        }
+
+
 
         //helper functions
 
@@ -969,6 +1183,105 @@ namespace ConsoleApp
             return null;
         }
 
+        static string regimportDefaultuser(string fil)
+        {
+            //import into default user hive
+            //has to be a HKEY_CURRENT_USER root reg file
+            //[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run]
+            string tempkey = @"temp_load_key";
+            string loadkey = $@"HKLM\{tempkey}";
+            string[] lines = null;
+            try
+            {
+                lines = File.ReadAllLines(fil);
+                if (lines.Length == 0) return $@"{fil} is empty";
+            }
+            catch (Exception)
+            {
+                return $@"could not read file {fil}";
+            }
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                lines[i] = lines[i].Replace(@"[HKEY_CURRENT_USER", $@"[{loadkey}");
+            }
+
+            string ntuserdat = $@"{sysdrive}\users\default\ntuser.dat";
+            string ntuserbak = $@"{ntuserdat}.bak";
+            //backup ntuser.dat -> ntuser.dat.bak if not done already
+            if (!File.Exists(ntuserbak))
+            {
+                try
+                {
+                    File.Copy(ntuserdat, ntuserbak);
+                }
+                catch (Exception)
+                {
+                    return "could not backup default user ntuser.dat";
+                }
+            }
+            //check if key already exists (cannot load into existing key)
+            if (processDo("reg.exe", $@"query {loadkey}"))
+            {
+                return $@"reg file import location {tempkey} cannot be used";
+            }
+            //load ntuser.dat file
+            if (!processDo("reg.exe", $@"load {loadkey} {ntuserdat}"))
+            {
+                return "unable to load default user registry hive";
+            }
+            //write modified reg file to temp location
+            fil = "_" + fil;
+            try
+            {
+                File.WriteAllLines(fil, lines);
+            }
+            catch
+            {
+                return $@"cannot save temporary modified reg file";
+            }
+
+            //import reg file
+            bool ret = processDo("reg.exe", $@"import {fil}");
+            //unload ntuser.dat (if previous succeeded or not)
+            ret &= processDo("reg.exe", $@"unload {loadkey}");
+            //delete temp file
+            File.Delete(fil);
+            //ret == true if both succeeded
+            if (!ret)
+            {
+                return "failed to import registry file";
+            }
+            return null;
+        }
 
     }
 }
+
+
+/*
+ 
+        //options removed
+
+        //tzutil /s "Central Standard Time"
+
+        //static void Timezone(ref List<string> argslist)
+        //{
+        //    //-timezone "timezonename"
+        //    if (argslist.Count() < 2)
+        //    {
+        //        Help(ref argslist);
+        //        return;
+        //    }
+        //    string tz = $@"""{argslist[1]}""";
+        //    if (!processDo("tzutil.exe", $@"/s {tz}"))
+        //    {
+        //        Error($@"unable to set timezone to {tz}");
+        //        return;
+        //    }
+        //    TimeZoneInfo.ClearCachedData();
+        //    Console.WriteLine($@"timezone set to {tz}");
+        //    Exit(0);
+        //}     
+     
+*/

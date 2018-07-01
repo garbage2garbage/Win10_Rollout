@@ -1,0 +1,3 @@
+    hide (rename) or unhide the default user DefaultLayouts.xml file which
+    will cause new users start menu tiles to default to a minimal set of 3
+    when set to -hide, -unhide will restore the file

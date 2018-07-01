@@ -11,3 +11,6 @@
    -shortcut        name target [ -arg arguments ] [ -wd workingdir ]
    -createuser      username [ password ] [ -admin ]
    -renamepc        newname [ description ]
+   -weather         [ settings.dat ]
+   -layoutxml       -hide OR -unhide
+   -regimport       filename [ -defaultuser ] 

@@ -1,0 +1,3 @@
+    set Weather app location to 51247 or provide a settings.dat file copied
+    from the Weather app Settings folder which is located in- 
+    <user>\AppData\Local\Packages\microsoft.Bingweather_8wekyb3d8bbwe\

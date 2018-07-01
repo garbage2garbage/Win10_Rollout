@@ -1,0 +1,4 @@
+    import a reg file into the current registry
+    if -defaultuser is specified, the reg file will be imported into the
+    default user's registry hive which is the HKCU root key for all new
+    users (all reg file key entries must start with HKEY_CURRENT_USER)
