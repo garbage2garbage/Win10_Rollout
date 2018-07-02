@@ -116,13 +116,16 @@ rem     any new users will run firstrun.cmd from startup folder
 rem
 rem     user customization takes place in firstrun.cmd
 rem     any other needed files will go into default user temp folder
+rem     (delete all files in these folders before copying the files)
 rem ===========================================================================
 if exist "%firstrunscript%" (
     set fail=0
     <nul set /p nothing=copying firstrun files to default user...
     if not exist "%defaultstartfolder%" (mkdir "%defaultstartfolder%" %silent% || set fail=1)
+    del /q "%defaultstartfolder%\*.*" %silent%
     copy /y "%firstrunscript%" "%defaultstartfolder%" %silent% || set fail=1
     rem copy any other needed files to temp folder
+    del /q "%defaulttemp%\*.*" %silent%
     for %%f in (%helperfiles%) do (
         copy /y %%f "%defaulttemp%" %silent% || set fail=1
     )
@@ -196,9 +199,9 @@ echo.
 if defined newpcname (
     echo  current computer name: %computername%
     if defined newpcdescription (
-        appone.exe -renamepc %newpcname% %newpcdescription%
+        appone.exe -renamepc "%newpcname%" "%newpcdescription%"
     ) else (
-        appone.exe -renamepc %newpcname% 
+        appone.exe -renamepc "%newpcname%"
     )
 )
 echo.
