@@ -66,7 +66,7 @@ rem ===========================================================================
 if defined chromenam (
     <nul set /p nothing=installing Chrome...
     %chromenam% /silent /install
-    if exist chrome\master_preferences copy /y chrome\master_preferences "c:\program files (x86)\google\chrome\application" %silent%
+    if exist chrome\master_preferences copy /y chrome\master_preferences "%ProgramFiles(x86)%\google\chrome\application" %silent%
     echo DONE
 )
 
