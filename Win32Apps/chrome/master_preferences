@@ -18,8 +18,11 @@
   },
   "distribution": { 
     "skip_first_run_ui": true, 
-    "create_all_shortcuts": true, 
+    "do_not_create_desktop_shortcut": false,
+    "do_not_create_quick_launch_shortcut": true,
     "do_not_launch_chrome": true, 
-    "make_chrome_default": false 
+    "make_chrome_default": false,
+    "suppress_first_run_default_browser_prompt": true,
+    "do_not_register_for_update_launch": true
   }
-} 
+}
