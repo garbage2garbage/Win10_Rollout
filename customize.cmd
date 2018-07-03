@@ -18,7 +18,7 @@ set newuser=User1
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe appxlist.txt pinstartlist.txt
+set helperfiles=appone.exe removeappx.txt pinstart.txt
 set regfileHKLM=HKLM.reg
 set regfileHKCU=HKCU.reg
 rem --our folders--
