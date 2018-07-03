@@ -11,8 +11,8 @@ set startfolder=%userprofile%\AppData\Roaming\Microsoft\Windows\Start Menu\Progr
 set usertemp=%userprofile%\appdata\local\temp
 set wallpaperfolder=%systemdrive%\users\public\pictures
 set appone=%usertemp%\appone.exe
-set appxlist=%usertemp%\appxlist.txt
-set pinstartlist=%usertemp%\pinstartlist.txt
+set appxlist=%usertemp%\removeappx.txt
+set pinstartlist=%usertemp%\pinstart.txt
 echo.
 echo  Starting firstrun.cmd, this will not take long...
 echo.
