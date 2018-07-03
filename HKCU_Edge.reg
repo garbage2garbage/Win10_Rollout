@@ -1,0 +1,13 @@
+Windows Registry Editor Version 5.00
+
+;Edge home button and url, new tab use blank page
+;cannot do homepage (is encrypted per machine)- have to do manually
+;need to do as current user (does not work to import to default user)
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\Main]
+"HomeButtonPage"="https://www.google.com/"
+"HomeButtonEnabled"=dword:00000001
+[HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\ServiceUI]
+"NewTabPageDisplayOption"=dword:00000002
+[HKEY_CURRENT_USER\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppContainer\Storage\microsoft.microsoftedge_8wekyb3d8bbwe\MicrosoftEdge\TabbedBrowsing]
+"NTPFirstRun"=dword:00000001

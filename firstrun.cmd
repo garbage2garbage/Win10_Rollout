@@ -13,9 +13,11 @@ set wallpaperfolder=%systemdrive%\users\public\pictures
 set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\removeappx.txt
 set pinstartlist=%usertemp%\pinstart.txt
+set HKCU=%usertemp%\HKCU_Edge.reg
 echo.
 echo  Starting firstrun.cmd, this will not take long...
 echo.
+%appone% -regimport "%HKCU%"
 %appone% -wallpaper "%wallpaperfolder%"
 %appone% -unpinstart -all
 %appone% -unpintaskbar -all
@@ -25,7 +27,7 @@ echo.
 echo.
 color 2f
 rem if run from startup folder, delete firstrun.cmd
-rem just leave appone.exe, pinstartlist.txt, appxlist.txt in users temp folder
+rem just leave appone.exe, pinstartlist.txt, appxlist.txt, HKCU_Edge.reg in users temp folder
 if "%~dp0" == "%startfolder%\" (
     echo console window will close in 10 seconds...
     timeout /t 10

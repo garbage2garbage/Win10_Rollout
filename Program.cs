@@ -250,12 +250,13 @@ namespace ConsoleApp
             }
             foreach (var lin in AppOne.Properties.Resources.help.Split(new string[] { "\r\n", "\n", "\r" }, StringSplitOptions.None))
             {
-                if(lin.Trim().StartsWith(argslist[0])) {
+                if (lin.Trim().StartsWith(argslist[0]))
+                {
                     Console.WriteLine(lin);
                     Console.WriteLine();
                     break;
                 }
-            }           
+            }
             if (specific_str == "-listapps")
             {
                 Console.WriteLine(AppOne.Properties.Resources.listapps_help);
@@ -336,12 +337,12 @@ namespace ConsoleApp
         {
             //-listapps [ -savepinned ]
             var myapps = new List<Apps>();
-            if (argslist.RemoveAll(x => x.ToLower() == "-savepinned") > 0) 
+            if (argslist.RemoveAll(x => x.ToLower() == "-savepinned") > 0)
             {
                 getAppsList(ref myapps);
-                foreach(var app in myapps)
-                { 
-                    if(app.is_pinned()) Console.WriteLine(app.Name);
+                foreach (var app in myapps)
+                {
+                    if (app.is_pinned()) Console.WriteLine(app.Name);
                 }
                 Exit(0);
             }
@@ -593,7 +594,7 @@ namespace ConsoleApp
             if (fil.ToLower() == "-bing")
             {
                 string ret = bingpaper(ref fil);
-                if(ret != null)
+                if (ret != null)
                 {
                     Error(ret);
                     return;
@@ -620,7 +621,7 @@ namespace ConsoleApp
             Console.Write($@"setting wallpaper to {fil.Split('\\').Last()}...");
             //0=fail, non-zero=success 
             bool good = 0 != SystemParametersInfo(20, 0, fil, 3);
-            if(good) Console.WriteLine("OK"); else { Console.WriteLine("failed"); }
+            if (good) Console.WriteLine("OK"); else { Console.WriteLine("failed"); }
             Exit(good ? 0 : 1);
         }
 
@@ -764,7 +765,7 @@ namespace ConsoleApp
                 return;
             }
             Console.WriteLine($@"renamed computer to {newname}");
-            if(desc != null) Console.WriteLine($@"set description to {desc}");
+            if (desc != null) Console.WriteLine($@"set description to {desc}");
             Exit(0);
         }
 
@@ -783,7 +784,7 @@ namespace ConsoleApp
                 return;
             }
             //kill weather app to let us delete the folder/files
-            Process[] p = Process.GetProcesses();                             
+            Process[] p = Process.GetProcesses();
             foreach (var pw in p.Where(x => x.MainWindowTitle == "Weather"))
             {
                 pw.Kill(); //found, kill
@@ -846,7 +847,7 @@ namespace ConsoleApp
                 System.IO.File.WriteAllBytes(
                     $@"{wxdir}\Settings\settings.dat",
                     AppOne.Properties.Resources.settings_dat
-                    );                
+                    );
                 Console.WriteLine(@"Weather app set to default settings");
                 Exit(0);
             }
@@ -1032,7 +1033,7 @@ namespace ConsoleApp
             if (!Directory.Exists(bingfolder))
             {
                 try { Directory.CreateDirectory(bingfolder); }
-                catch (Exception) { return "cannot create Bing directory: " + bingfolder ; }
+                catch (Exception) { return "cannot create Bing directory: " + bingfolder; }
             }
             System.Net.WebClient wc = new System.Net.WebClient();
             string bingurl = "http://www.bing.com";
@@ -1056,7 +1057,7 @@ namespace ConsoleApp
             //may have already downloaded, check
             if (!File.Exists(jpgname))
             {
-                try { wc.DownloadFile(jpgurl, jpgname); } 
+                try { wc.DownloadFile(jpgurl, jpgname); }
                 catch (Exception) { return "failed to download " + filname; }
             }
             if (File.Exists(jpgname))
@@ -1196,7 +1197,7 @@ namespace ConsoleApp
             //has to be a HKEY_CURRENT_USER root reg file
             //[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run]
             string tempkey = @"temp_load_key";
-            string loadkey = $@"HKLM\{tempkey}";
+            string loadkey = $@"HKEY_LOCAL_MACHINE\{tempkey}";
             string[] lines = null;
             try
             {
@@ -1247,7 +1248,6 @@ namespace ConsoleApp
             {
                 return $@"cannot save temporary modified reg file";
             }
-
             //import reg file
             bool ret = processDo("reg.exe", $@"import {fil}");
             //unload ntuser.dat (if previous succeeded or not)
