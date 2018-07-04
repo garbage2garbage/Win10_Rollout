@@ -17,13 +17,13 @@ set HKCU=%usertemp%\HKCU_Edge.reg
 echo.
 echo  Starting firstrun.cmd, this will not take long...
 echo.
-%appone% -regimport "%HKCU%"
-%appone% -wallpaper "%wallpaperfolder%"
 %appone% -unpinstart -all
 %appone% -unpintaskbar -all
-%appone% -pinstart "%pinstartlist%"
+%appone% -regimport "%HKCU%"
+%appone% -wallpaper "%wallpaperfolder%"
 %appone% -removeappx "%appxlist%"
 %appone% -weather
+%appone% -pinstart "%pinstartlist%"
 echo.
 color 2f
 rem if run from startup folder, delete firstrun.cmd
