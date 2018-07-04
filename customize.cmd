@@ -14,7 +14,7 @@ rem --options--
 set timezone=Central Standard Time
 set newpcname=PC-[s#]
 set newpcdescription=
-set newuser=User1
+set newuser=
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
