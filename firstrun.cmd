@@ -19,10 +19,12 @@ echo  Starting firstrun.cmd, this will not take long...
 echo.
 %appone% -unpinstart -all
 %appone% -unpintaskbar -all
+%appone% -weather
 %appone% -regimport "%HKCU%"
 %appone% -wallpaper "%wallpaperfolder%"
+echo.
 %appone% -removeappx "%appxlist%"
-%appone% -weather
+echo.
 %appone% -pinstart "%pinstartlist%"
 echo.
 color 2f
