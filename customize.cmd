@@ -69,7 +69,6 @@ rem     (any changes here will be done to original registry)
 rem ===========================================================================
 if exist %regfileHKCU% (
     echo HKCU default user registry changes...
-    echo.
     if exist %systemdrive%\users\default\ntuser.dat.bak (
         copy /y %systemdrive%\users\default\ntuser.dat.bak %systemdrive%\users\default\ntuser.dat %silent%
     )
