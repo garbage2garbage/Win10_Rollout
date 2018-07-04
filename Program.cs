@@ -752,6 +752,11 @@ namespace ConsoleApp
                 Error("could not get current computer name");
                 return;
             }
+            if(oldname == newname)
+            {
+                Error($@"computer name is already {newname}");
+                return;
+            }
             //quote names to be safe
             if (!processDo("wmic.exe",
                  $@"ComputerSystem where Name=""{oldname}"" call Rename Name=""{newname}"""))
