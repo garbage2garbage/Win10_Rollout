@@ -12,12 +12,11 @@ set usertemp=%userprofile%\appdata\local\temp
 set wallpaperfolder=%systemdrive%\users\public\pictures
 set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\removeappx.txt
-set pinstartlist=%usertemp%\pinstart.txt
 set HKCU=%usertemp%\HKCU_Edge.reg
 echo.
 echo  Starting firstrun.cmd, this will not take long...
 echo.
-%appone% -unpinstart -all
+%appone% -unpinstart "Microsoft Store"
 %appone% -unpintaskbar -all
 %appone% -weather
 %appone% -regimport "%HKCU%"
@@ -25,11 +24,11 @@ echo.
 echo.
 %appone% -removeappx "%appxlist%"
 echo.
-%appone% -pinstart "%pinstartlist%"
+%appone% -pinstart Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Defender Security Center"
 echo.
 color 2f
 rem if run from startup folder, delete firstrun.cmd
-rem just leave appone.exe, pinstartlist.txt, appxlist.txt, HKCU_Edge.reg in users temp folder
+rem just leave appone.exe, appxlist.txt, HKCU_Edge.reg in users temp folder
 if "%~dp0" == "%startfolder%\" (
     echo console window will close in 10 seconds...
     timeout /t 10
