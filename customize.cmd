@@ -18,7 +18,7 @@ set newuser=
 set powerprofile_ac=0
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe removeappx.txt pinstart.txt HKCU_Edge.reg
+set helperfiles=appone.exe removeappx.txt HKCU_Edge.reg
 set regfileHKLM=HKLM.reg
 set regfileHKCU=HKCU.reg
 rem --our folders--
@@ -148,7 +148,7 @@ rem     install win32 apps
 rem ===========================================================================
 if exist "%win32appsfrom%\install.cmd" (
     echo.
-    pushd "%~dp0"
+    pushd "%cd%"
     call %win32appsfrom%\install.cmd
     echo.
     color 5f
