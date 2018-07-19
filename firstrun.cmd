@@ -14,7 +14,8 @@ set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\removeappx.txt
 set HKCU=%usertemp%\HKCU_Edge.reg
 echo.
-echo  Starting firstrun.cmd, this will not take long...
+echo  ---new user setup---
+echo  starting firstrun.cmd, this will not take long...
 echo.
 %appone% -unpinstart "Microsoft Store"
 %appone% -unpintaskbar -all
