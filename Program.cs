@@ -83,6 +83,13 @@ namespace ConsoleApp
                 if (v.Name == unpin_str)
                 {
                     v.DoIt();
+                    Thread.Sleep(200);
+                    //just trying sleep, explorer sometimes gets the start menu
+                    //into a confused state when unpinning all (no icons show
+                    //but still shows wide as if icons are there, and verbs for
+                    //apps will still show as pinned, but cannot pin or unpin)
+                    //maybe by giving a little time between unpins explorer will
+                    //not get confused- just guessing
                     return true;
                 }
             }
@@ -96,6 +103,7 @@ namespace ConsoleApp
                 if (v.Name == unpintb_str)
                 {
                     v.DoIt();
+                    Thread.Sleep(200);
                     return true;
                 }
             }
@@ -109,6 +117,7 @@ namespace ConsoleApp
                 if (v.Name == pin_str)
                 {
                     v.DoIt();
+                    Thread.Sleep(200);
                     return true;
                 }
             }
@@ -428,7 +437,7 @@ namespace ConsoleApp
                 }
                 else
                 {
-                    if (myapps[idx].unpin()) Console.WriteLine(@"{0}...UNPINNED", app.PadRight(maxlen, '.'));
+                    if (myapps[idx].unpin()) Console.WriteLine(@"{0}...UNPINNED", app.PadRight(maxlen, '.'));                        
                     else Console.WriteLine(@"{0}...unchanged", app.PadRight(maxlen, '.'));
                 }
             }
