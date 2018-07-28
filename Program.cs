@@ -283,6 +283,7 @@ namespace ConsoleApp
             {
                 Console.WriteLine();
                 Console.WriteLine($@"    reset start menu tiles to default");
+                Console.WriteLine($@"    (using DefaultLayouts.xml, or minimal if -layoutxml -hide was previously used)");
                 Console.WriteLine();
             }
             if (specific_str == "-removeappx")
@@ -893,11 +894,19 @@ namespace ConsoleApp
                 ErrorAdmin();
                 return;
             }
+            //default user
             string xml = "DefaultLayouts.xml";
             string xmlfull = $@"{sysdrive}\users\default\appdata\local\microsoft\windows\shell\{xml}";
             string xmlfullbak = $@"{xmlfull}.bak";
+            //current user (in case wanting to modify current user, for -resetstartmenu)
+            string xmlcufull = $@"{userprofile}\appdata\local\microsoft\windows\shell\{xml}";
+            string xmlcufullbak = $@"{xmlfull}.bak";
             if (hide)
             {
+                //current user file
+                if (File.Exists(xmlcufull)) {
+                    try { File.Move(xmlcufull, xmlcufullbak); } catch { }
+                }
                 if (!File.Exists(xmlfull))
                 {
                     if (File.Exists(xmlfullbak))
@@ -924,6 +933,12 @@ namespace ConsoleApp
                 }
             }
             //unhide
+            //current user
+            if (File.Exists(xmlcufullbak) && !File.Exists(xmlcufull))
+            {
+                try { File.Move(xmlcufullbak, xmlcufull); } catch { }
+            }
+            //default user
             if (File.Exists(xmlfull))
             {
                 Console.WriteLine($@"{xml} already unhidden");
