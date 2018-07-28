@@ -83,13 +83,6 @@ namespace ConsoleApp
                 if (v.Name == unpin_str)
                 {
                     v.DoIt();
-                    Thread.Sleep(200);
-                    //just trying sleep, explorer sometimes gets the start menu
-                    //into a confused state when unpinning all (no icons show
-                    //but still shows wide as if icons are there, and verbs for
-                    //apps will still show as pinned, but cannot pin or unpin)
-                    //maybe by giving a little time between unpins explorer will
-                    //not get confused- just guessing
                     return true;
                 }
             }
@@ -103,7 +96,6 @@ namespace ConsoleApp
                 if (v.Name == unpintb_str)
                 {
                     v.DoIt();
-                    Thread.Sleep(200);
                     return true;
                 }
             }
@@ -117,7 +109,6 @@ namespace ConsoleApp
                 if (v.Name == pin_str)
                 {
                     v.DoIt();
-                    Thread.Sleep(200);
                     return true;
                 }
             }
@@ -197,6 +188,7 @@ namespace ConsoleApp
             optionslist.Add(new Options("-listapps", ListApps));
             optionslist.Add(new Options("-unpintaskbar", UnpinTaskbar));
             optionslist.Add(new Options("-pinstart", PinStart));
+            optionslist.Add(new Options("-resetstartmenu", ResetStartMenu));
             optionslist.Add(new Options("-removeappx", RemoveAppx));
             optionslist.Add(new Options("-wallpaper", Wallpaper));
             optionslist.Add(new Options("-shortcut", Shortcut));
@@ -285,6 +277,12 @@ namespace ConsoleApp
             {
                 Console.WriteLine();
                 Console.WriteLine($@"    unpin all apps or specified apps from taskbar");
+                Console.WriteLine();
+            }
+            if (specific_str == "-resetstartmenu")
+            {
+                Console.WriteLine();
+                Console.WriteLine($@"    reset start menu tiles to default");
                 Console.WriteLine();
             }
             if (specific_str == "-removeappx")
@@ -535,6 +533,14 @@ namespace ConsoleApp
                 }
             }
             Exit(failed);
+        }
+
+        static void ResetStartMenu(ref List<string> argslist)
+        {
+            del_startmenu("tilegrid");
+            del_startmenu("suggestions");
+            restart_explorer();
+            Exit(0);
         }
 
         static void RemoveAppx(ref List<string> argslist)
@@ -1282,6 +1288,75 @@ namespace ConsoleApp
                 return "failed to import registry file";
             }
             return null;
+        }
+
+        static bool del_startmenu(string nam)
+        { //"tilegrid", "suggestions"
+            string key = @"Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount";
+            string tilestr = null;
+            if (nam == "tilegrid") tilestr = @"$start.tilegrid$windows.data.curatedtilecollection.tilecollection";
+            else if (nam == "suggestions") tilestr = @"$start.suggestions$windows.data.curatedtilecollection.tilecollection";
+            else return false;
+
+            Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key, false);
+            Microsoft.Win32.RegistryKey reg2 = null;
+            if (reg == null) return false;
+
+            foreach (var subkeyname in reg.GetSubKeyNames())
+            {
+                if (subkeyname.Contains(tilestr))
+                {
+                    reg2 = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key + @"\" + subkeyname + @"\Current", true);
+                    if (reg2 != null)
+                    {
+                        try { reg2.DeleteValue("Data"); } catch { };
+                        reg2.Close();
+                        reg.Close();
+                        return true;
+                    }
+                }
+            }
+            reg.Close();
+            return false;
+        }
+
+        static void restart_explorer()
+        {
+            const string explorer = "explorer.exe";
+            string explorerPath = string.Format("{0}\\{1}", Environment.GetEnvironmentVariable("WINDIR"), explorer);
+            foreach (Process process in Process.GetProcesses())
+            {
+                // In case we get Access Denied
+                try
+                {
+                    if (string.Compare(process.MainModule.FileName, explorerPath, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        process.Kill();
+                    }
+                }
+                catch
+                {
+                }
+            }
+            Thread.Sleep(3000); //wait for explorer to restart
+            foreach (Process process in Process.GetProcesses())
+            {
+                try
+                {
+                    if (string.Compare(process.MainModule.FileName, explorerPath, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        return; //ok, it restarted
+                    }
+                }
+                catch
+                {
+                }
+            }
+            //start explorer ourselves (may not be set to auto restart)
+            Process p = new Process();
+            p.StartInfo.FileName = explorer;
+            p.StartInfo.UseShellExecute = true;
+            p.Start();
         }
 
     }
