@@ -135,7 +135,10 @@ namespace ConsoleApp
     class Program
     {
         //global vars
-        public const string version = "1803.00"; //tested with win10 1803
+
+        //prebuild creates resorse file with version/build date
+        //tested with win10 1803
+        public static string version = AppOne.Properties.Resources.build_date.ToString().Replace("\r", "").Replace("\n","");
         public const string NL = "\n";
         public static string exe_name;      //name of this script without path, set in main
         public static string sysdrive;      //normally C:
@@ -867,7 +870,7 @@ namespace ConsoleApp
             {
                 System.IO.File.WriteAllBytes(
                     $@"{wxdir}\Settings\settings.dat",
-                    AppOne.Properties.Resources.settings_dat
+                    AppOne.Properties.Resources.weather51247
                     );
                 Console.WriteLine(@"Weather app set to default settings");
                 Exit(0);
@@ -899,13 +902,14 @@ namespace ConsoleApp
             string xmlfull = $@"{sysdrive}\users\default\appdata\local\microsoft\windows\shell\{xml}";
             string xmlfullbak = $@"{xmlfull}.bak";
             //current user (in case wanting to modify current user, for -resetstartmenu)
+            //just delete current user xml file, Windows will try to use the default user
+            //xml file if cannot find- so just deal with default profile
             string xmlcufull = $@"{userprofile}\appdata\local\microsoft\windows\shell\{xml}";
-            string xmlcufullbak = $@"{xmlfull}.bak";
             if (hide)
             {
                 //current user file
                 if (File.Exists(xmlcufull)) {
-                    try { File.Move(xmlcufull, xmlcufullbak); } catch { }
+                    try { File.Delete(xmlcufull); } catch { }
                 }
                 if (!File.Exists(xmlfull))
                 {
@@ -933,11 +937,6 @@ namespace ConsoleApp
                 }
             }
             //unhide
-            //current user
-            if (File.Exists(xmlcufullbak) && !File.Exists(xmlcufull))
-            {
-                try { File.Move(xmlcufullbak, xmlcufull); } catch { }
-            }
             //default user
             if (File.Exists(xmlfull))
             {
