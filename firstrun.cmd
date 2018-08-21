@@ -29,6 +29,9 @@ rem now unpin all
 echo.
 %appone% -removeappx "%appxlist%"
 echo.
+rem do again
+%appone% -resetstartmenu
+%appone% -unpinstart "Microsoft Store"
 %appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Defender Security Center"
 echo.
 color 2f
