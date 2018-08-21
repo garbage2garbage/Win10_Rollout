@@ -3,6 +3,7 @@ cd /d %~dp0
 color 5f
 SETLOCAL ENABLEDELAYEDEXPANSION
 set silent=^>NUL 2^>^&1
+set appone=../appone.exe
 rem ===========================================================================
 rem     get file names so can update versions easily- assuming the install
 rem     files are named similar enough
@@ -59,6 +60,8 @@ if defined vlcnam (
 
 rem ===========================================================================
 rem     https://www.google.com/intl/en/chrome/browser/desktop/index.html?standalone=1
+rem 	32bit https://www.google.com/chrome/eula.html?system=true&standalone=1&platform=win
+rem 	64bit https://www.google.com/chrome/eula.html?system=true&standalone=1&platform=win64
 rem
 rem     Chrome
 rem     simple master_preferences file to set home page and startup page
@@ -95,5 +98,6 @@ if defined foxitnam (
     <nul set /p nothing=installing Foxit Reader...
     msiexec /qb /i %foxitnam% ADDLOCAL=FX_PDFVIEWER,FX_SE MAKEDEFAULT="1" VIEW_IN_BROWSER="1" DESKTOP_SHORTCUT="1" STARTMENU_SHORTCUT="1" AUTO_UPDATE="0" CPDF_DISABLE="1" DISABLE_UNINSTALL_SURVEY="1"
     del "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Foxit Reader\Activate Plugins.lnk" %silent%
+    %appone% -shortcut "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Foxit Reader\Foxit Updater" "C:\Program Files (x86)\Foxit Software\Foxit Reader\FoxitUpdater.exe" %silent%
     echo DONE
 )
