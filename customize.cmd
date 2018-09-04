@@ -16,9 +16,10 @@ set newpcname=PC-[s#]
 set newpcdescription=
 set newuser=
 set powerprofile_ac=0
+set passwordage=unlimited
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe removeappx.txt HKCU_Edge.reg
+set helperfiles=appone.exe removeappx.txt pinstart.txt HKCU_Edge.reg
 set regfileHKLM=HKLM.reg
 set regfileHKCU=HKCU.reg
 rem --our folders--
@@ -144,11 +145,21 @@ if defined powerprofile_ac (
 )
 
 rem ===========================================================================
+rem     maximum password age
+rem ===========================================================================
+if defined passwordage (
+    <nul set /p nothing=setting maximum password age to %passwordage%...
+    net accounts /maxpwage:%passwordage% %silent%
+    if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
+    echo.
+)
+
+rem ===========================================================================
 rem     install win32 apps
 rem ===========================================================================
 if exist "%win32appsfrom%\install.cmd" (
     echo.
-    pushd "%cd%"
+    pushd "%~dp0"
     call %win32appsfrom%\install.cmd
     echo.
     color 5f
