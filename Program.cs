@@ -541,8 +541,9 @@ namespace ConsoleApp
 
         static void ResetStartMenu(ref List<string> argslist)
         {
-            del_startmenu("tilegrid");
-            del_startmenu("suggestions");
+            del_startmenu("globalproperties"); //reset 'show recently added apps'
+            del_startmenu("tilegrid"); //tiles
+            del_startmenu("suggestions"); //suggestion tiles
             restart_explorer();
             Exit(0);
         }
@@ -1305,11 +1306,12 @@ namespace ConsoleApp
         }
 
         static bool del_startmenu(string nam)
-        { //"tilegrid", "suggestions"
+        { //"tilegrid", "suggestions", "globalproperties" (fix stuck 'show recently added apps')
             string key = @"Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount";
-            string tilestr = null;
-            if (nam == "tilegrid") tilestr = @"$start.tilegrid$windows.data.curatedtilecollection.tilecollection";
-            else if (nam == "suggestions") tilestr = @"$start.suggestions$windows.data.curatedtilecollection.tilecollection";
+            string regstr = null;
+            if (nam == "tilegrid") regstr = @"$start.tilegrid$windows.data.curatedtilecollection.tilecollection";
+            else if (nam == "suggestions") regstr = @"$start.suggestions$windows.data.curatedtilecollection.tilecollection";
+            else if (nam == "globalproperties") regstr = @"$windows.data.unifiedtile.startglobalproperties";
             else return false;
 
             Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key, false);
@@ -1318,7 +1320,7 @@ namespace ConsoleApp
 
             foreach (var subkeyname in reg.GetSubKeyNames())
             {
-                if (subkeyname.Contains(tilestr))
+                if (subkeyname.Contains(regstr))
                 {
                     reg2 = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key + @"\" + subkeyname + @"\Current", true);
                     if (reg2 != null)
