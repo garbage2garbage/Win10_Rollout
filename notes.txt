@@ -60,7 +60,7 @@ USB drive-
         //these files also copied to
         //c:\users\default\appdata\local\temp
         appone.exe          <-helper app (remove apps, set start menu, etc.)
-        HKCU_Edge.reg       <-HKCU registry file for Edge
+        HKCU_Edge.reg       <-HKCU registry file for Edge (cannot seem to set this in the default user hiv)
         pinstart.txt        <-new users start menu tile list
         removeappx.txt      <-new users remove appx list
 
