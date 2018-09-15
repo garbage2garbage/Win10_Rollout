@@ -2,48 +2,46 @@
  Notes
 ===============================================================================
 
-* no network connection (a little nicer if Win does not detect internet)
-* install Windows 10 from usb drive (Microsoft media creation tool)
-* first run OOBE setup wizard- create a temporary user (see below)
+<1> install Windows 10 from usb drive (Microsoft media creation tool)
+<2> first run OOBE setup wizard- create a temporary user (see below)
 
   the temporary user will be used to run the customize.cmd script, and then
-  deleted after logging into a new user account- most changes can be made
-  to the current user, but because the start menu tiles is quite a mess because
-  of suggested apps and cannot be removed via scripting (that I know of), its
-  easier to just use a temporary user then delete it when no longer needed
+  deleted after logging into a new user account- this is just an easier
+  option than to try to cleanup the first user which has all the Windows 
+  default settings
 
-  option 1 (auto create the new user)-
+  OOBE username option 1 (this will auto create the first new user later)-
   use 'temp<some name>', then a new user will be created with <some name>
-  when the script is done running
+  when the customize.cmd script is done running
   like- tempOwner  - tempOwner will be the temp user and Owner will be created
   by customize.cmd, tempOwner will need to be deleted later
 
-  option2-
-  use 'temp', then you will be promted for a new user name where you can type
-  in the new user name
+  OOBE option2-
+  use 'temp' as username, then you will be promted for a new user name 
+  where you can type in the new user name
 
-  option3-
-  a new user will need to be created with administrator priviledges
+  OOBE option3- use any name
+  a new user will need to manually be created with administrator priviledges
   (you can also create a password for the temporary user to prevent Windows
   from auto login at the next reboot)
 
-* run customize.cmd (as administrator) from usb drive
-* restart
-* log into new user, firstrun.cmd runs (user will be given a choice)
-* firstrun.cmd runs, then logs user out so changes take effect
-* log back in
-* delete the original temp user (only first new user needs to do this)
-
-* turn on num lock if desktop pc or laptop with number pad
-* connect network
-* settings/apps/default apps, set program defaults as needed
-  (foxit, chrome, vlc, etc.)
-* settings/personalization/start, turn off recently added apps
-* open/close Chrome 3 times to get rid of initial firstrun pages
-* Microsoft Edge, open, click home button, copy home address, set as homepage
-  (also click home button, dismiss google notification on web page- do
-   several times until no more google info notifications)
-* check date/time- can toggle auto set off/on in settings to force update
+<3> when at desktop (as temporary user) run customize.cmd (usb drive)
+    (recommend without network connection to prevent Windows online activity)
+  
+    when done, restart
+    log into new user, firstrun.cmd runs
+    firstrun.cmd runs automatically
+    delete the original temp user (only first new user needs to do this)
+    turn on num lock if desktop pc or laptop with number pad
+    connect network
+    settings/apps/default apps, set program defaults as needed
+    (foxit, chrome, vlc, etc.)
+    settings/personalization/start, turn off recently added apps
+    open/close Chrome 3 times to get rid of initial firstrun pages
+    Microsoft Edge, open, click home button, copy home address, set as homepage
+    (also click home button, dismiss google notification on web page- do
+     several times until no more google info notifications)
+    check date/time- can toggle auto set off/on in settings to force update
 
 
 ###############################################################################
@@ -55,35 +53,59 @@ USB drive-
     ...
 
     myfolder\
-        customize.cmd       <-main setup app, run as administrator
-        appone.exe          <-helper app (also put in users tmp)
-        HKLM.reg            <-HKLM registry file
-        HKCU.reg            <-HKCU registry file (imported into default user)
-        firstrun.cmd        <-new users first run app (put into users start folder)
-        pinstartlist.txt    <-new users start menu tile list (put in users tmp)
-        appxlist.txt        <-new users appx list to remove apps (put in users tmp)
-        Wallpaper\
+        customize.cmd       <-main setup app (step 3 above), run as administrator
+        
+        //these files also copied to
+        //c:\users\default\appdata\local\temp
+        appone.exe          <-helper app (remove apps, set start menu, etc.)
+        HKCU_Edge.reg       <-HKCU registry file for Edge
+        pinstart.txt        <-new users start menu tile list
+        removeappx.txt      <-new users remove appx list
+
+        //this file copied to 
+        //c:\users\default\appdata\roaming\microsoft\windows\start menu\programs\startup
+        firstrun.cmd        <-new users first run app
+        
+        //these jpg's copied to
+        //c:\users\public\pictures
+        Wallpaper\          <-any wanted wallpaper in this folder
             any.jpg
             another.jpg
-        Win32Apps\
+            
+        Win32Apps\          <-any needed Win32 apps
             install.cmd     <-apps install script, modify as needed
-            any.exe
-            another.msi
+            any.exe         <-any needed install exe
+            another.msi     <-any needed install msi
             any\            <-app specific files needed for install.cmd
             another\          like any settings file, etc.
 
 ===============================================================================
- customize.cmd (normally run after setup when logged into the temporary user,
-                but can run at any time in any user account with admin
-                priviledges)
+ customize.cmd summary
 ===============================================================================
 check if running as administrator
 set timezone
 HKLM registry changes
-HKCU registry changes (to default user)
-wallpapers
+HKCU registry changes (to the default user hiv)
+copy wallpapers
 rename default user DefaultLayouts.xml (start menu tiles will be minimal)
-copy helper files for firstrun.cmd
-set computer name
+copy firstrun.cmd and helper files to default user folders
+remove OneDrive link in default user start menu
 change power profile (current is balanced) so power stays on when on ac
+set password age
 run Win32Apps\install.cmd if available
+setup first user
+set computer name
+
+
+===============================================================================
+ firstrun.cmd summary
+===============================================================================
+reset start menu (should already be minimal, but do again)
+unpin all start menu
+unpin all taskbar
+set weather app location
+import Edge registry settings
+set random wallpaper from public pictures folder
+uninstall all appx from list (removeappx.txt)
+reset start menu (again, not really necessary but start menu is fragile)
+set start menu apps (from pinstart.txt)
