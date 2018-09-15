@@ -54,6 +54,8 @@ USB drive-
 
     myfolder\
         customize.cmd       <-main setup app (step 3 above), run as administrator
+        HKLM.reg            <-hklm registry settings
+        HKCU.reg            <-hkcu registry settings (imported to default user registry via AppOne.exe regimport command)
         
         //these files also copied to
         //c:\users\default\appdata\local\temp
@@ -84,11 +86,11 @@ USB drive-
 ===============================================================================
 check if running as administrator
 set timezone
-HKLM registry changes
-HKCU registry changes (to the default user hiv)
+HKLM registry changes (HKLM.reg)
+HKCU registry changes (to the default user hiv via AppOne.exe command)
 copy wallpapers
 rename default user DefaultLayouts.xml (start menu tiles will be minimal)
-copy firstrun.cmd and helper files to default user folders
+copy firstrun.cmd and helper files to default user folders (Startup and temp)
 remove OneDrive link in default user start menu
 change power profile (current is balanced) so power stays on when on ac
 set password age
