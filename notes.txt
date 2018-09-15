@@ -42,7 +42,7 @@
     (also click home button, dismiss google notification on web page- do
      several times until no more google info notifications)
     check date/time- can toggle auto set off/on in settings to force update
-
+    run Windows update
 
 ###############################################################################
     files - on usb drive (same drive as Win10 setup)
