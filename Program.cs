@@ -541,6 +541,11 @@ namespace ConsoleApp
 
         static void ResetStartMenu(ref List<string> argslist)
         {
+            no_show_recent_apps(); //disables show recently added apps
+            //adds 3 bytes to registry entry
+            //see if this helps (below will delete whole key, but just trying things
+            //as thing setting seems to get in a state where it cannot be disabled)
+
             del_startmenu("globalproperties"); //reset 'show recently added apps'
             del_startmenu("tilegrid"); //tiles
             del_startmenu("suggestions"); //suggestion tiles
@@ -1330,6 +1335,51 @@ namespace ConsoleApp
                         reg.Close();
                         return true;
                     }
+                }
+            }
+            reg.Close();
+            return false;
+        }
+
+        static bool no_show_recent_apps()
+        {
+            string key = @"Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount";
+            string regstr = @"$windows.data.unifiedtile.startglobalproperties";
+
+            Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key, false);
+            if (reg == null) return false;
+
+            foreach (var subkeyname in reg.GetSubKeyNames())
+            {
+                if (subkeyname.Contains(regstr))
+                {
+                    reg.Close();
+                    reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key + @"\" + subkeyname + @"\Current", true);
+                    if (reg == null) return false;
+                    try
+                    {
+                        byte[] bin = (byte[])reg.GetValue("Data");
+                        if (bin == null)
+                        {
+                            reg.Close();
+                            return false;
+                        }
+                        var c = bin.Count();
+                        //0xC21401 = show recent apps OFF (isabled)
+                        if (!(bin[20] == 0xC2 && bin[21] == 0x14 && bin[22] == 0x01))
+                        {
+                            //is enabled/ON (0xC21401 is missing at offset 0x20)
+                            //insert 3 bytes to disable
+                            byte[] bin2 = new byte[c + 3];
+                            for (var i = 0; i < 20; i++) bin2[i] = bin[i];
+                            bin2[20] = 0xC2; bin2[21] = 0x14; bin2[22] = 0x01;
+                            for (var i = 20; i < c; i++) bin2[i + 3] = bin[i];
+                            reg.SetValue("Data", bin2);
+                        }
+                    }
+                    catch { };
+                    reg.Close();
+                    return true;
                 }
             }
             reg.Close();
