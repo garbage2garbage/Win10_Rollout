@@ -200,6 +200,7 @@ namespace ConsoleApp
             optionslist.Add(new Options("-weather", Weather));
             optionslist.Add(new Options("-layoutxml", LayoutXml));
             optionslist.Add(new Options("-regimport", RegImport));
+            optionslist.Add(new Options("-norecentapps", NoRecentApps));
 
             //check cmdline option against our optionslist
             var opt = optionslist.Find(x => x.Name == argslist[0].ToLower());
@@ -537,6 +538,12 @@ namespace ConsoleApp
                 }
             }
             Exit(failed);
+        }
+
+        static void NoRecentApps(ref List<string> argslist)
+        {
+            no_show_recent_apps(); //disables show recently added apps
+            Exit(0);
         }
 
         static void ResetStartMenu(ref List<string> argslist)
