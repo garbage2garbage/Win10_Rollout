@@ -17,22 +17,15 @@ echo.
 echo  ---new user setup---
 echo  starting firstrun.cmd, this will not take long...
 echo.
-rem reset start menu first, will cleanup and use minimal apps
-rem should already be minimal, but explorer seems fragile with the start menu
-%appone% -resetstartmenu
-rem now unpin all
-%appone% -unpinstart -all
-%appone% -unpintaskbar -all
 %appone% -weather
 %appone% -regimport "%HKCU%"
 %appone% -wallpaper "%wallpaperfolder%"
 echo.
 %appone% -removeappx "%appxlist%"
 echo.
-rem do again
-%appone% -resetstartmenu
 %appone% -unpinstart "Microsoft Store"
 %appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Defender Security Center"
+%appone% -norecentapps
 echo.
 color 2f
 rem if run from startup folder, delete firstrun.cmd

@@ -548,12 +548,9 @@ namespace ConsoleApp
 
         static void ResetStartMenu(ref List<string> argslist)
         {
-            no_show_recent_apps(); //disables show recently added apps
-            //adds 3 bytes to registry entry
-            //see if this helps (below will delete whole key, but just trying things
-            //as thing setting seems to get in a state where it cannot be disabled)
+            //added -norecentapps , so leave global properties alone for now
 
-            del_startmenu("globalproperties"); //reset 'show recently added apps'
+            //del_startmenu("globalproperties"); //reset 'show recently added apps'
             del_startmenu("tilegrid"); //tiles
             del_startmenu("suggestions"); //suggestion tiles
             restart_explorer();
