@@ -542,14 +542,60 @@ namespace ConsoleApp
 
         static void NoRecentApps(ref List<string> argslist)
         {
-            no_show_recent_apps(); //disables show recently added apps
-            Exit(0);
+            string key = @"Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount";
+            string regstr = @"$windows.data.unifiedtile.startglobalproperties";
+
+            Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key, false);
+            if (reg == null)
+            {
+                Error("unable to open cloud store registry key");
+            }
+
+            foreach (var subkeyname in reg.GetSubKeyNames())
+            {
+                if (subkeyname.Contains(regstr))
+                {
+                    reg.Close();
+                    reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key + @"\" + subkeyname + @"\Current", true);
+                    if (reg == null) Error("unable to open globalproperties registry key");
+                    try
+                    {
+                        byte[] bin = (byte[])reg.GetValue("Data");
+                        if (bin == null)
+                        {
+                            reg.Close();
+                            Error("unable to read globalproperties Data value");
+                        }
+                        var c = bin.Count();
+                        //0xC21401 = show recent apps OFF (disabled)
+                        if (!(bin[20] == 0xC2 && bin[21] == 0x14 && bin[22] == 0x01))
+                        {
+                            //is enabled/ON (0xC21401 is missing at offset 0x20)
+                            //insert 3 bytes to disable
+                            byte[] bin2 = new byte[c + 3];
+                            for (var i = 0; i < 20; i++) bin2[i] = bin[i];
+                            bin2[20] = 0xC2; bin2[21] = 0x14; bin2[22] = 0x01;
+                            for (var i = 20; i < c; i++) bin2[i + 3] = bin[i];
+                            reg.SetValue("Data", bin2);
+                            Console.WriteLine("disabled show recently added apps in Start Menu");
+                        }
+                        else {
+                            Console.WriteLine("show recently added apps in Start Menu already disabled");
+                        }
+                    }
+                    catch {
+                        Error("unknown error occurred");
+                    };
+                    reg.Close();
+                    Exit(0);
+                }
+            }
+            reg.Close();            
+            Error("unable to find globalproperties registry key");
         }
 
         static void ResetStartMenu(ref List<string> argslist)
         {
-            //added -norecentapps , so leave global properties alone for now
-
             //del_startmenu("globalproperties"); //reset 'show recently added apps'
             del_startmenu("tilegrid"); //tiles
             del_startmenu("suggestions"); //suggestion tiles
@@ -1229,11 +1275,19 @@ namespace ConsoleApp
             //File Explorer needs alternate location for verbs()
             Type t = Type.GetTypeFromProgID("Shell.Application");
             dynamic shell = Activator.CreateInstance(t);
+            //no longer there in 1809- use alternate below
             //use another namespace where File Explorer is located- start menu places
-            var feobj = shell.NameSpace(
-                    Environment.GetEnvironmentVariable("ProgramData") +
-                    @"\Microsoft\Windows\Start Menu Places"
+            //var feobj = shell.NameSpace(
+            //  Environment.GetEnvironmentVariable("ProgramData") +
+            //  @"\Microsoft\Windows\Start Menu Places"
+            //  );
+
+            //1809, use current user start menu instead
+             var   feobj = shell.NameSpace(
+                    userprofile + 
+                    @"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools"
                     );
+            if (feobj == null) return null;
             //find file explorer, return its Verbs()
             foreach (var v in feobj.Items())
             {
@@ -1339,51 +1393,6 @@ namespace ConsoleApp
                         reg.Close();
                         return true;
                     }
-                }
-            }
-            reg.Close();
-            return false;
-        }
-
-        static bool no_show_recent_apps()
-        {
-            string key = @"Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount";
-            string regstr = @"$windows.data.unifiedtile.startglobalproperties";
-
-            Microsoft.Win32.RegistryKey reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key, false);
-            if (reg == null) return false;
-
-            foreach (var subkeyname in reg.GetSubKeyNames())
-            {
-                if (subkeyname.Contains(regstr))
-                {
-                    reg.Close();
-                    reg = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key + @"\" + subkeyname + @"\Current", true);
-                    if (reg == null) return false;
-                    try
-                    {
-                        byte[] bin = (byte[])reg.GetValue("Data");
-                        if (bin == null)
-                        {
-                            reg.Close();
-                            return false;
-                        }
-                        var c = bin.Count();
-                        //0xC21401 = show recent apps OFF (isabled)
-                        if (!(bin[20] == 0xC2 && bin[21] == 0x14 && bin[22] == 0x01))
-                        {
-                            //is enabled/ON (0xC21401 is missing at offset 0x20)
-                            //insert 3 bytes to disable
-                            byte[] bin2 = new byte[c + 3];
-                            for (var i = 0; i < 20; i++) bin2[i] = bin[i];
-                            bin2[20] = 0xC2; bin2[21] = 0x14; bin2[22] = 0x01;
-                            for (var i = 20; i < c; i++) bin2[i + 3] = bin[i];
-                            reg.SetValue("Data", bin2);
-                        }
-                    }
-                    catch { };
-                    reg.Close();
-                    return true;
                 }
             }
             reg.Close();
