@@ -24,8 +24,9 @@ echo.
 %appone% -removeappx "%appxlist%"
 echo.
 %appone% -unpinstart "Microsoft Store"
-%appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Defender Security Center"
+%appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel"
 %appone% -norecentapps
+%appone% -unpintaskbar -all
 echo.
 color 2f
 rem if run from startup folder, delete firstrun.cmd

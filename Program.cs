@@ -1275,23 +1275,34 @@ namespace ConsoleApp
             //File Explorer needs alternate location for verbs()
             Type t = Type.GetTypeFromProgID("Shell.Application");
             dynamic shell = Activator.CreateInstance(t);
-            //no longer there in 1809- use alternate below
-            //use another namespace where File Explorer is located- start menu places
-            //var feobj = shell.NameSpace(
-            //  Environment.GetEnvironmentVariable("ProgramData") +
-            //  @"\Microsoft\Windows\Start Menu Places"
-            //  );
 
-            //1809, use current user start menu instead
-             var   feobj = shell.NameSpace(
-                    userprofile + 
-                    @"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools"
-                    );
-            if (feobj == null) return null;
+            //need to find an existing shortcut to File Explorer
+            //but cannot be the short 407 byte ones, like found here-
+            //C:\Users\User1\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools
+            //unable to find any, so replace above explorer shortcut with normal shortcut
+
+            //here is the folder
+            string dir = userprofile + 
+                @"\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\System Tools";
+            //for Shortcut command
+            string[] args = { "-shortcut",
+                dir + @"\File Explorer",
+                @"%windir%\explorer.exe" };
+            FileInfo fl = new FileInfo(dir + @"\File Explorer.lnk");
+            //small shortcuts are 407 bytes, normal shortcut about 1.5k
+            //if small shortcut, replace with normal one
+            if (fl.Length<500) 
+            {
+                var args_list = new List<string>(args);
+                Shortcut(ref args_list); //existing command, needs list like command line
+            }
+
+            var feobj = shell.NameSpace(dir);
+            if (feobj == null) return null;            
             //find file explorer, return its Verbs()
             foreach (var v in feobj.Items())
             {
-                if (v.path.ToLower().Contains("file explorer")) return v.Verbs();
+                if (v.path.EndsWith("File Explorer.lnk")) return v.Verbs();
             }
             return null;
         }

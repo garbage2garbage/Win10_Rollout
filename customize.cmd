@@ -12,14 +12,14 @@ rem     vars
 rem ===========================================================================
 rem --options--
 set timezone=Central Standard Time
-set newpcname=PC-[s#]
+set newpcname=
 set newpcdescription=
 set newuser=
 set powerprofile_ac=0
 set passwordage=unlimited
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe removeappx.txt pinstart.txt HKCU_Edge.reg
+set helperfiles=appone.exe removeappx.txt HKCU_Edge.reg
 set regfileHKLM=HKLM.reg
 set regfileHKCU=HKCU.reg
 rem --our folders--
@@ -208,8 +208,15 @@ rem ===========================================================================
 rem     new computer name
 rem ===========================================================================
 echo.
+echo  current computer name: %computername%
+if not defined newpcname (
+    echo  set computer name, press ENTER to keep current name
+    echo  use [s#] for serial number substitution
+    echo  use [#date] for date substitution
+    echo  use [#rand] for 8-digit random number substitution
+    set /p newpcname="  name: "
+)
 if defined newpcname (
-    echo  current computer name: %computername%
     if defined newpcdescription (
         appone.exe -renamepc "%newpcname%" "%newpcdescription%"
     ) else (
