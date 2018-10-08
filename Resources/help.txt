@@ -6,7 +6,8 @@
    -pinstart        appname [ appname2 "app name 3" ... ] OR filename
    -unpinstart      appname [ appname2 "app name 3" ... ] OR -all
    -unpintaskbar    appname [ appname2 "app name 3" ... ] OR -all
-   -resetstartmenu
+   -resetstartmenu  reset all Start Menu tiles
+   -norecentapps    do not show recently added apps in Start Menu
    -removeappx      appname [ appname2 "app name 3" ... ] OR filename
    -wallpaper       filename OR foldername OR -bing
    -shortcut        name target [ -arg arguments ] [ -wd workingdir ]
