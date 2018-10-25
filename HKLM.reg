@@ -18,6 +18,6 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Defender Security Center\Virus and threat protection]
 "SummaryNotificationDisabled"=dword:00000001
 
-
-
-
+;disable 'privacy settings experience' at new user sign-in (started in ver 1809)
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\OOBE]
+"DisablePrivacyExperience"=dword:00000001
