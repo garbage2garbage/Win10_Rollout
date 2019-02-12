@@ -215,6 +215,7 @@ if not defined newpcname (
     echo  use [#date] for date substitution
     echo  use [#rand] for 8-digit random number substitution
     set /p newpcname="  name: "
+    set /p newpcdescription="description: "
 )
 if defined newpcname (
     if defined newpcdescription (
