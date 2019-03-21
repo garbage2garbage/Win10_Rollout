@@ -12,7 +12,7 @@ for /f %%n in ('dir /b 7z*.exe') do set zipnam=%%n
 for /f %%n in ('dir /b vlc*.exe') do set vlcnam=%%n
 for /f %%n in ('dir /b chrome*.exe') do set chromenam=%%n
 for /f %%n in ('dir /b LibreOffice*.msi') do set officenam=%%n
-for /f %%n in ('dir /b FoxitReader*.msi') do set foxitnam=%%n
+for /f %%n in ('dir /b Foxit*.msi') do set foxitnam=%%n
 
 rem ===========================================================================
 rem     can pass 'all' to script to automatically do all installs
@@ -51,7 +51,8 @@ if defined vlcnam (
     <nul set /p nothing=installing VLC...
     %vlcnam% /L=1033 /S
     mkdir c:\users\default\appdata\roaming\vlc %silent%
-    if exist vlc copy /y vlc\*.* c:\users\default\appdata\roaming\vlc %silent%
+    if exist vlc copy /y vlc\*.* "c:\users\default\appdata\roaming\vlc" %silent%
+    if exist vlc copy /y vlc\*.* "%appdata%\vlc" %silent%
     del "c:\programdata\microsoft\windows\start menu\programs\videolan\documentation.lnk" %silent%
     del "c:\programdata\microsoft\windows\start menu\programs\videolan\release notes.lnk" %silent%L
     del "c:\programdata\microsoft\windows\start menu\programs\videolan\videolan website.lnk" %silent%
@@ -86,6 +87,7 @@ if defined officenam (
 
 rem ===========================================================================
 rem     https://www.foxitsoftware.com/pdf-reader/enterprise-register.php
+rem     https://www.foxitsoftware.com/downloads/latest.php?product=Foxit-Enterprise-Reader&platform=Windows&version=9.3.0.10826&package_type=msi&language=English
 rem
 rem     Foxit Reader
 rem     get msi version, then can use command line switches
