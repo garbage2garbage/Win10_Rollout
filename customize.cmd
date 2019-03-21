@@ -171,7 +171,7 @@ rem     if this user is 'temp' or starts with 'temp', create a password of 1
 rem     to prevent autologin after restart (we don't need to login ever again)
 rem ===========================================================================
 if %username:~0,4% == temp (
-    <nul set /p nothing=setting %username% password to 1 to prevent auto logon at next boot
+    <nul set /p nothing=setting %username% password to 1 to prevent auto logon at next boot...
     net user %username% 1 %silent%
     if !errorlevel! == 0 ( echo OK ) else ( echo FAILED )
     echo.
@@ -211,24 +211,22 @@ if not defined newuser (
     set /p nothing=" cleanup this user? [y/n]: "
     if "!nothing!" == "y" (
     appone.exe -weather
-    echo.
     appone.exe -regimport "%regfileHKCU%"
-    echo.
     appone.exe -regimport HKCU_Edge.reg
-    echo.
     appone.exe -wallpaper "%wallpaperto%"
     echo.
     appone -removeappx removeappx.txt
     echo.
     appone -resetstartmenu
-    echo.
     appone -unpinstart "Microsoft Store"
-    echo.
     appone -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel"
-    echo.
     appone -norecentapps
-    echo.
     appone -unpintaskbar -all
+    if exist "%localappdata%\Microsoft\OneDrive\OneDrive.exe" (
+        <nul set /p nothing=uninstalling OneDrive...
+        start /wait %systemroot%\SysWOW64\OneDriveSetup.exe /uninstall /silent
+        echo Done
+    )
     )
 )
 
