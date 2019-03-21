@@ -202,6 +202,34 @@ if defined newuser (
     echo adding new user %newuser%...
     appone.exe -createuser -admin "%newuser%"
     echo.
+) 
+
+rem ===========================================================================
+rem     can cleanup current user if new user not defined
+rem ===========================================================================
+if not defined newuser (
+    set /p nothing=" cleanup this user? [y/n]: "
+    if "!nothing!" == "y" (
+    appone.exe -weather
+    echo.
+    appone.exe -regimport "%regfileHKCU%"
+    echo.
+    appone.exe -regimport HKCU_Edge.reg
+    echo.
+    appone.exe -wallpaper "%wallpaperto%"
+    echo.
+    appone -removeappx removeappx.txt
+    echo.
+    appone -resetstartmenu
+    echo.
+    appone -unpinstart "Microsoft Store"
+    echo.
+    appone -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel"
+    echo.
+    appone -norecentapps
+    echo.
+    appone -unpintaskbar -all
+    )
 )
 
 rem ===========================================================================
