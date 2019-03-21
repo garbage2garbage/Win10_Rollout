@@ -2,6 +2,7 @@ Microsoft.Messaging
 Microsoft.Microsoft3DViewer
 Microsoft.MicrosoftOfficeHub
 Microsoft.MSPaint
+Microsoft.MixedReality.Portal
 Microsoft.Office.OneNote
 Microsoft.OneConnect
 Microsoft.People
