@@ -1128,13 +1128,13 @@ namespace ConsoleApp
             System.Net.WebClient wc = new System.Net.WebClient();
             string bingurl = "http://www.bing.com";
             string binghttp = wc.DownloadString(bingurl);
-            string[] lines = binghttp.Replace("\"", "\n").Replace("'", "\n").Replace("\\", "").Split('\n');
+            string[] lines = binghttp.Replace("\"", "\n").Split('\n');
             string jpgurl = "";
             foreach (var line in lines)
             {
-                if (line.StartsWith("/") && line.EndsWith(".jpg"))
+                if (line.StartsWith("http://") && line.EndsWith("_1920x1200.jpg"))
                 {
-                    jpgurl = bingurl + line;
+                    jpgurl = line;
                     break;
                 }
             }
@@ -1142,7 +1142,7 @@ namespace ConsoleApp
             {
                 return "unable to find jpg on Bing.com";
             }
-            string filname = jpgurl.Split('/').Last().Replace("_1920x1080", "");
+            string filname = jpgurl.Split('/').Last().Replace("_1920x1200", "");
             string jpgname = $@"{bingfolder}\{filname}";
             //may have already downloaded, check
             if (!File.Exists(jpgname))
