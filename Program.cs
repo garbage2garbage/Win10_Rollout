@@ -1126,15 +1126,19 @@ namespace ConsoleApp
                 catch (Exception) { return "cannot create Bing directory: " + bingfolder; }
             }
             System.Net.WebClient wc = new System.Net.WebClient();
-            string bingurl = "http://www.bing.com";
+            string bingurl = "https://www.bing.com";
             string binghttp = wc.DownloadString(bingurl);
-            string[] lines = binghttp.Replace("\"", "\n").Split('\n');
+            //04052019
+            //http://az608707.vo.msecnd.net/files/YongfuTown_EN-US7670109876_tmb.jpg
+            //href="/th?id=OHR.YongfuTown_EN-US7670109876_1920x1080.jpg&amp;rf=LaDigue_1920x1080.jpg
+            //https://www.bing.com/th?id=OHR.YongfuTown_EN-US7670109876_1920x1080.jpg
+            string[] lines = binghttp.Replace("\"", "\n").Replace("&","\n").Split('\n');
             string jpgurl = "";
             foreach (var line in lines)
             {
-                if (line.StartsWith("http://") && line.EndsWith("_1920x1200.jpg"))
+                if (line.StartsWith("/th?id=") && line.EndsWith(".jpg"))
                 {
-                    jpgurl = line;
+                    jpgurl = bingurl + line;
                     break;
                 }
             }
@@ -1142,7 +1146,9 @@ namespace ConsoleApp
             {
                 return "unable to find jpg on Bing.com";
             }
-            string filname = jpgurl.Split('/').Last().Replace("_1920x1200", "");
+            string filname = jpgurl.Split('/').Last();
+            filname = filname.Substring(filname.IndexOf('.') + 1);
+
             string jpgname = $@"{bingfolder}\{filname}";
             //may have already downloaded, check
             if (!File.Exists(jpgname))
