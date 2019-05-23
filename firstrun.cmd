@@ -23,8 +23,9 @@ echo.
 echo.
 %appone% -removeappx "%appxlist%"
 echo.
-%appone% -unpinstart "Microsoft Store"
-%appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Security"
+rem Win10 1903- cannot access start menu
+rem %appone% -unpinstart "Microsoft Store"
+rem %appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Security"
 %appone% -norecentapps
 %appone% -unpintaskbar -all
 echo.

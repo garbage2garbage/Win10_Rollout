@@ -108,6 +108,12 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Search]
 "SearchboxTaskbarMode"=dword:00000000
 
+;cortana hide button on taskbar 
+;(another setting in addition to above starting w/ver 1903)
+;==============================================================================
+[HKEY_CURRENT_USER\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced]
+"ShowCortanaButton"=dword:00000000
+
 
 ;Foxit Reader settings
 ;==============================================================================
@@ -121,3 +127,8 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Foxit Software\Foxit Reader 9.0\Preferences\Others]
 "bCheckRegister"="0"
 
+;color theme (version 1903+)
+;==============================================================================
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize]
+"AppsUseLightTheme"=dword:00000001
+"SystemUsesLightTheme"=dword:00000000
