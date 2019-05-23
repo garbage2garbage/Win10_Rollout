@@ -87,7 +87,7 @@ if defined officenam (
 
 rem ===========================================================================
 rem     https://www.foxitsoftware.com/pdf-reader/enterprise-register.php
-rem     https://www.foxitsoftware.com/downloads/latest.php?product=Foxit-Enterprise-Reader&platform=Windows&version=9.3.0.10826&package_type=msi&language=English
+rem     http://www.foxitsoftware.com/downloads/latest.php?product=Foxit-Enterprise-Reader&platform=Windows&version=9.5.0.20723&package_type=msi&language=English
 rem
 rem     Foxit Reader
 rem     get msi version, then can use command line switches
