@@ -3,7 +3,7 @@ cd /d %~dp0
 color 5f
 SETLOCAL ENABLEDELAYEDEXPANSION
 set silent=^>NUL 2^>^&1
-set appone=appone.exe
+set appone="..\appone.exe"
 rem ===========================================================================
 rem     get file names so can update versions easily- assuming the install
 rem     files are named similar enough
