@@ -13,6 +13,8 @@ set wallpaperfolder=%systemdrive%\users\public\pictures
 set appone=%usertemp%\appone.exe
 set appxlist=%usertemp%\removeappx.txt
 set HKCU=%usertemp%\HKCU_Edge.reg
+set layoutxmlfolder=%LOCALAPPDATA%\Microsoft\Windows\Shell
+set layoutxml=%usertemp%\DefaultLayouts.xml
 echo.
 echo  ---new user setup---
 echo  starting firstrun.cmd, this will not take long...
@@ -24,10 +26,12 @@ echo.
 %appone% -removeappx "%appxlist%"
 echo.
 rem Win10 1903- cannot access start menu
-rem %appone% -unpinstart "Microsoft Store"
-rem %appone% -pinstart "Microsoft Edge" Calculator Settings "File Explorer" "Task Manager" "Google Chrome" Weather "Control Panel" "Windows Security"
+rem Plan B - use a layout xml file for this user to set icons
+rem resetstartmenu will cause it to be loaded
+copy /y %layoutxml% %layoutxmlfolder% %silent%
 %appone% -norecentapps
 %appone% -unpintaskbar -all
+%appone% -resetstartmenu
 echo.
 color 2f
 rem if run from startup folder, delete firstrun.cmd

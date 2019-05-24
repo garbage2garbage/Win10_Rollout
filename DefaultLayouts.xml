@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FullDefaultLayoutTemplate 
+    xmlns="http://schemas.microsoft.com/Start/2014/FullDefaultLayout"
+    xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout"
+    Version="1">
+    <StartLayoutCollection>
+
+        <StartLayout
+            GroupCellWidth="6"
+            TargetedContentTilesEnabled="true"
+            OfficeSKU="None">
+            <start:Group
+                LocalizedNameResourceTag="TileGrid_DefaultGroup1">
+                <start:Tile 
+		    Size="2x2"
+                    Column="0"
+                    Row="0"
+                    AppUserModelID="Microsoft.MicrosoftEdge_8wekyb3d8bbwe!MicrosoftEdge" />
+		<start:DesktopApplicationTile
+		    DesktopApplicationID="Microsoft.Windows.ControlPanel" 
+		    Size="2x2"
+	            Column="2"
+                    Row="0" />
+		<start:DesktopApplicationTile 
+		    DesktopApplicationLinkPath="%ALLUSERSPROFILE%\Microsoft\Windows\Start Menu\Programs\System Tools\Task Manager.lnk"
+		    Size="2x2" 
+         	    Column="4" 
+                    Row="0" />
+                <start:DesktopApplicationTile
+                    DesktopApplicationLinkPath="%APPDATA%\Microsoft\Windows\Start Menu\Programs\System Tools\File Explorer.lnk"
+                    Size="2x2"
+                    Row="2"
+                    Column="0"/>
+                <start:Tile 
+		    Size="2x2"
+                    Column="2"
+                    Row="2"
+                    AppUserModelID="Microsoft.BingWeather_8wekyb3d8bbwe!App" />
+               <start:Tile 
+		    Size="2x2"
+                    Column="4"
+                    Row="2"
+                    AppUserModelID="Microsoft.WindowsCalculator_8wekyb3d8bbwe!App" />
+
+            </start:Group>
+        </StartLayout>
+
+    </StartLayoutCollection>
+ </FullDefaultLayoutTemplate>

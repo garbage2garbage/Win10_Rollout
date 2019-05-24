@@ -19,9 +19,10 @@ set powerprofile_ac=0
 set passwordage=unlimited
 rem --our files--
 set firstrunscript=firstrun.cmd
-set helperfiles=appone.exe removeappx.txt HKCU_Edge.reg
+set helperfiles=appone.exe removeappx.txt HKCU_Edge.reg DefaultLayouts.xml
 set regfileHKLM=HKLM.reg
 set regfileHKCU=HKCU.reg
+set layoutfile=DefaultLayouts.xml
 rem --our folders--
 set wallpaperfrom=Wallpaper
 set win32appsfrom=Win32Apps
@@ -217,6 +218,11 @@ if not defined newuser (
     echo.
     appone -removeappx removeappx.txt
     echo.
+    rem plan B for Win10 1903 start menu icons
+    rem use a DefaultLayouts.xml file for this user
+    rem (keep Default user xml renamed -
+    copy /y %layoutfile% %LOCALAPPDATA%\Microsoft\Windows\Shell %silent%
+    rem now this will load the xml file
     appone -resetstartmenu
     rem Win10 1903 - cannot access start menu
     rem appone -unpinstart "Microsoft Store"
