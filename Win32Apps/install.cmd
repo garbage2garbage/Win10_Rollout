@@ -51,8 +51,9 @@ if defined vlcnam (
     <nul set /p nothing=installing VLC...
     %vlcnam% /L=1033 /S
     mkdir c:\users\default\appdata\roaming\vlc %silent%
+    mkdir %appdata%\vlc %silent%
     if exist vlc copy /y vlc\*.* "c:\users\default\appdata\roaming\vlc" %silent%
-    if exist vlc copy /y vlc\*.* "%appdata%\vlc\" %silent%
+    if exist vlc copy /y vlc\*.* "%appdata%\vlc" %silent%
     del "c:\programdata\microsoft\windows\start menu\programs\videolan\documentation.lnk" %silent%
     del "c:\programdata\microsoft\windows\start menu\programs\videolan\release notes.lnk" %silent%L
     del "c:\programdata\microsoft\windows\start menu\programs\videolan\videolan website.lnk" %silent%
