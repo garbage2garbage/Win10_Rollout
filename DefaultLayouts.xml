@@ -4,13 +4,12 @@
     xmlns:start="http://schemas.microsoft.com/Start/2014/StartLayout"
     Version="1">
     <StartLayoutCollection>
-
         <StartLayout
             GroupCellWidth="6"
             TargetedContentTilesEnabled="true"
             OfficeSKU="None">
             <start:Group
-                LocalizedNameResourceTag="TileGrid_DefaultGroup1">
+                LocalizedNameResourceTag="Group1">
                 <start:Tile 
 		    Size="2x2"
                     Column="0"
