@@ -250,10 +250,12 @@ if defined newpcname (
 )
 echo.
 
+rem powershell Enable-WindowsOptionalFeature -FeatureName Internet-Explorer-Optional-amd64 –Online
+
 rem ===========================================================================
 rem     DONE
 rem ===========================================================================
-color 2f
+color 20
 echo.
 echo  === reboot for changes to take effect ===
 echo.

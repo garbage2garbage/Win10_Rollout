@@ -26,7 +26,7 @@ echo.
 %appone% -norecentapps
 %appone% -unpintaskbar -all
 echo.
-color 2f
+color 20
 rem if run from startup folder, delete firstrun.cmd
 rem just leave appone.exe, appxlist.txt, HKCU_Edge.reg in users temp folder
 if "%~dp0" == "%startfolder%\" (
